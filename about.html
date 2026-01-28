@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="About Anthony Santos - ISSA-Certified Trainer, Triathlete, and founder of Vintus Performance. Learn about the journey and philosophy behind elite coaching.">
+    <meta name="keywords" content="Anthony Santos, personal trainer, ISSA certified, triathlete, fitness coach, Morristown NJ">
+    <title>About | Vintus Performance</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3EV%3C/text%3E%3C/svg%3E">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* About Page Specific Styles */
+        .about-hero {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding-top: 120px;
+            padding-bottom: 4rem;
+            background:
+                radial-gradient(ellipse at 30% 70%, rgba(192, 192, 192, 0.03) 0%, transparent 50%),
+                var(--black);
+        }
+
+        .about-hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 5rem;
+            align-items: center;
+        }
+
+        .about-image-wrapper {
+            position: relative;
+        }
+
+        .about-image-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--silver);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .about-image {
+            width: 100%;
+            height: 550px;
+            object-fit: cover;
+            object-position: center 45%;
+            border: 1px solid var(--border-color);
+            position: relative;
+            z-index: 1;
+            filter: grayscale(20%);
+            transition: all var(--transition-normal);
+        }
+
+        .about-image-wrapper:hover .about-image {
+            filter: grayscale(0%);
+            border-color: var(--silver);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(180deg, var(--silver), var(--border-color));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -3rem;
+            top: 0.5rem;
+            width: 10px;
+            height: 10px;
+            background: var(--silver);
+            transform: rotate(45deg);
+        }
+
+        .timeline-item h4 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--silver);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item p {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        .philosophy-card {
+            background: var(--black-card);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            text-align: center;
+            transition: all var(--transition-normal);
+        }
+
+        .philosophy-card:hover {
+            border-color: var(--silver);
+            transform: translateY(-5px);
+        }
+
+        .philosophy-card h4 {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: var(--accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .philosophy-card p {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .image-grid-item {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+            overflow: hidden;
+        }
+
+        .image-grid-item:hover {
+            border-color: var(--silver);
+        }
+
+        .image-grid-item span {
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--gray-dark);
+        }
+
+        @media (max-width: 1024px) {
+            .about-hero-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .about-image-wrapper {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .image-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .about-hero {
+                padding-top: 100px;
+            }
+
+            .about-image-placeholder {
+                height: 400px;
+            }
+
+            .timeline {
+                padding-left: 2rem;
+            }
+
+            .timeline-item::before {
+                left: -2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <a href="index.html" class="logo">VINTUS<span>.</span></a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="features.html">Services</a></li>
+            <li><a href="about.html" class="active">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+        <a href="contact.html" class="nav-cta">Free Consultation</a>
+        <div class="mobile-menu" id="mobileMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobileNav">
+        <a href="index.html">Home</a>
+        <a href="features.html">Services</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="contact.html" class="btn-outline" style="margin-top: 2rem;">Free Consultation</a>
+    </div>
+
+    <!-- About Hero Section -->
+    <section class="about-hero">
+        <div class="container about-hero-content">
+            <div class="about-image-wrapper reveal">
+                <img src="images/AboutVintus.png" alt="Anthony Santos - Vintus Performance" class="about-image">
+            </div>
+            <div>
+                <div class="section-label reveal">Meet Your Coach</div>
+                <h1 class="reveal" style="font-family: var(--font-heading); font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; text-transform: uppercase; line-height: 1.1; margin-bottom: 1.5rem;">Anthony Santos</h1>
+                <p class="reveal" style="font-family: var(--font-accent); font-style: italic; font-size: 1.3rem; color: var(--silver); margin-bottom: 2rem;">ISSA-Certified Trainer | Triathlete | Founder</p>
+                <p class="reveal" style="color: var(--gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                    At Vintus Performance, greatness starts from within - and that belief comes directly from the journey of its founder.
+                </p>
+                <p class="reveal" style="color: var(--gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem;">
+                    Anthony is an ISSA-Certified Trainer, triathlete, and lifelong athlete who turned his personal pursuit of excellence into a mission to help others achieve their own version of it.
+                </p>
+                <div class="reveal" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 50px; height: 50px; background: var(--silver); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 0.75rem; font-weight: 700; color: var(--black);">ISSA</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">
+                            <strong style="color: var(--off-white); display: block;">Certified Trainer</strong>
+                            International Sports Sciences
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 50px; height: 50px; background: var(--silver); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 0.75rem; font-weight: 700; color: var(--black);">6+</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">
+                            <strong style="color: var(--off-white); display: block;">Years Experience</strong>
+                            Strength & Endurance
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 50px; height: 50px; background: var(--silver); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 0.75rem; font-weight: 700; color: var(--black);">70.3</div>
+                        <div style="font-size: 0.9rem; color: var(--gray);">
+                            <strong style="color: var(--off-white); display: block;">Ironman Triathlete</strong>
+                            Endurance Competitor
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Section Placeholder -->
+    <section style="padding: 4rem 0; background: var(--black-light);">
+        <div class="container">
+            <div class="reveal" style="max-width: 800px; margin: 0 auto;">
+                <div style="position: relative; padding-bottom: 56.25%; background: var(--black-card); border: 1px solid var(--border-color);">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
+                        <div style="width: 80px; height: 80px; border: 2px solid var(--silver); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="var(--silver)" stroke="none">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                        </div>
+                        <span style="font-family: var(--font-heading); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gray);">Watch Introduction Video</span>
+                        <p style="font-size: 0.8rem; color: var(--gray-dark);">Instagram Reel Embed Placeholder</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Story Section -->
+    <section style="padding: var(--section-padding) 0;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start;">
+                <div>
+                    <div class="section-label reveal">The Journey</div>
+                    <h2 class="reveal" style="font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; text-transform: uppercase; line-height: 1.1; margin-bottom: 2rem;">From Personal Pursuit to<br><span style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Professional Mission</span></h2>
+                    <p class="reveal" style="color: var(--gray); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        After years of endurance training, weightlifting, and competing as a triathlete, Anthony learned that <strong style="color: var(--off-white);">true performance isn't just built in the gym - it's forged through discipline, resilience, and mindset.</strong>
+                    </p>
+                    <p class="reveal" style="color: var(--gray); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        Vintus Performance was founded on that very principle. The name itself represents <strong style="color: var(--off-white);">"Vitality Within"</strong> - the idea that physical strength and mental dominance are inseparable.
+                    </p>
+                    <p class="reveal" style="color: var(--gray); font-size: 1.05rem; line-height: 1.8;">
+                        Through personalized training systems, structured nutrition, and mindset development, Anthony helps high-performing individuals unlock their full potential - <strong style="color: var(--off-white);">physically, mentally, and professionally.</strong>
+                    </p>
+                </div>
+                <div class="timeline reveal">
+                    <div class="timeline-item">
+                        <h4>Lifelong Athlete</h4>
+                        <p>Started athletic journey at a young age, building the foundation for a lifetime of physical excellence and competitive drive.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>6+ Years of Training</h4>
+                        <p>Dedicated years to mastering both strength training and endurance sports, understanding the science behind peak performance.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>ISSA Certification</h4>
+                        <p>Earned certification from the International Sports Sciences Association, combining practical experience with formal education.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Ironman 70.3 Triathlete</h4>
+                        <p>Competed in Ironman triathlon events, proving dedication to pushing limits and achieving what most consider impossible.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Founded Vintus Performance</h4>
+                        <p>Launched a coaching practice built on the belief that true transformation comes from within, helping high achievers reach new levels.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Philosophy Section -->
+    <section style="padding: var(--section-padding) 0; background: var(--black-light);">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label reveal">The Approach</div>
+                <h2 class="reveal">Precision-Based <span class="accent">Philosophy</span></h2>
+            </div>
+
+            <div class="reveal" style="max-width: 900px; margin: 0 auto 4rem; text-align: center;">
+                <p style="color: var(--gray); font-size: 1.15rem; line-height: 1.8;">
+                    Unlike generic fitness programs, Vintus Performance takes a <strong style="color: var(--off-white);">precision-based approach</strong>. Every plan is intentionally designed to align with the client's lifestyle, goals, and time demands - whether you're an executive looking to optimize your time with energy and focus, or an athlete striving for peak performance.
+                </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                <div class="philosophy-card reveal">
+                    <h4>Discipline</h4>
+                    <p>The foundation of sustainable success. Every achievement starts with the commitment to show up consistently.</p>
+                </div>
+                <div class="philosophy-card reveal">
+                    <h4>Confidence</h4>
+                    <p>Built through consistency and progress. Watching yourself improve creates unshakeable self-belief.</p>
+                </div>
+                <div class="philosophy-card reveal">
+                    <h4>Health</h4>
+                    <p>Prioritized, never compromised. Performance without longevity is meaningless.</p>
+                </div>
+                <div class="philosophy-card reveal">
+                    <h4>Excellence</h4>
+                    <p>In every plan, session, and detail. Mediocrity has no place in high performance.</p>
+                </div>
+                <div class="philosophy-card reveal">
+                    <h4>Integrity</h4>
+                    <p>You get what you pay for - and more. Honest coaching builds lasting results.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What Makes Vintus Different -->
+    <section style="padding: var(--section-padding) 0;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 5rem; align-items: center;">
+                <div>
+                    <div class="section-label reveal">The Difference</div>
+                    <h2 class="reveal" style="font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; text-transform: uppercase; line-height: 1.1; margin-bottom: 2rem;">We Don't Guess.<br><span style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">We Engineer Results.</span></h2>
+                    <p class="reveal" style="color: var(--gray); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        With a foundation in science, structure, and accountability, Anthony ensures every client not only achieves results but <strong style="color: var(--off-white);">sustains them for life</strong>.
+                    </p>
+                    <p class="reveal" style="color: var(--gray); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                        What began as a personal pursuit of improvement has evolved into a coaching experience that redefines what it means to train. Anthony's philosophy blends years of athletic experience with elite-level coaching methods.
+                    </p>
+
+                    <div class="reveal" style="background: var(--black-card); border-left: 3px solid var(--silver); padding: 1.5rem 2rem; margin-top: 2rem;">
+                        <p style="font-family: var(--font-accent); font-style: italic; font-size: 1.1rem; color: var(--off-white); margin-bottom: 0.5rem;">
+                            "Your life is full, your time is valuable, and your goals are non-negotiable. That's why Vintus Performance is more than a training service - it's a high-performance investment in yourself."
+                        </p>
+                        <span style="color: var(--silver); font-size: 0.85rem;">- Anthony Santos</span>
+                    </div>
+                </div>
+                <div class="reveal" style="position: relative;">
+                    <div style="width: 100%; height: 450px; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;">
+                        <span style="font-family: 'Oswald', sans-serif; font-size: 0.9rem; letter-spacing: 3px; opacity: 0.4; text-transform: uppercase;">Action Photo</span>
+                    </div>
+                    <div style="position: absolute; bottom: -20px; right: -20px; background: var(--silver); padding: 1.5rem 2rem;">
+                        <span style="font-family: var(--font-heading); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; color: var(--black);">Morristown, NJ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Photo Gallery -->
+    <section style="padding: var(--section-padding) 0; background: var(--black-light);">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label reveal">Gallery</div>
+                <h2 class="reveal">In <span class="accent">Action</span></h2>
+            </div>
+
+            <div class="image-grid reveal">
+                <div class="image-grid-item"><span>Swimming</span></div>
+                <div class="image-grid-item"><span>Cycling</span></div>
+                <div class="image-grid-item"><span>Running</span></div>
+                <div class="image-grid-item"><span>Triathlon</span></div>
+                <div class="image-grid-item"><span>Training</span></div>
+                <div class="image-grid-item"><span>Gym</span></div>
+                <div class="image-grid-item"><span>Competition</span></div>
+                <div class="image-grid-item"><span>Finish Line</span></div>
+            </div>
+
+            <p class="reveal" style="text-align: center; color: var(--gray); margin-top: 2rem; font-size: 0.9rem;">
+                Follow the journey on Instagram <a href="https://www.instagram.com/santyfit_/" target="_blank" style="color: var(--silver);">@santyfit_</a> and <a href="https://www.instagram.com/vintusofficial/" target="_blank" style="color: var(--silver);">@vintusofficial</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section style="padding: 8rem 0; text-align: center; position: relative; background: var(--black);">
+        <div class="container" style="position: relative; z-index: 1;">
+            <h2 class="reveal" style="font-family: var(--font-heading); font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; text-transform: uppercase; margin-bottom: 1.5rem; line-height: 1.1;">Ready to Work <span style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Together</span>?</h2>
+            <p class="reveal" style="color: var(--gray); font-size: 1.1rem; max-width: 600px; margin: 0 auto 3rem;">Let's discuss your goals and create a plan that fits your lifestyle and ambitions.</p>
+            <div class="reveal" style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
+                <a href="contact.html" class="btn-primary">
+                    Book Free Consultation
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="features.html" class="btn-secondary">
+                    View Programs
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <a href="index.html" class="logo">VINTUS<span>.</span></a>
+                </div>
+                <ul class="footer-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="features.html">Services</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Vintus Performance. Discipline Within, Dominance Beyond.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+</body>
+</html>

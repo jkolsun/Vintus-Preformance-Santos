@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact Vintus Performance - Book your free consultation, get in touch for training inquiries. Located in Morristown, NJ with remote training available worldwide.">
+    <meta name="keywords" content="contact, personal training, fitness consultation, Morristown NJ, online coaching">
+    <title>Contact | Vintus Performance</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3EV%3C/text%3E%3C/svg%3E">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Contact Page Specific Styles */
+        .contact-hero {
+            padding: 12rem 0 4rem;
+            text-align: center;
+            position: relative;
+            background:
+                radial-gradient(ellipse at center, rgba(192, 192, 192, 0.02) 0%, transparent 50%),
+                var(--black);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 5rem;
+            align-items: start;
+        }
+
+        .contact-info-card {
+            background: var(--black-card);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            transition: all var(--transition-normal);
+        }
+
+        .contact-info-card:hover {
+            border-color: var(--silver);
+        }
+
+        .contact-info-icon {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, var(--silver), var(--silver-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .contact-info-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--black);
+        }
+
+        .contact-info-text h4 {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-info-text a,
+        .contact-info-text p {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 1rem;
+            line-height: 1.6;
+            transition: color var(--transition-normal);
+        }
+
+        .contact-info-text a:hover {
+            color: var(--silver);
+        }
+
+        .contact-form-wrapper {
+            background: var(--black-card);
+            border: 1px solid var(--border-color);
+            padding: 3rem;
+            position: relative;
+        }
+
+        .contact-form-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--accent);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .quick-action-card {
+            background: var(--black-card);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            transition: all var(--transition-normal);
+        }
+
+        .quick-action-card:hover {
+            border-color: var(--silver);
+            transform: translateY(-5px);
+        }
+
+        .quick-action-card h4 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .quick-action-card p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .contact-hero {
+                padding: 10rem 0 3rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-form-wrapper {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <a href="index.html" class="logo">VINTUS<span>.</span></a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="features.html">Services</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html" class="active">Contact</a></li>
+        </ul>
+        <a href="contact.html" class="nav-cta">Free Consultation</a>
+        <div class="mobile-menu" id="mobileMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobileNav">
+        <a href="index.html">Home</a>
+        <a href="features.html">Services</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="contact.html" class="btn-outline" style="margin-top: 2rem;">Free Consultation</a>
+    </div>
+
+    <!-- Contact Hero -->
+    <section class="contact-hero">
+        <div class="container">
+            <div class="section-label reveal">Get In Touch</div>
+            <h1 class="reveal" style="font-family: var(--font-heading); font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">Let's Talk Goals,<br><span style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Growth, and Greatness.</span></h1>
+            <p class="reveal" style="color: var(--gray); font-size: 1.2rem; max-width: 600px; margin: 0 auto;">Ready to stop guessing and start executing with precision and excellence? Reach out today.</p>
+        </div>
+    </section>
+
+    <!-- Main Contact Section -->
+    <section style="padding: 4rem 0 var(--section-padding);">
+        <div class="container contact-grid">
+            <!-- Contact Info -->
+            <div>
+                <h2 class="reveal" style="font-family: var(--font-heading); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2rem;">Contact Information</h2>
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 3rem;">
+                    <div class="contact-info-card reveal">
+                        <div class="contact-info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                        </div>
+                        <div class="contact-info-text">
+                            <h4>Email</h4>
+                            <a href="mailto:vintusperformance@gmail.com">vintusperformance@gmail.com</a>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card reveal">
+                        <div class="contact-info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                        </div>
+                        <div class="contact-info-text">
+                            <h4>Location</h4>
+                            <p>Morristown, NJ<br><span style="font-size: 0.9rem;">Remote Training Available Worldwide</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media -->
+                <h3 class="reveal" style="font-family: var(--font-heading); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1.5rem;">Follow Along</h3>
+                <div class="reveal" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem;">
+                    <a href="https://www.instagram.com/vintusofficial/" target="_blank" style="display: flex; align-items: center; gap: 1rem; color: var(--gray); text-decoration: none; padding: 1rem; background: var(--black-card); border: 1px solid var(--border-color); transition: all var(--transition-normal);" onmouseover="this.style.borderColor='var(--silver)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--silver)">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                        <div>
+                            <strong style="color: var(--off-white); display: block;">@vintusofficial</strong>
+                            <span style="font-size: 0.85rem;">Vintus Performance</span>
+                        </div>
+                    </a>
+                    <a href="https://www.instagram.com/santyfit_/" target="_blank" style="display: flex; align-items: center; gap: 1rem; color: var(--gray); text-decoration: none; padding: 1rem; background: var(--black-card); border: 1px solid var(--border-color); transition: all var(--transition-normal);" onmouseover="this.style.borderColor='var(--silver)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--silver)">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                        <div>
+                            <strong style="color: var(--off-white); display: block;">@santyfit_</strong>
+                            <span style="font-size: 0.85rem;">Anthony Santos - Personal</span>
+                        </div>
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61585862086039" target="_blank" style="display: flex; align-items: center; gap: 1rem; color: var(--gray); text-decoration: none; padding: 1rem; background: var(--black-card); border: 1px solid var(--border-color); transition: all var(--transition-normal);" onmouseover="this.style.borderColor='var(--silver)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--silver)">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <div>
+                            <strong style="color: var(--off-white); display: block;">Anthony Santos</strong>
+                            <span style="font-size: 0.85rem;">Facebook</span>
+                        </div>
+                    </a>
+                    <a href="https://www.tiktok.com/@santy.fit" target="_blank" style="display: flex; align-items: center; gap: 1rem; color: var(--gray); text-decoration: none; padding: 1rem; background: var(--black-card); border: 1px solid var(--border-color); transition: all var(--transition-normal);" onmouseover="this.style.borderColor='var(--silver)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--silver)">
+                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                        </svg>
+                        <div>
+                            <strong style="color: var(--off-white); display: block;">@santy.fit</strong>
+                            <span style="font-size: 0.85rem;">TikTok</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="reveal" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 2rem 0; border-top: 1px solid var(--border-color);">
+                    <div style="text-align: center;">
+                        <div style="font-family: var(--font-heading); font-size: 2rem; font-weight: 700; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">6+</div>
+                        <div style="font-size: 0.8rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px;">Years</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-family: var(--font-heading); font-size: 2rem; font-weight: 700; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ISSA</div>
+                        <div style="font-size: 0.8rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px;">Certified</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-family: var(--font-heading); font-size: 2rem; font-weight: 700; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">70.3</div>
+                        <div style="font-size: 0.8rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px;">Ironman</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="contact-form-wrapper reveal">
+                <h2 style="font-family: var(--font-heading); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem;">Send a Message</h2>
+                <p style="color: var(--gray); margin-bottom: 2rem;">Fill out the form below and I'll get back to you within 24 hours.</p>
+
+                <form action="#" method="POST" id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name *</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name *</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interest">I'm Interested In *</label>
+                        <select id="interest" name="interest" required>
+                            <option value="">Select an option</option>
+                            <option value="consultation">Free Consultation</option>
+                            <option value="private">Private Coaching ($500/mo)</option>
+                            <option value="30-day">30-Day Training Plan ($99)</option>
+                            <option value="60-day">60-Day Training Plan ($149)</option>
+                            <option value="90-day">90-Day Training Plan ($199)</option>
+                            <option value="nutrition">Premium Nutrition Plan</option>
+                            <option value="30min">30-Minute Session</option>
+                            <option value="60min">60-Minute Training Session</option>
+                            <option value="other">Other / General Inquiry</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="goals">Tell Me About Your Goals</label>
+                        <textarea id="goals" name="goals" rows="5" placeholder="What are you looking to achieve? What's your current fitness level? Any specific challenges?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="referral">How Did You Hear About Us?</label>
+                        <select id="referral" name="referral">
+                            <option value="">Select an option</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="google">Google Search</option>
+                            <option value="referral">Friend/Family Referral</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="form-submit">
+                        Send Message
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 0.5rem; vertical-align: middle;">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </form>
+
+                <p style="color: var(--gray-dark); font-size: 0.85rem; margin-top: 1.5rem; text-align: center;">
+                    By submitting this form, you agree to be contacted regarding Vintus Performance services.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section style="padding: var(--section-padding) 0; background: var(--black-light);">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label reveal">Quick Actions</div>
+                <h2 class="reveal">Ready to <span class="accent">Get Started</span>?</h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                <div class="quick-action-card reveal">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--silver)" stroke-width="1.5" style="margin-bottom: 1rem;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <h4>Book Free Consultation</h4>
+                    <p>Schedule a call to discuss your goals and find the perfect program.</p>
+                    <a href="#contactForm" class="btn-outline" style="width: 100%;">Schedule Now</a>
+                </div>
+
+                <div class="quick-action-card reveal">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--silver)" stroke-width="1.5" style="margin-bottom: 1rem;">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <h4>View Programs</h4>
+                    <p>Explore training plans, nutrition plans, and coaching options.</p>
+                    <a href="features.html" class="btn-outline" style="width: 100%;">See All Services</a>
+                </div>
+
+                <div class="quick-action-card reveal">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--silver)" stroke-width="1.5" style="margin-bottom: 1rem;">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <h4>Email Directly</h4>
+                    <p>Have a quick question? Send an email anytime.</p>
+                    <a href="mailto:vintusperformance@gmail.com" class="btn-outline" style="width: 100%;">Send Email</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section style="padding: var(--section-padding) 0;">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label reveal">FAQ</div>
+                <h2 class="reveal">Common <span class="accent">Questions</span></h2>
+            </div>
+
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <div class="reveal" style="border-bottom: 1px solid var(--border-color); padding: 1.5rem 0;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">How quickly will I hear back?</h4>
+                    <p style="color: var(--gray); line-height: 1.7;">I typically respond to all inquiries within 24 hours. For urgent matters, feel free to send a DM on Instagram.</p>
+                </div>
+                <div class="reveal" style="border-bottom: 1px solid var(--border-color); padding: 1.5rem 0;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">Do you offer in-person training?</h4>
+                    <p style="color: var(--gray); line-height: 1.7;">Yes! I'm based in Morristown, NJ and offer in-person training locally. Remote/online coaching is also available worldwide.</p>
+                </div>
+                <div class="reveal" style="border-bottom: 1px solid var(--border-color); padding: 1.5rem 0;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">What's included in the free consultation?</h4>
+                    <p style="color: var(--gray); line-height: 1.7;">The free consultation is a no-pressure call where we discuss your goals, current fitness level, and which program might be the best fit for you. There's no obligation to purchase anything.</p>
+                </div>
+                <div class="reveal" style="border-bottom: 1px solid var(--border-color); padding: 1.5rem 0;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">How do payments work?</h4>
+                    <p style="color: var(--gray); line-height: 1.7;">Training plans are one-time payments. Private coaching is $500/month, billed once per month. All payments are processed securely and you can cancel private coaching at any time.</p>
+                </div>
+                <div class="reveal" style="padding: 1.5rem 0;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem;">I'm a complete beginner. Is this right for me?</h4>
+                    <p style="color: var(--gray); line-height: 1.7;">Absolutely. Programs are tailored to your current fitness level, whether you're a complete beginner or an experienced athlete. The free consultation helps me understand exactly where you're starting from.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <a href="index.html" class="logo">VINTUS<span>.</span></a>
+                </div>
+                <ul class="footer-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="features.html">Services</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Vintus Performance. Discipline Within, Dominance Beyond.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script>
+        // Pre-select interest from URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const interest = urlParams.get('interest');
+            if (interest) {
+                const selectElement = document.getElementById('interest');
+                if (selectElement) {
+                    selectElement.value = interest;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
