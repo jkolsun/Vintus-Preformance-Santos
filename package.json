@@ -1,0 +1,15 @@
+{
+  "name": "vintus-performance",
+  "version": "1.0.0",
+  "description": "Vintus Performance - Elite Personal Training Website",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "googleapis": "^126.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
