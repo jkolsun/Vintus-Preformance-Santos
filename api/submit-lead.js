@@ -1,32 +1,76 @@
 /**
- * Vercel Serverless Function: Submit Lead to Google Sheets
+ * Vercel Serverless Function: Submit Lead to Vintus CRM (Google Sheets)
  *
- * This function receives quiz data and writes it to a Google Sheet.
- *
- * Required Environment Variables (set in Vercel Dashboard):
- * - GOOGLE_SHEETS_PRIVATE_KEY: The private key from your service account JSON
- * - GOOGLE_SHEETS_CLIENT_EMAIL: The client email from your service account JSON
- * - GOOGLE_SHEETS_SPREADSHEET_ID: The ID of your Google Spreadsheet
- *
- * Setup Instructions:
- * 1. Go to Google Cloud Console (https://console.cloud.google.com)
- * 2. Create a new project or select existing one
- * 3. Enable the Google Sheets API
- * 4. Create a Service Account (IAM & Admin > Service Accounts)
- * 5. Create and download a JSON key for the service account
- * 6. Share your Google Sheet with the service account email (Editor access)
- * 7. Add the environment variables to Vercel project settings
+ * Columns: Timestamp | First Name | Last Name | Email | Phone | Primary Goal |
+ *          Training Days | Experience | Challenge | Source | Intent |
+ *          Booking Status | Booked Time | Notes
  */
 
 const { google } = require('googleapis');
 
-// CORS headers
-const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-};
+// Intent detection based on quiz answers
+function detectIntent(data) {
+    let score = 0;
+
+    // High-commitment training schedule = higher intent
+    if (data.training_days === '6+') score += 3;
+    else if (data.training_days === '4-5') score += 2;
+    else if (data.training_days === '2-3') score += 1;
+
+    // Experience level - intermediate/advanced usually more serious
+    if (data.experience === 'advanced') score += 2;
+    else if (data.experience === 'intermediate') score += 2;
+    else if (data.experience === 'beginner') score += 1;
+
+    // Challenge type - some indicate higher buying intent
+    if (data.challenge === 'no-results') score += 3; // Frustrated, wants solution
+    else if (data.challenge === 'structure') score += 2; // Needs accountability
+    else if (data.challenge === 'energy') score += 1;
+    else if (data.challenge === 'unsure') score += 1;
+
+    // Goal specificity
+    if (data.primary_goal === 'build-muscle' || data.primary_goal === 'lose-fat') score += 2;
+    else if (data.primary_goal === 'well-rounded') score += 2;
+    else if (data.primary_goal === 'endurance') score += 1;
+
+    // Classify intent
+    if (score >= 8) return 'High';
+    if (score >= 5) return 'Medium';
+    return 'Low';
+}
+
+// Format goal for readability
+function formatGoal(goal, otherText) {
+    const goalMap = {
+        'build-muscle': 'Build Muscle',
+        'lose-fat': 'Lose Fat',
+        'endurance': 'Improve Endurance',
+        'well-rounded': 'Well-Rounded',
+        'other': otherText || 'Other'
+    };
+    return goalMap[goal] || goal || '';
+}
+
+// Format challenge for readability
+function formatChallenge(challenge) {
+    const challengeMap = {
+        'structure': 'Lack of Structure/Accountability',
+        'no-results': 'Not Seeing Results',
+        'energy': 'Inconsistent Energy/Recovery',
+        'unsure': 'Unsure How to Train/Fuel'
+    };
+    return challengeMap[challenge] || challenge || '';
+}
+
+// Format experience for readability
+function formatExperience(exp) {
+    const expMap = {
+        'beginner': 'Beginner',
+        'intermediate': 'Intermediate',
+        'advanced': 'Advanced'
+    };
+    return expMap[exp] || exp || '';
+}
 
 module.exports = async (req, res) => {
     // Handle CORS preflight
@@ -58,26 +102,29 @@ module.exports = async (req, res) => {
         const clientEmail = process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
         const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
 
-        if (!privateKey || !clientEmail || !spreadsheetId) {
-            console.log('Google Sheets credentials not configured. Storing lead locally.');
+        // Detect lead intent
+        const intent = detectIntent(data);
 
-            // In development or if credentials aren't set, just log and return success
-            console.log('Lead received:', {
+        if (!privateKey || !clientEmail || !spreadsheetId) {
+            console.log('Google Sheets credentials not configured. Lead data:');
+            console.log({
                 timestamp: data.timestamp || new Date().toISOString(),
                 name: `${data.first_name} ${data.last_name}`,
                 email: data.email,
                 phone: data.phone,
-                goal: data.primary_goal,
+                goal: formatGoal(data.primary_goal, data.primary_goal_other),
                 days: data.training_days,
-                experience: data.experience,
-                challenge: data.challenge,
-                source: data.source
+                experience: formatExperience(data.experience),
+                challenge: formatChallenge(data.challenge),
+                source: data.source,
+                intent: intent
             });
 
             res.status(200).json({
                 success: true,
-                message: 'Lead captured successfully (local mode)',
-                leadId: `local_${Date.now()}`
+                message: 'Lead captured (local mode)',
+                leadId: `local_${Date.now()}`,
+                intent: intent
             });
             return;
         }
@@ -93,7 +140,10 @@ module.exports = async (req, res) => {
 
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Prepare row data
+        // Prepare row data matching CRM columns:
+        // Timestamp | First Name | Last Name | Email | Phone | Primary Goal |
+        // Training Days | Experience | Challenge | Source | Intent |
+        // Booking Status | Booked Time | Notes
         const timestamp = data.timestamp || new Date().toISOString();
         const row = [
             timestamp,
@@ -101,18 +151,21 @@ module.exports = async (req, res) => {
             data.last_name || '',
             data.email || '',
             data.phone || '',
-            data.primary_goal || '',
+            formatGoal(data.primary_goal, data.primary_goal_other),
             data.training_days || '',
-            data.experience || '',
-            data.challenge || '',
+            formatExperience(data.experience),
+            formatChallenge(data.challenge),
             data.source || 'quiz',
-            'New' // Status column
+            intent,
+            'New', // Booking Status
+            '',    // Booked Time (empty until they book)
+            ''     // Notes (empty for now)
         ];
 
-        // Append to Google Sheet
+        // Append to Google Sheet (Sheet1 is default)
         await sheets.spreadsheets.values.append({
             spreadsheetId,
-            range: 'Leads!A:K', // Adjust sheet name and range as needed
+            range: 'Sheet1!A:N',
             valueInputOption: 'USER_ENTERED',
             insertDataOption: 'INSERT_ROWS',
             requestBody: {
@@ -120,18 +173,18 @@ module.exports = async (req, res) => {
             }
         });
 
-        console.log('Lead saved to Google Sheets:', data.email);
+        console.log(`Lead saved: ${data.email} | Intent: ${intent}`);
 
         res.status(200).json({
             success: true,
             message: 'Lead captured successfully',
-            leadId: `gs_${Date.now()}`
+            leadId: `gs_${Date.now()}`,
+            intent: intent
         });
 
     } catch (error) {
         console.error('Error saving lead:', error);
 
-        // Don't expose internal errors to client
         res.status(500).json({
             success: false,
             message: 'An error occurred. Please try again.'
