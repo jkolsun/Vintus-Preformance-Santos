@@ -647,6 +647,14 @@ function throttle(func, limit) {
             if (heroQuizProgress) {
                 heroQuizProgress.style.width = '100%';
             }
+
+            // Hide carousel navigation buttons
+            const carouselNav = document.querySelector('.carousel-nav');
+            const carouselDots = document.querySelector('.carousel-dots');
+            const carouselProgress = document.querySelector('.carousel-progress');
+            if (carouselNav) carouselNav.style.display = 'none';
+            if (carouselDots) carouselDots.style.display = 'none';
+            if (carouselProgress) carouselProgress.style.display = 'none';
         }
 
         // Initialize progress

@@ -786,6 +786,7 @@ nav.scrolled .logo-img {
     z-index: 5;
     padding-top: 100px;
     padding-bottom: 120px;
+    overflow-y: auto;
 }
 
 .hero-form-wrapper {
@@ -1205,6 +1206,7 @@ nav.scrolled .logo-img {
 /* Quiz Results */
 .hero-quiz-results {
     animation: fadeInUp 0.5s ease forwards;
+    padding-bottom: 2rem;
 }
 
 .hero-quiz-results .hero-quiz-header h2 {
@@ -1222,10 +1224,32 @@ nav.scrolled .logo-img {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
     padding: 1.5rem;
+    padding-right: 1rem;
     margin-bottom: 2rem;
-    font-size: 0.95rem;
-    line-height: 1.7;
+    font-size: 0.9rem;
+    line-height: 1.6;
     color: var(--gray-light);
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for AI content */
+.hero-quiz-ai-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.hero-quiz-ai-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.hero-quiz-ai-content::-webkit-scrollbar-thumb {
+    background: var(--silver-dark);
+    border-radius: 4px;
+}
+
+.hero-quiz-ai-content::-webkit-scrollbar-thumb:hover {
+    background: var(--silver);
 }
 
 .hero-quiz-ai-content p {
