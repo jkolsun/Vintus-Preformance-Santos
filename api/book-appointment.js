@@ -59,9 +59,11 @@ module.exports = async (req, res) => {
                 const calendar = google.calendar({ version: 'v3', auth });
 
                 // Create event with Google Meet
+                // Note: Service accounts can't invite external attendees without Domain-Wide Delegation
+                // So we create the event without attendees - client info is in the description
                 const event = {
                     summary: `Strategy Call - ${name}`,
-                    description: `Free Strategy Call with ${name}\n\nContact: ${email}\nPhone: ${phone}\n\nBooked via Vintus Performance website.`,
+                    description: `Free Strategy Call with ${name}\n\nClient Email: ${email}\nClient Phone: ${phone}\n\nBooked via Vintus Performance website.\n\nIMPORTANT: Please send the Meet link to the client manually or set up automated emails.`,
                     start: {
                         dateTime: startTime.toISOString(),
                         timeZone: 'America/New_York'
@@ -70,9 +72,6 @@ module.exports = async (req, res) => {
                         dateTime: endTime.toISOString(),
                         timeZone: 'America/New_York'
                     },
-                    attendees: [
-                        { email: email }
-                    ],
                     conferenceData: {
                         createRequest: {
                             requestId: `vintus-${Date.now()}`,
@@ -83,7 +82,7 @@ module.exports = async (req, res) => {
                         useDefault: false,
                         overrides: [
                             { method: 'email', minutes: 24 * 60 }, // 1 day before
-                            { method: 'email', minutes: 60 },      // 1 hour before
+                            { method: 'popup', minutes: 60 },      // 1 hour before
                             { method: 'popup', minutes: 30 }       // 30 min before
                         ]
                     }
@@ -92,8 +91,7 @@ module.exports = async (req, res) => {
                 const response = await calendar.events.insert({
                     calendarId,
                     resource: event,
-                    conferenceDataVersion: 1,
-                    sendUpdates: 'all' // Send email invites to attendees
+                    conferenceDataVersion: 1
                 });
 
                 calendarEventId = response.data.id;
