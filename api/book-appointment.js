@@ -206,8 +206,8 @@ module.exports = async (req, res) => {
                 // Note: Service accounts can't create Meet links for personal Gmail accounts
                 // Santi can add a Meet link manually from the calendar
                 const event = {
-                    summary: `Strategy Call - ${name}`,
-                    description: `Free Strategy Call with ${name}\n\nClient Email: ${email}\nClient Phone: ${phone}\n\nBooked via Vintus Performance website.\n\nTo add video call: Open this event in Google Calendar and click "Add Google Meet video conferencing"`,
+                    summary: `🆓 FREE Consultation Call - ${name}`,
+                    description: `FREE CONSULTATION CALL (Not a form submission)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nClient: ${name}\nEmail: ${email}\nPhone: ${phone}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nThis is a scheduled FREE consultation call booked directly through the Vintus Performance calendar.\n\nTo add video call: Open this event in Google Calendar and click "Add Google Meet video conferencing"`,
                     start: {
                         dateTime: startDateTimeStr,
                         timeZone: 'America/New_York'

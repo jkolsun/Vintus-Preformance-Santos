@@ -109,51 +109,42 @@ module.exports = async (req, res) => {
         const bookedSlots = {};
 
         // Process events into booked slots
+        // Block all 30-minute slots that overlap with calendar events
         events.forEach(event => {
-            if (!event.start || !event.start.dateTime) return;
+            // Handle both timed events and all-day events
+            const startTime = event.start.dateTime ? new Date(event.start.dateTime) : null;
+            const endTime = event.end.dateTime ? new Date(event.end.dateTime) : null;
 
-            const start = new Date(event.start.dateTime);
-            const dateKey = `${start.getFullYear()}-${(start.getMonth() + 1).toString().padStart(2, '0')}-${start.getDate().toString().padStart(2, '0')}`;
-            const timeKey = `${start.getHours()}:${start.getMinutes().toString().padStart(2, '0')}`;
+            // Skip all-day events (they don't have dateTime)
+            if (!startTime || !endTime) return;
 
-            if (!bookedSlots[dateKey]) {
-                bookedSlots[dateKey] = [];
+            // Block all 30-minute slots that this event covers
+            let slotTime = new Date(startTime);
+            // Round down to nearest 30 min slot
+            slotTime.setMinutes(slotTime.getMinutes() < 30 ? 0 : 30, 0, 0);
+
+            while (slotTime < endTime) {
+                const dateKey = `${slotTime.getFullYear()}-${(slotTime.getMonth() + 1).toString().padStart(2, '0')}-${slotTime.getDate().toString().padStart(2, '0')}`;
+                const timeKey = `${slotTime.getHours()}:${slotTime.getMinutes().toString().padStart(2, '0')}`;
+
+                if (!bookedSlots[dateKey]) {
+                    bookedSlots[dateKey] = [];
+                }
+
+                // Only add if not already in the list
+                if (!bookedSlots[dateKey].includes(timeKey)) {
+                    bookedSlots[dateKey].push(timeKey);
+                }
+
+                // Move to next 30-minute slot
+                slotTime.setMinutes(slotTime.getMinutes() + 30);
             }
-            bookedSlots[dateKey].push(timeKey);
         });
 
-        // Add some strategic "busy" slots for social proof
-        // This makes the calendar look realistically busy
-        const enhancedSlots = { ...bookedSlots };
-        for (let i = 0; i < CONFIG.maxAdvanceDays; i++) {
-            const date = new Date(now);
-            date.setDate(now.getDate() + i);
-
-            if (!CONFIG.availableDays.includes(date.getDay())) continue;
-
-            const dateKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-
-            if (!enhancedSlots[dateKey]) {
-                enhancedSlots[dateKey] = [];
-            }
-
-            // Add 2-4 strategic "buffer" blocks per day
-            const bufferCount = 2 + Math.floor(Math.random() * 3);
-            const availableForBuffer = CONFIG.availableHours.filter(h =>
-                !enhancedSlots[dateKey].some(t => t.startsWith(`${h}:`))
-            );
-
-            for (let b = 0; b < bufferCount && availableForBuffer.length > 0; b++) {
-                const randomIndex = Math.floor(Math.random() * availableForBuffer.length);
-                const hour = availableForBuffer.splice(randomIndex, 1)[0];
-                const minute = Math.random() < 0.5 ? 0 : 30;
-                enhancedSlots[dateKey].push(`${hour}:${minute.toString().padStart(2, '0')}`);
-            }
-        }
-
         res.status(200).json({
-            bookedSlots: enhancedSlots,
-            source: 'calendar'
+            bookedSlots: bookedSlots,
+            source: 'calendar',
+            eventCount: events.length
         });
 
     } catch (error) {
