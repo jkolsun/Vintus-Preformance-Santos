@@ -149,10 +149,25 @@ module.exports = async (req, res) => {
         const clientEmail = process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
         const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
 
-        // Parse the time
+        // Parse the time - keep as Eastern Time values (don't convert to UTC)
         const [hour, minute] = time.split(':').map(Number);
         const [year, month, day] = date.split('-').map(Number);
 
+        // Format datetime strings for Google Calendar (Eastern Time)
+        // Use format: YYYY-MM-DDTHH:mm:ss (no timezone, let Google Calendar apply the timeZone parameter)
+        const pad = (n) => n.toString().padStart(2, '0');
+        const startDateTimeStr = `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00`;
+
+        // End time is 30 minutes later
+        let endHour = hour;
+        let endMinute = minute + 30;
+        if (endMinute >= 60) {
+            endMinute -= 60;
+            endHour += 1;
+        }
+        const endDateTimeStr = `${year}-${pad(month)}-${pad(day)}T${pad(endHour)}:${pad(endMinute)}:00`;
+
+        // For display purposes, create a date object (used for email/sheets formatting)
         const startTime = new Date(year, month - 1, day, hour, minute);
         const endTime = new Date(startTime.getTime() + 30 * 60 * 1000); // 30 minutes
 
@@ -179,11 +194,11 @@ module.exports = async (req, res) => {
                     summary: `Strategy Call - ${name}`,
                     description: `Free Strategy Call with ${name}\n\nClient Email: ${email}\nClient Phone: ${phone}\n\nBooked via Vintus Performance website.\n\nTo add video call: Open this event in Google Calendar and click "Add Google Meet video conferencing"`,
                     start: {
-                        dateTime: startTime.toISOString(),
+                        dateTime: startDateTimeStr,
                         timeZone: 'America/New_York'
                     },
                     end: {
-                        dateTime: endTime.toISOString(),
+                        dateTime: endDateTimeStr,
                         timeZone: 'America/New_York'
                     },
                     reminders: {
