@@ -22,66 +22,81 @@ async function sendConfirmationEmail({ name, email, date, time, meetLink }) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f4;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
     <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-            <!-- Header -->
-            <div style="padding: 40px 40px 20px; text-align: center;">
-                <h1 style="color: #f5c518; margin: 0; font-size: 28px; font-weight: 700;">VINTUS PERFORMANCE</h1>
-                <p style="color: #ffffff; margin: 10px 0 0; font-size: 14px; letter-spacing: 2px;">ELITE COACHING</p>
+        <div style="background: #0a0a0a; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+            <!-- Header with Logo -->
+            <div style="padding: 40px 40px 20px; text-align: center; border-bottom: 1px solid #222222;">
+                <img src="https://vintusperformance.org/images/Vintus_LOGO.PNG" alt="Vintus Performance" style="max-width: 180px; height: auto; margin-bottom: 10px;">
             </div>
 
             <!-- Content -->
-            <div style="padding: 20px 40px 40px;">
-                <div style="background: rgba(245, 197, 24, 0.1); border-left: 4px solid #f5c518; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
-                    <h2 style="color: #f5c518; margin: 0 0 5px; font-size: 20px;">You're Booked!</h2>
-                    <p style="color: #cccccc; margin: 0; font-size: 14px;">Your strategy call is confirmed</p>
+            <div style="padding: 30px 40px 40px;">
+                <div style="background: #141414; border-left: 4px solid #c0c0c0; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
+                    <h2 style="color: #ffffff; margin: 0 0 5px; font-size: 20px;">You're Booked!</h2>
+                    <p style="color: #888888; margin: 0; font-size: 14px;">Your strategy call is confirmed</p>
                 </div>
 
-                <p style="color: #ffffff; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
+                <p style="color: #e5e5e5; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
                     Hey ${firstName},<br><br>
                     Your free strategy call has been scheduled. I'm looking forward to learning about your fitness goals and showing you how we can get you there.
                 </p>
 
                 <!-- Meeting Details Box -->
-                <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-                    <h3 style="color: #f5c518; margin: 0 0 20px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Meeting Details</h3>
+                <div style="background: #141414; border-radius: 12px; padding: 25px; margin-bottom: 25px; border: 1px solid #222222;">
+                    <h3 style="color: #c0c0c0; margin: 0 0 20px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Meeting Details</h3>
 
                     <div style="margin-bottom: 15px;">
-                        <p style="color: #888888; margin: 0 0 5px; font-size: 12px; text-transform: uppercase;">Date</p>
+                        <p style="color: #666666; margin: 0 0 5px; font-size: 12px; text-transform: uppercase;">Date</p>
                         <p style="color: #ffffff; margin: 0; font-size: 18px; font-weight: 600;">${date}</p>
                     </div>
 
                     <div style="margin-bottom: 15px;">
-                        <p style="color: #888888; margin: 0 0 5px; font-size: 12px; text-transform: uppercase;">Time</p>
+                        <p style="color: #666666; margin: 0 0 5px; font-size: 12px; text-transform: uppercase;">Time</p>
                         <p style="color: #ffffff; margin: 0; font-size: 18px; font-weight: 600;">${time} (Eastern Time)</p>
                     </div>
 
                     ${meetLink ? `
                     <div>
-                        <p style="color: #888888; margin: 0 0 10px; font-size: 12px; text-transform: uppercase;">Video Call Link</p>
-                        <a href="${meetLink}" style="display: inline-block; background: #f5c518; color: #1a1a2e; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Join Google Meet</a>
+                        <p style="color: #666666; margin: 0 0 10px; font-size: 12px; text-transform: uppercase;">Video Call Link</p>
+                        <a href="${meetLink}" style="display: inline-block; background: #ffffff; color: #0a0a0a; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Join Google Meet</a>
                     </div>
                     ` : ''}
                 </div>
 
-                <p style="color: #cccccc; font-size: 14px; line-height: 1.6; margin: 0 0 25px;">
+                <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 0 0 25px;">
                     <strong style="color: #ffffff;">What to expect:</strong><br>
                     We'll discuss your current fitness level, goals, and create a roadmap to get you results. This is a no-pressure conversation - just real talk about what's possible for you.
                 </p>
 
-                <p style="color: #cccccc; font-size: 14px; line-height: 1.6; margin: 0;">
-                    See you soon,<br>
-                    <strong style="color: #f5c518;">Coach Santi</strong><br>
-                    Vintus Performance
-                </p>
+                <!-- Signature -->
+                <div style="border-top: 1px solid #222222; padding-top: 25px; margin-top: 25px;">
+                    <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 0 0 15px;">
+                        See you soon,<br>
+                        <strong style="color: #ffffff;">Coach Santos</strong><br>
+                        <span style="color: #666666;">Vintus Performance</span>
+                    </p>
+
+                    <!-- Social Media Icons -->
+                    <div style="margin-top: 20px;">
+                        <a href="https://www.instagram.com/vintusperformance" style="display: inline-block; margin-right: 12px; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style="width: 28px; height: 28px; border-radius: 6px;">
+                        </a>
+                        <a href="https://www.tiktok.com/@vintusperformance" style="display: inline-block; margin-right: 12px; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="width: 28px; height: 28px; border-radius: 6px;">
+                        </a>
+                        <a href="https://www.facebook.com/profile.php?id=61587130270730" style="display: inline-block; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/174/174848.png" alt="Facebook" style="width: 28px; height: 28px; border-radius: 6px;">
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Footer -->
         <div style="text-align: center; padding: 30px 20px;">
-            <p style="color: #888888; font-size: 12px; margin: 0;">
-                Vintus Performance | Elite Personal Training
+            <p style="color: #666666; font-size: 12px; margin: 0;">
+                Vintus Performance | Discipline Within, Dominance Beyond
             </p>
         </div>
     </div>
