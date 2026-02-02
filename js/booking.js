@@ -179,6 +179,17 @@
         state.isLoading = true;
         showLoading(true);
 
+        // Get quiz data from localStorage if available
+        let quizData = {};
+        try {
+            const stored = localStorage.getItem('vintusQuizData');
+            if (stored) {
+                quizData = JSON.parse(stored);
+            }
+        } catch (e) {
+            console.log('No quiz data found');
+        }
+
         const bookingData = {
             name: formData.get('name'),
             email: formData.get('email'),
@@ -191,7 +202,12 @@
                 state.selectedDate.getDate(),
                 parseInt(state.selectedTime.split(':')[0]),
                 parseInt(state.selectedTime.split(':')[1])
-            ).toISOString()
+            ).toISOString(),
+            // Include quiz personalization data
+            primary_goal: quizData.primary_goal || '',
+            training_days: quizData.training_days || '',
+            experience: quizData.experience || '',
+            challenge: quizData.challenge || ''
         };
 
         try {

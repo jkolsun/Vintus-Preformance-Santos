@@ -134,7 +134,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { name, email, phone, date, time, datetime } = req.body;
+        const { name, email, phone, date, time, datetime, primary_goal, training_days, experience, challenge } = req.body;
 
         // Validate required fields
         if (!name || !email || !date || !time) {
@@ -261,18 +261,18 @@ module.exports = async (req, res) => {
                 };
                 const bookedTimeFormatted = startTime.toLocaleString('en-US', options);
 
-                // Prepare row - check if this is updating an existing lead or new
+                // Prepare row with quiz personalization data if available
                 const row = [
                     new Date().toISOString(),           // Timestamp
                     name.split(' ')[0] || name,         // First Name
                     name.split(' ').slice(1).join(' ') || '', // Last Name
                     email,                               // Email
                     phone,                               // Phone
-                    '',                                  // Primary Goal
-                    '',                                  // Training Days
-                    '',                                  // Experience
-                    '',                                  // Challenge
-                    'booking-page',                      // Source
+                    primary_goal || '',                  // Primary Goal (from quiz)
+                    training_days || '',                 // Training Days (from quiz)
+                    experience || '',                    // Experience (from quiz)
+                    challenge || '',                     // Challenge (from quiz)
+                    primary_goal ? 'quiz + booking' : 'booking-page', // Source
                     'High',                              // Intent (booking = high intent)
                     'Booked',                            // Booking Status
                     bookedTimeFormatted,                 // Booked Time

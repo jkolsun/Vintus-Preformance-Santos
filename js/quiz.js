@@ -254,6 +254,18 @@
         elements.form.style.display = 'none';
         elements.backButton.style.display = 'none';
 
+        // Save quiz answers to localStorage for booking page
+        localStorage.setItem('vintusQuizData', JSON.stringify({
+            primary_goal: state.answers.primary_goal,
+            training_days: state.answers.training_days,
+            experience: state.answers.experience,
+            challenge: state.answers.challenge,
+            first_name: state.answers.first_name,
+            last_name: state.answers.last_name,
+            email: state.answers.email,
+            phone: state.answers.phone
+        }));
+
         // Generate AI summary
         generateAISummary();
 
