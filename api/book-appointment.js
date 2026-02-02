@@ -172,12 +172,12 @@ module.exports = async (req, res) => {
 
                 const calendar = google.calendar({ version: 'v3', auth });
 
-                // Create event with Google Meet
-                // Note: Service accounts can't invite external attendees without Domain-Wide Delegation
-                // So we create the event without attendees - client info is in the description
+                // Create calendar event
+                // Note: Service accounts can't create Meet links for personal Gmail accounts
+                // Santi can add a Meet link manually from the calendar
                 const event = {
                     summary: `Strategy Call - ${name}`,
-                    description: `Free Strategy Call with ${name}\n\nClient Email: ${email}\nClient Phone: ${phone}\n\nBooked via Vintus Performance website.\n\nIMPORTANT: Please send the Meet link to the client manually or set up automated emails.`,
+                    description: `Free Strategy Call with ${name}\n\nClient Email: ${email}\nClient Phone: ${phone}\n\nBooked via Vintus Performance website.\n\nTo add video call: Open this event in Google Calendar and click "Add Google Meet video conferencing"`,
                     start: {
                         dateTime: startTime.toISOString(),
                         timeZone: 'America/New_York'
@@ -185,12 +185,6 @@ module.exports = async (req, res) => {
                     end: {
                         dateTime: endTime.toISOString(),
                         timeZone: 'America/New_York'
-                    },
-                    conferenceData: {
-                        createRequest: {
-                            requestId: `vintus-${Date.now()}`,
-                            conferenceSolutionKey: { type: 'hangoutsMeet' }
-                        }
                     },
                     reminders: {
                         useDefault: false,
@@ -204,12 +198,10 @@ module.exports = async (req, res) => {
 
                 const response = await calendar.events.insert({
                     calendarId,
-                    resource: event,
-                    conferenceDataVersion: 1
+                    resource: event
                 });
 
                 calendarEventId = response.data.id;
-                meetLink = response.data.hangoutLink || response.data.conferenceData?.entryPoints?.[0]?.uri;
 
                 console.log(`Calendar event created: ${calendarEventId}`);
             } catch (calendarError) {
