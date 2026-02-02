@@ -3704,9 +3704,34 @@ footer {
 }
 
 /* Video grid with 9:16 aspect ratio */
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
 .video-grid .image-grid-item {
     aspect-ratio: 9 / 16;
     max-height: 600px;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.video-grid .image-grid-item.video-link {
+    cursor: pointer;
+}
+
+/* Always visible overlay for video grid */
+.image-grid-overlay.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.video-grid .image-grid-item:hover .image-grid-overlay.visible {
+    background: linear-gradient(transparent 30%, rgba(0, 0, 0, 0.95));
 }
 
 .image-grid-placeholder {
