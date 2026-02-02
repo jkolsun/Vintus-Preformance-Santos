@@ -97,7 +97,7 @@ async function sendConfirmationEmail({ name, email, date, time, meetLink }) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'Vintus Performance <bookings@vintusperformance.com>',
+                from: 'Vintus Performance <onboarding@resend.dev>',
                 to: email,
                 subject: `Your Strategy Call is Confirmed - ${date}`,
                 html: htmlContent
