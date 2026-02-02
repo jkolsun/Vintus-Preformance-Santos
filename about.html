@@ -190,6 +190,20 @@
             }
         }
 
+        @media (max-width: 1024px) {
+            /* Story section - stack columns on tablet */
+            .story-grid {
+                grid-template-columns: 1fr !important;
+                gap: 3rem !important;
+            }
+
+            /* What Makes Different section - stack columns on tablet */
+            .difference-grid {
+                grid-template-columns: 1fr !important;
+                gap: 3rem !important;
+            }
+        }
+
         @media (max-width: 768px) {
             .about-hero {
                 padding-top: 100px;
@@ -205,6 +219,16 @@
 
             .timeline-item::before {
                 left: -2rem;
+            }
+
+            /* Story section mobile refinements */
+            .story-grid h2 {
+                font-size: 1.8rem !important;
+            }
+
+            /* Difference section image on mobile */
+            .difference-grid .difference-image {
+                height: 300px !important;
             }
         }
     </style>
@@ -323,7 +347,7 @@
     <!-- The Story Section -->
     <section style="padding: var(--section-padding) 0;">
         <div class="container">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start;">
+            <div class="story-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start;">
                 <div>
                     <div class="section-label reveal">The Journey</div>
                     <h2 class="reveal" style="font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; text-transform: uppercase; line-height: 1.1; margin-bottom: 2rem;">From Personal Pursuit to<br><span style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Professional Mission</span></h2>
@@ -405,7 +429,7 @@
     <!-- What Makes Vintus Different -->
     <section style="padding: var(--section-padding) 0;">
         <div class="container">
-            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 5rem; align-items: center;">
+            <div class="difference-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 5rem; align-items: center;">
                 <div>
                     <div class="section-label reveal">The Difference</div>
                     <h2 class="reveal" style="font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; text-transform: uppercase; line-height: 1.1; margin-bottom: 2rem;">We Don't Guess.<br><span style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">We Engineer Results.</span></h2>
@@ -441,20 +465,32 @@
                 <h2 class="reveal">In <span class="accent">Action</span></h2>
             </div>
 
-            <div class="image-grid reveal">
-                <div class="image-grid-item"><span>Swimming</span></div>
-                <div class="image-grid-item"><span>Cycling</span></div>
-                <div class="image-grid-item"><span>Running</span></div>
-                <div class="image-grid-item"><span>Triathlon</span></div>
-                <div class="image-grid-item"><span>Training</span></div>
-                <div class="image-grid-item"><span>Gym</span></div>
-                <div class="image-grid-item"><span>Competition</span></div>
-                <div class="image-grid-item"><span>Finish Line</span></div>
+            <div class="image-grid reveal" style="grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 250px);">
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/home1.PNG'); background-position: center;"></div>
+                </div>
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/home2.PNG'); background-position: center top;"></div>
+                </div>
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/gallery3.PNG'); background-position: center;"></div>
+                </div>
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/gallery4.PNG'); background-position: center;"></div>
+                </div>
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/gallery5.PNG'); background-position: center;"></div>
+                </div>
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/gallery6.PNG'); background-position: center;"></div>
+                </div>
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/gallery7.PNG'); background-position: center;"></div>
+                </div>
+                <div class="image-grid-item">
+                    <div class="image-grid-item-inner" style="background-image: url('images/gallery8.PNG'); background-position: center;"></div>
+                </div>
             </div>
-
-            <p class="reveal" style="text-align: center; color: var(--gray); margin-top: 2rem; font-size: 0.9rem;">
-                Follow the journey on Instagram <a href="https://www.instagram.com/santyfit_/" target="_blank" style="color: var(--silver);">@santyfit_</a> and <a href="https://www.instagram.com/vintusofficial/" target="_blank" style="color: var(--silver);">@vintusofficial</a>
-            </p>
         </div>
     </section>
 

@@ -186,6 +186,42 @@
             .consultation-card .price {
                 font-size: 1.5rem;
             }
+
+            /* Video grid improvements for mobile */
+            .video-grid {
+                padding: 0 !important;
+                gap: 0.75rem !important;
+            }
+
+            .video-grid .image-grid-item {
+                max-height: 500px !important;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+
+            /* Pricing badge mobile adjustment */
+            .pricing-badge {
+                font-size: 0.65rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            /* Feature highlights mobile */
+            .feature-highlight {
+                padding: 1rem;
+            }
+
+            .feature-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .feature-text h4 {
+                font-size: 0.9rem;
+            }
+
+            .feature-text p {
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
@@ -443,7 +479,7 @@
 
     <!-- Parallax Motivation Section -->
     <section class="parallax-section" style="min-height: 50vh;">
-        <div class="parallax-bg" style="background-image: url('images/parallax-training.jpg');"></div>
+        <div class="parallax-bg" style="background-image: url('images/yesterday.PNG?v=2'); background-size: cover; background-position: center;"></div>
         <div class="parallax-overlay"></div>
         <div class="parallax-content reveal">
             <h2 style="font-size: clamp(2rem, 5vw, 3.5rem);">Your Only <span class="accent">Competition</span> Is Yesterday</h2>
@@ -749,8 +785,7 @@
             <a href="contact.html" class="btn-primary reveal">Start Your Assessment</a>
         </div>
         <div class="split-image">
-            <div class="split-image-inner" style="background-image: url('images/results-focus.jpg');"></div>
-            <div class="split-image-placeholder">Results Image</div>
+            <div class="split-image-inner" style="background-image: url('images/apart.PNG'); background-position: center top;"></div>
         </div>
     </section>
 

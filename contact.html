@@ -148,12 +148,37 @@
                 padding: 8rem 0 2rem;
             }
 
+            .contact-hero h1 {
+                font-size: clamp(2rem, 8vw, 3rem) !important;
+            }
+
             .form-row {
                 grid-template-columns: 1fr;
             }
 
             .contact-form-wrapper {
                 padding: 2rem;
+            }
+
+            /* Quick stats adjustment for mobile */
+            .quick-stats-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 0.5rem !important;
+            }
+
+            .quick-stats-grid > div {
+                padding: 0.5rem;
+            }
+
+            /* Social link cards on mobile */
+            .social-link-card {
+                padding: 0.75rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .contact-hero h1 {
+                font-size: 1.8rem !important;
             }
         }
     </style>
