@@ -3703,6 +3703,12 @@ footer {
     transform: scale(1.1);
 }
 
+/* Video grid with 9:16 aspect ratio */
+.video-grid .image-grid-item {
+    aspect-ratio: 9 / 16;
+    max-height: 600px;
+}
+
 .image-grid-placeholder {
     width: 100%;
     height: 100%;
@@ -3954,6 +3960,14 @@ footer {
         grid-column: span 1;
     }
 
+    .video-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .video-grid .image-grid-item {
+        max-height: 500px;
+    }
+
     .parallax-bg {
         background-attachment: scroll;
     }
@@ -3979,6 +3993,16 @@ footer {
     .image-grid {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: repeat(4, 180px);
+    }
+
+    .video-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .video-grid .image-grid-item {
+        max-height: 400px;
     }
 
     .scroll-text span {
