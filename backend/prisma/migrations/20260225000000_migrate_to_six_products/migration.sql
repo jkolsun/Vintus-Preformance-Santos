@@ -1,17 +1,12 @@
 -- AlterEnum: Replace old PlanTier values with new product tiers
--- Step 1: Add new values to the existing enum
-ALTER TYPE "PlanTier" ADD VALUE IF NOT EXISTS 'PRIVATE_COACHING';
-ALTER TYPE "PlanTier" ADD VALUE IF NOT EXISTS 'TRAINING_30DAY';
-ALTER TYPE "PlanTier" ADD VALUE IF NOT EXISTS 'TRAINING_60DAY';
-ALTER TYPE "PlanTier" ADD VALUE IF NOT EXISTS 'TRAINING_90DAY';
-ALTER TYPE "PlanTier" ADD VALUE IF NOT EXISTS 'NUTRITION_4WEEK';
-ALTER TYPE "PlanTier" ADD VALUE IF NOT EXISTS 'NUTRITION_8WEEK';
+-- NOTE: ADD VALUE is non-transactional in PostgreSQL, so new values
+-- already exist from the prior failed attempt. We skip straight to
+-- data migration and enum recreation.
 
--- Step 2: Migrate any existing rows from old tiers to new tiers
+-- Step 1: Migrate existing rows from old tiers to PRIVATE_COACHING
 UPDATE "Subscription" SET "planTier" = 'PRIVATE_COACHING' WHERE "planTier" IN ('FOUNDATION', 'PERFORMANCE', 'ELITE');
 
--- Step 3: Rename enum by creating new type, migrating column, and dropping old
--- (Cannot remove values from a Postgres enum, so we recreate it)
+-- Step 2: Recreate enum with only the 6 new values
 ALTER TYPE "PlanTier" RENAME TO "PlanTier_old";
 
 CREATE TYPE "PlanTier" AS ENUM ('PRIVATE_COACHING', 'TRAINING_30DAY', 'TRAINING_60DAY', 'TRAINING_90DAY', 'NUTRITION_4WEEK', 'NUTRITION_8WEEK');
