@@ -54,7 +54,9 @@ app.use(errorHandler);
 // ---------------------------------------------------------------------------
 const PORT = env.PORT;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Vintus Performance API running on port ${PORT}`);
+  console.log(`Environment: ${env.NODE_ENV}`);
   logger.info(`Vintus Performance API running on port ${PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
 
