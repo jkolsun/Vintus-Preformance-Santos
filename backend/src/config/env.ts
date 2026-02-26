@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   // Database
-  DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection string"),
+  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
   // Application
   FRONTEND_URL: z.string().url("FRONTEND_URL must be a valid URL"),
@@ -50,9 +50,9 @@ function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("❌ Invalid environment variables:");
+    console.log("FATAL: Invalid environment variables:");
     for (const issue of result.error.issues) {
-      console.error(`  → ${issue.path.join(".")}: ${issue.message}`);
+      console.log(`  -> ${issue.path.join(".")}: ${issue.message}`);
     }
     process.exit(1);
   }
