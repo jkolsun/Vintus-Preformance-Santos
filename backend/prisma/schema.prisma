@@ -1,0 +1,400 @@
+// schema.prisma — CANONICAL (Vintus Performance)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// AUTH & USER
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(CLIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  athleteProfile  AthleteProfile?
+  subscription    Subscription?
+  messageLogs     MessageLog[]
+  escalationEvents EscalationEvent[]
+  deviceConnections DeviceConnection[]
+  sessions        Session[]
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+  COACH
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// ATHLETE PROFILE & INTAKE
+// ============================================================
+
+model AthleteProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Intake survey data
+  firstName       String
+  lastName        String
+  phone           String?
+  timezone        String   @default("America/New_York")
+  dateOfBirth     DateTime?
+
+  // Goals & context
+  primaryGoal     String        // build-muscle | lose-fat | endurance | recomposition | well-rounded
+  secondaryGoals  String[]      // array of goals
+  trainingDaysPerWeek Int
+  preferredTrainingTime String? // morning | midday | evening
+  experienceLevel String        // beginner | intermediate | advanced | elite
+  currentActivity String?       // description of current routine
+  equipmentAccess String        // full-gym | home-gym | minimal | bodyweight-only
+  injuryHistory   String?       // free text
+  sleepSchedule   String?       // e.g. "11pm-6:30am"
+  stressLevel     Int?          // 1-10
+  occupation      String?
+  travelFrequency String?       // rarely | monthly | weekly
+  biggestChallenge String?      // structure | no-results | energy | unsure | free text
+
+  // AI classification output
+  personaType     String?       // executive-athlete | endurance-competitor | hybrid-builder | recovery-first
+  aiSummary       String?       // AI-generated summary paragraph
+  riskFlags       String[]      // injury, overtraining, etc.
+
+  // Routine questionnaire (post-purchase)
+  wakeTime        String?
+  bedTime         String?
+  mealsPerDay     Int?
+  hydrationLevel  String?       // low | moderate | good
+  supplementsUsed String?
+  recoveryPractices String[]    // foam-roll | stretch | sauna | cold-plunge | massage | none
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  readinessMetrics  ReadinessMetric[]
+  workoutPlans      WorkoutPlan[]
+}
+
+// ============================================================
+// READINESS & DAILY DATA
+// ============================================================
+
+model ReadinessMetric {
+  id              String   @id @default(cuid())
+  athleteProfileId String
+  athleteProfile  AthleteProfile @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
+
+  date            DateTime @db.Date
+  source          DataSource @default(MANUAL)
+
+  // Core metrics (nullable — not all sources provide all)
+  hrvMs           Float?       // HRV in milliseconds
+  restingHr       Int?         // bpm
+  sleepScore      Float?       // 0-100
+  sleepDurationMin Int?
+  fatigueScore    Float?       // 0-100 (higher = more fatigued)
+  stressScore     Float?       // 0-100
+  caloriesBurned  Int?
+  steps           Int?
+  vo2Estimate     Float?
+  trainingLoad    Float?       // TSS or equivalent
+  bodyWeight      Float?       // kg
+
+  // Manual check-in fields (MVP before wearables)
+  perceivedEnergy   Int?       // 1-10
+  perceivedSoreness Int?       // 1-10
+  perceivedMood     Int?       // 1-10
+  sleepQualityManual Int?      // 1-10
+  notes             String?
+
+  createdAt       DateTime @default(now())
+
+  @@unique([athleteProfileId, date, source])
+}
+
+enum DataSource {
+  MANUAL
+  STRAVA
+  GARMIN
+  APPLE_HEALTH
+  WHOOP
+  OURA
+  FITBIT
+  TRAININGPEAKS
+}
+
+// ============================================================
+// WORKOUT PLAN & SESSIONS
+// ============================================================
+
+model WorkoutPlan {
+  id              String   @id @default(cuid())
+  athleteProfileId String
+  athleteProfile  AthleteProfile @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
+
+  name            String         // e.g. "Week 3 — Build Phase"
+  weekNumber      Int
+  blockType       String         // base | build | peak | deload | recovery
+  startDate       DateTime @db.Date
+  endDate         DateTime @db.Date
+  isActive        Boolean  @default(true)
+
+  plannedTSS      Float?         // weekly target training stress
+  actualTSS       Float?         // accumulated
+
+  sessions        WorkoutSession[]
+  adjustmentLogs  AdjustmentLog[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model WorkoutSession {
+  id              String   @id @default(cuid())
+  workoutPlanId   String
+  workoutPlan     WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  scheduledDate   DateTime @db.Date
+  scheduledOrder  Int            // 1, 2, 3... for day ordering
+  sessionType     SessionType
+  title           String         // e.g. "Upper Body Strength A"
+  description     String?        // coach notes / AI explanation
+  prescribedDuration Int?        // minutes
+  prescribedTSS   Float?
+
+  // Workout content (JSON — exercises, sets, reps, zones, etc.)
+  content         Json           // structured workout data
+
+  // Completion tracking
+  status          SessionStatus @default(SCHEDULED)
+  completedAt     DateTime?
+  actualDuration  Int?           // minutes
+  actualTSS       Float?
+  rpe             Int?           // rate of perceived exertion 1-10
+  athleteNotes    String?
+
+  // If rescheduled
+  originalDate    DateTime? @db.Date
+  rescheduledFrom String?        // ID of session this replaced
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum SessionType {
+  STRENGTH_UPPER
+  STRENGTH_LOWER
+  STRENGTH_FULL
+  STRENGTH_PUSH
+  STRENGTH_PULL
+  ENDURANCE_ZONE2
+  ENDURANCE_TEMPO
+  ENDURANCE_INTERVALS
+  HIIT
+  MOBILITY_RECOVERY
+  ACTIVE_RECOVERY
+  REST
+  CUSTOM
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  MISSED
+  SKIPPED
+  RESCHEDULED
+}
+
+// ============================================================
+// ADAPTIVE ADJUSTMENT LOG
+// ============================================================
+
+model AdjustmentLog {
+  id              String   @id @default(cuid())
+  workoutPlanId   String
+  workoutPlan     WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  triggerEvent    String        // missed_workout | low_hrv | high_fatigue | low_sleep | travel_week | deload_trigger
+  triggerData     Json?         // snapshot of the data that triggered this
+  adjustmentType  String        // reschedule | reduce_volume | reduce_intensity | swap_session | add_recovery | advance_deload
+  description     String        // human-readable explanation
+  affectedSessions String[]    // IDs of sessions modified
+
+  createdAt       DateTime @default(now())
+}
+
+// ============================================================
+// ADHERENCE TRACKING
+// ============================================================
+
+model AdherenceRecord {
+  id              String   @id @default(cuid())
+  userId          String
+  weekStartDate   DateTime @db.Date
+
+  scheduledCount  Int
+  completedCount  Int
+  missedCount     Int
+  skippedCount    Int
+  adherenceRate   Float          // 0.0 - 1.0
+
+  // Rolling window tracking
+  consecutiveMissed Int @default(0)
+  weeklyMissedStreak Int @default(0)
+
+  escalationTriggered Boolean @default(false)
+
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, weekStartDate])
+}
+
+// ============================================================
+// MESSAGING
+// ============================================================
+
+model MessageLog {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  channel         MessageChannel
+  category        MessageCategory
+  templateId      String?        // which template was used
+  content         String         // actual message sent
+  metadata        Json?          // any extra context
+
+  sentAt          DateTime @default(now())
+  deliveredAt     DateTime?
+  readAt          DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+
+  // Twilio/Resend tracking
+  externalId      String?        // SID or message ID from provider
+}
+
+enum MessageChannel {
+  SMS
+  EMAIL
+  PUSH
+  IN_APP
+}
+
+enum MessageCategory {
+  WELCOME
+  MOTIVATION
+  HUMOR
+  EDUCATION
+  ACCOUNTABILITY
+  RECOVERY_TIP
+  WORKOUT_COMPLETED
+  WORKOUT_MISSED
+  ESCALATION
+  CHECK_IN
+  SYSTEM
+}
+
+// ============================================================
+// ESCALATION
+// ============================================================
+
+model EscalationEvent {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  triggerReason   String         // 3_missed_workouts | no_checkin_5_days | high_fatigue_sustained
+  escalationLevel Int            // 1 = nudge, 2 = concern, 3 = book call
+  messageSent     Boolean @default(false)
+  messageLogId    String?
+  callBooked      Boolean @default(false)
+  resolvedAt      DateTime?
+  resolution      String?        // resumed | paused_subscription | churned | call_completed
+
+  createdAt       DateTime @default(now())
+}
+
+// ============================================================
+// SUBSCRIPTION & BILLING
+// ============================================================
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  planTier        PlanTier
+  stripeCustomerId    String?
+  stripeSubscriptionId String?
+  stripePriceId       String?
+
+  status          SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum PlanTier {
+  PRIVATE_COACHING     // $500/mo recurring subscription
+  TRAINING_30DAY       // $99 one-time, 30-day access
+  TRAINING_60DAY       // $149 one-time, 60-day access
+  TRAINING_90DAY       // $199 one-time, 90-day access
+  NUTRITION_4WEEK      // $229 one-time, 28-day access
+  NUTRITION_8WEEK      // $399 one-time, 56-day access
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  PAUSED
+  TRIALING
+}
+
+// ============================================================
+// DEVICE CONNECTIONS
+// ============================================================
+
+model DeviceConnection {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider        DataSource
+  accessToken     String?        // encrypted
+  refreshToken    String?        // encrypted
+  externalUserId  String?
+  scopes          String[]
+  isActive        Boolean  @default(true)
+  lastSyncAt      DateTime?
+  syncErrors      Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, provider])
+}

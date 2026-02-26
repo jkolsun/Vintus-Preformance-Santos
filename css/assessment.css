@@ -1,0 +1,497 @@
+/* Assessment Page — Vintus Performance (Expanded Intake Survey) */
+/* Extends quiz.css patterns for 8-step form with additional field types */
+
+.assessment-page {
+  min-height: 100vh;
+  background: var(--black);
+}
+
+/* ── Progress Bar ── */
+
+.assess-progress {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--black);
+  padding: 1rem 5%;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.assess-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.assess-progress-steps {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.assess-step {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-dark);
+  transition: all var(--transition-normal);
+}
+
+.assess-step.active {
+  border-color: var(--silver);
+  color: var(--silver);
+}
+
+.assess-step.completed {
+  background: var(--silver);
+  border-color: var(--silver);
+  color: var(--black);
+}
+
+/* ── Container ── */
+
+.assess-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 140px 1.5rem 4rem;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ── Slides ── */
+
+.assess-slide {
+  display: none;
+  animation: assessFadeIn 0.4s ease;
+}
+
+.assess-slide.active {
+  display: block;
+}
+
+@keyframes assessFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.assess-slide-content {
+  padding: 1rem 0;
+}
+
+.assess-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--silver-dark);
+  margin-bottom: 0.75rem;
+}
+
+.assess-slide-content h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--off-white);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.assess-subtitle {
+  color: var(--gray);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+/* ── Option Cards (single select) ── */
+
+.assess-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.assess-option {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  color: var(--off-white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  text-align: left;
+  width: 100%;
+}
+
+.assess-option:hover {
+  border-color: var(--silver-dark);
+  transform: translateX(5px);
+}
+
+.assess-option.selected {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.05);
+}
+
+.assess-option-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.assess-option-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: var(--silver-dark);
+  transition: stroke 0.3s ease;
+}
+
+.assess-option.selected .assess-option-icon {
+  background: var(--silver);
+  border-color: var(--silver);
+}
+
+.assess-option.selected .assess-option-icon svg {
+  stroke: var(--black);
+}
+
+.assess-option-text strong {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assess-option-text span {
+  display: block;
+  color: var(--gray);
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+/* ── Multi-select Checkboxes ── */
+
+.assess-checkboxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.assess-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.assess-checkbox:hover {
+  border-color: var(--silver-dark);
+}
+
+.assess-checkbox.checked {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.05);
+}
+
+.assess-checkbox-box {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.assess-checkbox.checked .assess-checkbox-box {
+  background: var(--silver);
+  border-color: var(--silver);
+}
+
+.assess-checkbox.checked .assess-checkbox-box::after {
+  content: '';
+  width: 6px;
+  height: 10px;
+  border: solid var(--black);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.assess-checkbox-label {
+  font-size: 0.9rem;
+  color: var(--off-white);
+}
+
+/* ── Form Fields (text, email, date, textarea) ── */
+
+.assess-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.assess-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.assess-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.assess-field label {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-light);
+  margin-bottom: 0.5rem;
+}
+
+.assess-field input,
+.assess-field select,
+.assess-field textarea {
+  padding: 1rem 1.25rem;
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  color: var(--off-white);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: border-color var(--transition-fast);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.assess-field input::placeholder,
+.assess-field textarea::placeholder {
+  color: var(--gray-dark);
+}
+
+.assess-field input:focus,
+.assess-field select:focus,
+.assess-field textarea:focus {
+  outline: none;
+  border-color: var(--silver);
+  box-shadow: 0 0 0 3px rgba(192, 192, 192, 0.1);
+}
+
+.assess-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.assess-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.25rem center;
+  padding-right: 3rem;
+}
+
+.assess-field select option {
+  background: var(--black);
+  color: var(--off-white);
+}
+
+/* ── Range Slider ── */
+
+.assess-slider-group {
+  margin-bottom: 1.5rem;
+}
+
+.assess-slider-group label {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-light);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.assess-slider-value {
+  color: var(--silver);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.assess-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border-color);
+  outline: none;
+  border-radius: 2px;
+}
+
+.assess-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: var(--silver);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.assess-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: var(--silver);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Navigation Buttons ── */
+
+.assess-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2.5rem;
+  gap: 1rem;
+}
+
+.assess-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--gray-light);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.assess-back:hover {
+  border-color: var(--silver);
+  color: var(--silver);
+}
+
+.assess-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+.assess-next,
+.assess-submit {
+  padding: 0.75rem 2rem;
+  background: var(--silver);
+  color: var(--black);
+  border: 2px solid var(--silver);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  margin-left: auto;
+}
+
+.assess-next:hover,
+.assess-submit:hover {
+  background: var(--white);
+  box-shadow: 0 10px 30px rgba(192, 192, 192, 0.2);
+}
+
+.assess-next:disabled,
+.assess-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Required Indicator ── */
+
+.required::after {
+  content: ' *';
+  color: var(--silver-dark);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .assess-fields-row {
+    grid-template-columns: 1fr;
+  }
+
+  .assess-checkboxes {
+    grid-template-columns: 1fr;
+  }
+
+  .assess-progress-steps {
+    gap: 0.25rem;
+  }
+
+  .assess-step {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .assess-container {
+    padding-top: 120px;
+  }
+
+  .assess-field input,
+  .assess-field textarea,
+  .assess-field select {
+    font-size: 16px; /* Prevent iOS zoom */
+  }
+
+  .assess-progress-steps {
+    display: none;
+  }
+}

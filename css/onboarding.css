@@ -1,0 +1,418 @@
+/* Onboarding Page — Vintus Performance */
+
+.onboarding-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboard-section {
+  flex: 1;
+  padding: 8rem 5% 4rem;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Step Indicator ── */
+
+.onboard-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+.onboard-step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border-color);
+  transition: all var(--transition-normal);
+}
+
+.onboard-step-dot.active {
+  background: var(--silver);
+  box-shadow: 0 0 8px rgba(192, 192, 192, 0.3);
+}
+
+.onboard-step-dot.completed {
+  background: var(--silver-dark);
+}
+
+.onboard-step-line {
+  width: 40px;
+  height: 2px;
+  background: var(--border-color);
+  transition: background var(--transition-normal);
+}
+
+.onboard-step-line.completed {
+  background: var(--silver-dark);
+}
+
+/* ── Steps ── */
+
+.onboard-step {
+  display: none;
+  animation: onboardFadeIn 0.4s ease;
+}
+
+.onboard-step.active {
+  display: block;
+}
+
+@keyframes onboardFadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.onboard-step h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--off-white);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.onboard-step > p {
+  color: var(--gray);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* ── Form Fields ── */
+
+.onboard-field {
+  margin-bottom: 1.5rem;
+}
+
+.onboard-field label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-light);
+  margin-bottom: 0.5rem;
+}
+
+.onboard-field input,
+.onboard-field select {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  color: var(--off-white);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: border-color var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.onboard-field input:focus,
+.onboard-field select:focus {
+  outline: none;
+  border-color: var(--silver);
+  box-shadow: 0 0 0 3px rgba(192, 192, 192, 0.1);
+}
+
+.onboard-field input::placeholder {
+  color: var(--gray-dark);
+}
+
+.onboard-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.25rem center;
+  padding-right: 3rem;
+}
+
+.onboard-field select option {
+  background: var(--black);
+  color: var(--off-white);
+}
+
+.onboard-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* ── Device Cards ── */
+
+.onboard-devices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.onboard-device {
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  text-align: center;
+  transition: all var(--transition-normal);
+  cursor: default;
+  position: relative;
+}
+
+.onboard-device-name {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--off-white);
+  margin-bottom: 0.5rem;
+}
+
+.onboard-device-status {
+  font-size: 0.8rem;
+  color: var(--gray-dark);
+}
+
+.onboard-device-status.available {
+  color: var(--silver);
+}
+
+.onboard-device.active-device {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.05);
+}
+
+/* ── Slider ── */
+
+.onboard-slider-group {
+  margin-bottom: 1.5rem;
+}
+
+.onboard-slider-group label {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-light);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.onboard-slider-value {
+  color: var(--silver);
+  font-weight: 600;
+}
+
+.onboard-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border-color);
+  outline: none;
+  border-radius: 2px;
+}
+
+.onboard-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  background: var(--silver);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--white);
+}
+
+.onboard-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: var(--silver);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--white);
+}
+
+/* ── Checkbox Group ── */
+
+.onboard-checkboxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.onboard-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.onboard-checkbox:hover {
+  border-color: var(--silver-dark);
+}
+
+.onboard-checkbox.checked {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.05);
+}
+
+.onboard-cb-box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.onboard-checkbox.checked .onboard-cb-box {
+  background: var(--silver);
+  border-color: var(--silver);
+}
+
+.onboard-checkbox.checked .onboard-cb-box::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid var(--black);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.onboard-cb-label {
+  font-size: 0.9rem;
+  color: var(--off-white);
+}
+
+/* ── Buttons ── */
+
+.onboard-btn {
+  width: 100%;
+  padding: 1.1rem;
+  background: var(--silver);
+  color: var(--black);
+  border: 2px solid var(--silver);
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  margin-top: 1rem;
+}
+
+.onboard-btn:hover {
+  background: var(--white);
+  box-shadow: 0 10px 30px rgba(192, 192, 192, 0.2);
+}
+
+.onboard-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.onboard-btn-secondary {
+  background: transparent;
+  color: var(--gray-light);
+  border-color: var(--border-color);
+}
+
+.onboard-btn-secondary:hover {
+  border-color: var(--silver);
+  color: var(--silver);
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ── Success Step ── */
+
+.onboard-success {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.onboard-success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 2rem;
+  border-radius: 50%;
+  border: 2px solid var(--silver);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboard-success-icon svg {
+  width: 40px;
+  height: 40px;
+  stroke: var(--silver);
+}
+
+.onboard-success h2 {
+  margin-bottom: 1rem;
+}
+
+.onboard-success p {
+  color: var(--gray);
+  margin-bottom: 2rem;
+}
+
+/* ── Error ── */
+
+.onboard-error {
+  background: rgba(220, 50, 50, 0.1);
+  border: 1px solid rgba(220, 50, 50, 0.3);
+  color: #f87171;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  display: none;
+}
+
+/* ── Password Requirements ── */
+
+.password-reqs {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--gray-dark);
+}
+
+@media (max-width: 768px) {
+  .onboard-fields-row {
+    grid-template-columns: 1fr;
+  }
+  .onboard-checkboxes {
+    grid-template-columns: 1fr;
+  }
+  .onboard-devices {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .onboard-field input,
+  .onboard-field select {
+    font-size: 16px;
+  }
+  .onboard-devices {
+    grid-template-columns: 1fr;
+  }
+}

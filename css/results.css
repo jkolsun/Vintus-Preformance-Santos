@@ -1,0 +1,362 @@
+/* Results Page — Vintus Performance */
+
+.results-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.results-section {
+  flex: 1;
+  padding: 8rem 5% 4rem;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.results-header h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--off-white);
+  margin-bottom: 0.75rem;
+}
+
+.results-header p {
+  color: var(--gray);
+  font-size: 1.05rem;
+}
+
+/* ── Loading State ── */
+
+.results-loading {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--gray);
+}
+
+.results-loading .spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── AI Summary Card ── */
+
+.results-summary {
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--silver);
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.results-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.results-summary-header svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--silver);
+  flex-shrink: 0;
+}
+
+.results-summary-header span {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--silver);
+}
+
+.results-summary-body {
+  color: var(--gray-light);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+/* ── Persona Badge ── */
+
+.results-persona {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: rgba(192, 192, 192, 0.08);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--silver);
+  margin-bottom: 2rem;
+}
+
+/* ── Risk Flags ── */
+
+.results-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.results-flag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(220, 50, 50, 0.08);
+  border: 1px solid rgba(220, 50, 50, 0.2);
+  color: #f87171;
+  font-size: 0.85rem;
+}
+
+.results-flag svg {
+  width: 16px;
+  height: 16px;
+  stroke: #f87171;
+  flex-shrink: 0;
+}
+
+/* ── Plan Cards ── */
+
+.results-plans-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--off-white);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.results-category-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gray);
+  text-align: center;
+  margin-bottom: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* Featured hero card — centered, max-width */
+.results-featured {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.results-featured .plan-card {
+  max-width: 480px;
+  width: 100%;
+}
+
+/* 3-column grid for training plans */
+.results-plans-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+/* 2-column centered grid for nutrition plans */
+.results-plans-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 700px;
+  margin: 0 auto 3rem;
+}
+
+.plan-card {
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  padding: 2.5rem 2rem;
+  position: relative;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-card:hover {
+  border-color: var(--border-color-hover);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-glow);
+}
+
+.plan-card.recommended {
+  border-color: var(--silver);
+}
+
+.plan-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  background: var(--silver);
+  color: var(--black);
+  padding: 0.4rem 1rem;
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.plan-card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--off-white);
+  margin-bottom: 0.25rem;
+}
+
+.plan-tagline {
+  color: var(--gray);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.plan-price {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: var(--accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.25rem;
+}
+
+.plan-period {
+  color: var(--gray-dark);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem;
+  flex: 1;
+}
+
+.plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  color: var(--gray-light);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.plan-features li:last-child {
+  border-bottom: none;
+}
+
+.plan-features li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--silver);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+.plan-select {
+  width: 100%;
+  padding: 1rem;
+  background: transparent;
+  color: var(--silver);
+  border: 1px solid var(--silver);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.plan-select:hover {
+  background: var(--silver);
+  color: var(--black);
+}
+
+.plan-card.recommended .plan-select {
+  background: var(--silver);
+  color: var(--black);
+}
+
+.plan-card.recommended .plan-select:hover {
+  background: var(--white);
+  box-shadow: 0 10px 30px rgba(192, 192, 192, 0.2);
+}
+
+/* ── Footer Note ── */
+
+.results-footer-note {
+  text-align: center;
+  padding: 2rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.results-footer-note p {
+  color: var(--gray);
+  font-size: 0.9rem;
+}
+
+/* ── Error State ── */
+
+.results-error {
+  text-align: center;
+  padding: 4rem 0;
+  color: #f87171;
+}
+
+@media (max-width: 768px) {
+  .results-plans-3 {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .results-plans-2 {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .results-summary {
+    padding: 1.5rem;
+  }
+}

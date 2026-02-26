@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete your Vintus Performance onboarding.">
+    <title>Onboarding | Vintus Performance</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3EV%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/onboarding.css">
+</head>
+<body class="onboarding-page" style="background: #000 !important;">
+    <!-- Minimal Nav -->
+    <nav style="display:flex;align-items:center;justify-content:center;padding:1rem 5%;position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(10,10,10,0.98);border-bottom:1px solid rgba(192,192,192,0.1);">
+        <a href="index.html" class="logo"><img src="images/VintusBlankLogo.jpeg" alt="Vintus Performance" class="logo-img"></a>
+    </nav>
+
+    <section class="onboard-section">
+        <!-- Step Indicator -->
+        <div class="onboard-steps" id="stepIndicator">
+            <div class="onboard-step-dot active" data-step="1"></div>
+            <div class="onboard-step-line"></div>
+            <div class="onboard-step-dot" data-step="2"></div>
+            <div class="onboard-step-line"></div>
+            <div class="onboard-step-dot" data-step="3"></div>
+            <div class="onboard-step-line"></div>
+            <div class="onboard-step-dot" data-step="4"></div>
+        </div>
+
+        <div class="onboard-error" id="onboardError"></div>
+
+        <!-- Step 1: Set Password -->
+        <div class="onboard-step active" data-step="1" id="step1">
+            <h2>Welcome to Vintus</h2>
+            <p>Set your password to access your training portal.</p>
+
+            <div class="onboard-field">
+                <label for="obPassword">Password</label>
+                <input type="password" id="obPassword" placeholder="Create a strong password" autocomplete="new-password">
+                <div class="password-reqs">Min 8 characters, 1 uppercase letter, 1 number</div>
+            </div>
+            <div class="onboard-field">
+                <label for="obPasswordConfirm">Confirm Password</label>
+                <input type="password" id="obPasswordConfirm" placeholder="Confirm your password" autocomplete="new-password">
+            </div>
+
+            <button class="onboard-btn" id="step1Btn">Set Password & Continue</button>
+        </div>
+
+        <!-- Step 2: Device Connection -->
+        <div class="onboard-step" data-step="2" id="step2">
+            <h2>Connect Your Devices</h2>
+            <p>Wearable integration is coming soon. For now, use daily check-ins to track your readiness.</p>
+
+            <div class="onboard-devices">
+                <div class="onboard-device">
+                    <div class="onboard-device-name">Strava</div>
+                    <div class="onboard-device-status">Coming Soon</div>
+                </div>
+                <div class="onboard-device">
+                    <div class="onboard-device-name">Garmin</div>
+                    <div class="onboard-device-status">Coming Soon</div>
+                </div>
+                <div class="onboard-device">
+                    <div class="onboard-device-name">Apple Health</div>
+                    <div class="onboard-device-status">Coming Soon</div>
+                </div>
+                <div class="onboard-device">
+                    <div class="onboard-device-name">WHOOP</div>
+                    <div class="onboard-device-status">Coming Soon</div>
+                </div>
+                <div class="onboard-device">
+                    <div class="onboard-device-name">Oura Ring</div>
+                    <div class="onboard-device-status">Coming Soon</div>
+                </div>
+                <div class="onboard-device">
+                    <div class="onboard-device-name">Fitbit</div>
+                    <div class="onboard-device-status">Coming Soon</div>
+                </div>
+                <div class="onboard-device active-device">
+                    <div class="onboard-device-name">Manual Check-in</div>
+                    <div class="onboard-device-status available">Always Available</div>
+                </div>
+            </div>
+
+            <button class="onboard-btn" id="step2Btn">Continue</button>
+        </div>
+
+        <!-- Step 3: Routine Questionnaire -->
+        <div class="onboard-step" data-step="3" id="step3">
+            <h2>Your Daily Routine</h2>
+            <p>Help us understand your lifestyle so we can optimize your training schedule.</p>
+
+            <div class="onboard-fields-row" style="margin-bottom:1.25rem;">
+                <div class="onboard-field">
+                    <label for="wakeTime">Wake Time</label>
+                    <input type="time" id="wakeTime" value="06:30">
+                </div>
+                <div class="onboard-field">
+                    <label for="bedTime">Bed Time</label>
+                    <input type="time" id="bedTime" value="22:30">
+                </div>
+            </div>
+
+            <div class="onboard-fields-row" style="margin-bottom:1.25rem;">
+                <div class="onboard-field">
+                    <label for="mealsPerDay">Meals Per Day</label>
+                    <select id="mealsPerDay">
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <div class="onboard-field">
+                    <label for="hydrationLevel">Hydration Level</label>
+                    <select id="hydrationLevel">
+                        <option value="low">Low</option>
+                        <option value="moderate" selected>Moderate</option>
+                        <option value="good">Good</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="onboard-field" style="margin-bottom:1.5rem;">
+                <label for="supplements">Supplements Used (optional)</label>
+                <input type="text" id="supplements" placeholder="e.g. Creatine, Protein, Multivitamin">
+            </div>
+
+            <label style="display:block;font-family:var(--font-heading);font-size:0.8rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--gray-light);margin-bottom:0.75rem;">Recovery Practices</label>
+            <div class="onboard-checkboxes" id="recoveryPractices">
+                <div class="onboard-checkbox" data-value="foam-roll"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Foam Rolling</span></div>
+                <div class="onboard-checkbox" data-value="stretch"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Stretching</span></div>
+                <div class="onboard-checkbox" data-value="sauna"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Sauna</span></div>
+                <div class="onboard-checkbox" data-value="cold-plunge"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Cold Plunge</span></div>
+                <div class="onboard-checkbox" data-value="massage"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Massage</span></div>
+                <div class="onboard-checkbox" data-value="none"><div class="onboard-cb-box"></div><span class="onboard-cb-label">None</span></div>
+            </div>
+
+            <div class="onboard-slider-group">
+                <label><span>Typical Energy Level</span><span class="onboard-slider-value" id="energyVal">5</span></label>
+                <input type="range" class="onboard-slider" id="energySlider" min="1" max="10" value="5">
+            </div>
+            <div class="onboard-slider-group">
+                <label><span>Typical Soreness Level</span><span class="onboard-slider-value" id="sorenessVal">5</span></label>
+                <input type="range" class="onboard-slider" id="sorenessSlider" min="1" max="10" value="5">
+            </div>
+            <div class="onboard-slider-group">
+                <label><span>Typical Mood Level</span><span class="onboard-slider-value" id="moodVal">5</span></label>
+                <input type="range" class="onboard-slider" id="moodSlider" min="1" max="10" value="5">
+            </div>
+            <div class="onboard-slider-group">
+                <label><span>Typical Sleep Quality</span><span class="onboard-slider-value" id="sleepVal">5</span></label>
+                <input type="range" class="onboard-slider" id="sleepSlider" min="1" max="10" value="5">
+            </div>
+
+            <button class="onboard-btn" id="step3Btn">Complete Setup</button>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div class="onboard-step" data-step="4" id="step4">
+            <div class="onboard-success">
+                <div class="onboard-success-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <h2>You're All Set!</h2>
+                <p>Your personalized training plan has been generated. Time to get to work.</p>
+                <a href="dashboard.html" class="onboard-btn" style="display:inline-block;text-decoration:none;text-align:center;max-width:300px;">Go to Dashboard</a>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/onboarding.js"></script>
+</body>
+</html>

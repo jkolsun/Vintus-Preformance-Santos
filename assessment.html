@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete your comprehensive fitness assessment with Vintus Performance. Get a personalized AI-powered training plan.">
+    <title>Fitness Assessment | Vintus Performance</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3EV%3C/text%3E%3C/svg%3E">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/assessment.css">
+</head>
+<body class="assessment-page" style="background: #000 !important;">
+    <!-- Minimal Nav -->
+    <nav class="quiz-nav" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 5%;position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(10,10,10,0.98);border-bottom:1px solid rgba(192,192,192,0.1);">
+        <a href="index.html" class="logo"><img src="images/VintusBlankLogo.jpeg" alt="Vintus Performance" class="logo-img"></a>
+        <a href="index.html" style="color:var(--gray);font-family:var(--font-body);font-size:0.9rem;text-decoration:none;">Exit Assessment</a>
+    </nav>
+
+    <!-- Main -->
+    <main class="assess-container">
+        <!-- Progress -->
+        <div class="assess-progress">
+            <div class="assess-progress-bar" id="progressBar" style="width: 0%"></div>
+            <div class="assess-progress-steps">
+                <div class="assess-step active" data-step="1">1</div>
+                <div class="assess-step" data-step="2">2</div>
+                <div class="assess-step" data-step="3">3</div>
+                <div class="assess-step" data-step="4">4</div>
+                <div class="assess-step" data-step="5">5</div>
+                <div class="assess-step" data-step="6">6</div>
+                <div class="assess-step" data-step="7">7</div>
+                <div class="assess-step" data-step="8">8</div>
+            </div>
+        </div>
+
+        <form id="assessForm">
+            <!-- Step 1: Contact Info -->
+            <div class="assess-slide active" data-slide="1">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Step 1 of 8</span>
+                    <h2>Let's start with the basics</h2>
+                    <p class="assess-subtitle">Your contact information so we can deliver your personalized plan.</p>
+
+                    <div class="assess-fields">
+                        <div class="assess-fields-row">
+                            <div class="assess-field">
+                                <label for="firstName" class="required">First Name</label>
+                                <input type="text" id="firstName" placeholder="First name" required>
+                            </div>
+                            <div class="assess-field">
+                                <label for="lastName" class="required">Last Name</label>
+                                <input type="text" id="lastName" placeholder="Last name" required>
+                            </div>
+                        </div>
+                        <div class="assess-field">
+                            <label for="email" class="required">Email Address</label>
+                            <input type="email" id="email" placeholder="you@email.com" required>
+                        </div>
+                        <div class="assess-field">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" placeholder="(555) 123-4567">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Demographics -->
+            <div class="assess-slide" data-slide="2">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Step 2 of 8</span>
+                    <h2>A little about you</h2>
+                    <p class="assess-subtitle">Help us understand your lifestyle context.</p>
+
+                    <div class="assess-fields">
+                        <div class="assess-fields-row">
+                            <div class="assess-field">
+                                <label for="dateOfBirth">Date of Birth</label>
+                                <input type="date" id="dateOfBirth">
+                            </div>
+                            <div class="assess-field">
+                                <label for="occupation">Occupation</label>
+                                <input type="text" id="occupation" placeholder="e.g. Software Engineer">
+                            </div>
+                        </div>
+                        <div class="assess-field">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone">
+                                <option value="America/New_York">Eastern (ET)</option>
+                                <option value="America/Chicago">Central (CT)</option>
+                                <option value="America/Denver">Mountain (MT)</option>
+                                <option value="America/Los_Angeles">Pacific (PT)</option>
+                                <option value="America/Anchorage">Alaska (AKT)</option>
+                                <option value="Pacific/Honolulu">Hawaii (HT)</option>
+                                <option value="Europe/London">London (GMT)</option>
+                                <option value="Europe/Paris">Central Europe (CET)</option>
+                                <option value="Asia/Tokyo">Japan (JST)</option>
+                                <option value="Australia/Sydney">Sydney (AEST)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Primary Goal -->
+            <div class="assess-slide" data-slide="3">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Step 3 of 8</span>
+                    <h2>What's your primary fitness goal?</h2>
+                    <p class="assess-subtitle">Select the one that resonates most with where you want to be.</p>
+
+                    <div class="assess-options" data-field="primaryGoal">
+                        <button type="button" class="assess-option" data-value="build-muscle">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M3 12h18M4.5 6.5v11M19.5 6.5v11"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Build Muscle</strong>
+                                <span>Gain strength and size</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="lose-fat">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Lose Fat</strong>
+                                <span>Burn fat and get lean</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="endurance">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Improve Endurance</strong>
+                                <span>Boost stamina and cardio</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="well-rounded">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Well-Rounded Fitness</strong>
+                                <span>Balance of strength, cardio, and health</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="recomposition">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Body Recomposition</strong>
+                                <span>Build muscle while losing fat</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Training Context -->
+            <div class="assess-slide" data-slide="4">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Step 4 of 8</span>
+                    <h2>Your training background</h2>
+                    <p class="assess-subtitle">We'll use this to calibrate your starting point.</p>
+
+                    <div class="assess-slider-group">
+                        <label>
+                            <span class="required">Training days per week</span>
+                            <span class="assess-slider-value" id="trainingDaysValue">4</span>
+                        </label>
+                        <input type="range" class="assess-slider" id="trainingDaysPerWeek" min="1" max="7" value="4" step="1">
+                    </div>
+
+                    <div class="assess-fields" style="margin-bottom: 1.5rem;">
+                        <label class="assess-label" style="margin-bottom: 0.5rem;">Preferred training time</label>
+                        <div class="assess-options" data-field="preferredTrainingTime" style="flex-direction: row; flex-wrap: wrap; gap: 0.75rem;">
+                            <button type="button" class="assess-option" data-value="morning" style="flex:1;min-width:120px;justify-content:center;">
+                                <div class="assess-option-text" style="text-align:center;">
+                                    <strong>Morning</strong>
+                                </div>
+                            </button>
+                            <button type="button" class="assess-option" data-value="midday" style="flex:1;min-width:120px;justify-content:center;">
+                                <div class="assess-option-text" style="text-align:center;">
+                                    <strong>Midday</strong>
+                                </div>
+                            </button>
+                            <button type="button" class="assess-option" data-value="evening" style="flex:1;min-width:120px;justify-content:center;">
+                                <div class="assess-option-text" style="text-align:center;">
+                                    <strong>Evening</strong>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <label class="assess-label" style="margin-bottom: 0.5rem;">Experience level</label>
+                    <div class="assess-options" data-field="experienceLevel">
+                        <button type="button" class="assess-option" data-value="beginner">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Beginner</strong>
+                                <span>New to structured training</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="intermediate">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Intermediate</strong>
+                                <span>1-3 years of training</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="advanced">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Advanced</strong>
+                                <span>3+ years of consistent training</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="elite">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15l-2 5l9-11h-5l2-5l-9 11h5z"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Elite</strong>
+                                <span>Competitive or professional athlete</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Equipment Access -->
+            <div class="assess-slide" data-slide="5">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Step 5 of 8</span>
+                    <h2>What equipment do you have access to?</h2>
+                    <p class="assess-subtitle">This determines how we structure your sessions.</p>
+
+                    <div class="assess-options" data-field="equipmentAccess">
+                        <button type="button" class="assess-option" data-value="full-gym">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="1"/><path d="M6 7V5M18 7V5M6 17v2M18 17v2"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Full Gym</strong>
+                                <span>Commercial gym with all equipment</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="home-gym">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Home Gym</strong>
+                                <span>Dumbbells, bench, rack, etc.</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="minimal">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Minimal</strong>
+                                <span>Resistance bands, light dumbbells</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="bodyweight-only">
+                            <div class="assess-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
+                            </div>
+                            <div class="assess-option-text">
+                                <strong>Bodyweight Only</strong>
+                                <span>No equipment needed</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Health & Injury -->
+            <div class="assess-slide" data-slide="6">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Step 6 of 8</span>
+                    <h2>Health & Training History</h2>
+                    <p class="assess-subtitle">This helps us design a safe, effective program.</p>
+
+                    <div class="assess-fields">
+                        <div class="assess-field">
+                            <label for="injuryHistory">Injury history or limitations</label>
+                            <textarea id="injuryHistory" placeholder="e.g. Torn ACL in 2020, occasional lower back pain..."></textarea>
+                        </div>
+                        <div class="assess-field">
+                            <label for="currentActivity">Current training routine</label>
+                            <textarea id="currentActivity" placeholder="Describe what you currently do, if anything..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7: Sleep, Stress & Goals -->
+            <div class="assess-slide" data-slide="7">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Step 7 of 8</span>
+                    <h2>Sleep, Stress & Goals</h2>
+                    <p class="assess-subtitle">Recovery is half the equation.</p>
+
+                    <div class="assess-fields" style="margin-bottom: 1.5rem;">
+                        <div class="assess-field">
+                            <label for="sleepSchedule">Typical sleep schedule</label>
+                            <input type="text" id="sleepSchedule" placeholder="e.g. 11pm - 6:30am">
+                        </div>
+                    </div>
+
+                    <div class="assess-slider-group">
+                        <label>
+                            <span>Stress level (daily average)</span>
+                            <span class="assess-slider-value" id="stressValue">5</span>
+                        </label>
+                        <input type="range" class="assess-slider" id="stressLevel" min="1" max="10" value="5" step="1">
+                    </div>
+
+                    <label class="assess-label" style="margin-bottom: 0.75rem;">Secondary goals (select all that apply)</label>
+                    <div class="assess-checkboxes" id="secondaryGoals">
+                        <div class="assess-checkbox" data-value="improve-sleep">
+                            <div class="assess-checkbox-box"></div>
+                            <span class="assess-checkbox-label">Improve Sleep</span>
+                        </div>
+                        <div class="assess-checkbox" data-value="reduce-stress">
+                            <div class="assess-checkbox-box"></div>
+                            <span class="assess-checkbox-label">Reduce Stress</span>
+                        </div>
+                        <div class="assess-checkbox" data-value="increase-energy">
+                            <div class="assess-checkbox-box"></div>
+                            <span class="assess-checkbox-label">Increase Energy</span>
+                        </div>
+                        <div class="assess-checkbox" data-value="build-confidence">
+                            <div class="assess-checkbox-box"></div>
+                            <span class="assess-checkbox-label">Build Confidence</span>
+                        </div>
+                        <div class="assess-checkbox" data-value="improve-mobility">
+                            <div class="assess-checkbox-box"></div>
+                            <span class="assess-checkbox-label">Improve Mobility</span>
+                        </div>
+                        <div class="assess-checkbox" data-value="sport-performance">
+                            <div class="assess-checkbox-box"></div>
+                            <span class="assess-checkbox-label">Sport Performance</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 8: Lifestyle -->
+            <div class="assess-slide" data-slide="8">
+                <div class="assess-slide-content">
+                    <span class="assess-label">Final Step</span>
+                    <h2>Lifestyle & Challenges</h2>
+                    <p class="assess-subtitle">Last few details to craft your plan.</p>
+
+                    <label class="assess-label" style="margin-bottom: 0.5rem;">How often do you travel?</label>
+                    <div class="assess-options" data-field="travelFrequency" style="margin-bottom: 2rem;">
+                        <button type="button" class="assess-option" data-value="rarely">
+                            <div class="assess-option-text">
+                                <strong>Rarely</strong>
+                                <span>A few times a year or less</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="monthly">
+                            <div class="assess-option-text">
+                                <strong>Monthly</strong>
+                                <span>1-2 trips per month</span>
+                            </div>
+                        </button>
+                        <button type="button" class="assess-option" data-value="weekly">
+                            <div class="assess-option-text">
+                                <strong>Weekly</strong>
+                                <span>Frequent travel for work</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="assess-fields">
+                        <div class="assess-field">
+                            <label for="biggestChallenge">What's your biggest challenge right now?</label>
+                            <textarea id="biggestChallenge" placeholder="Tell us what's holding you back..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Navigation Buttons -->
+        <div class="assess-nav" id="assessNav">
+            <button type="button" class="assess-back" id="assessBack" style="visibility: hidden;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back
+            </button>
+            <button type="button" class="assess-next" id="assessNext">Next</button>
+            <button type="button" class="assess-submit" id="assessSubmit" style="display: none;">Submit Assessment</button>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/assessment.js"></script>
+</body>
+</html>

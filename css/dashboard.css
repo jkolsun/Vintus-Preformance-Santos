@@ -1,0 +1,431 @@
+/* Dashboard Page — Vintus Performance Client Portal */
+
+.dashboard-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-section {
+  flex: 1;
+  padding: 7rem 5% 4rem;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Greeting ── */
+
+.dash-greeting {
+  margin-bottom: 2.5rem;
+}
+
+.dash-greeting h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--off-white);
+  margin-bottom: 0.25rem;
+}
+
+.dash-greeting .dash-date {
+  color: var(--gray);
+  font-size: 0.95rem;
+}
+
+.dash-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: rgba(192, 192, 192, 0.08);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--silver);
+  margin-top: 0.75rem;
+}
+
+/* ── Grid Layout ── */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Cards ── */
+
+.dash-card {
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  padding: 2rem;
+  transition: all var(--transition-normal);
+}
+
+.dash-card:hover {
+  border-color: var(--border-color-hover);
+}
+
+.dash-card h3 {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--gray);
+  margin-bottom: 1.25rem;
+}
+
+.dash-card-full {
+  grid-column: 1 / -1;
+}
+
+/* ── Today's Workout Card ── */
+
+.dash-workout-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--off-white);
+  margin-bottom: 0.5rem;
+}
+
+.dash-workout-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  background: rgba(192, 192, 192, 0.08);
+  border: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--silver-dark);
+}
+
+.dash-workout-btn {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background: var(--silver);
+  color: var(--black);
+  border: none;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-normal);
+}
+
+.dash-workout-btn:hover {
+  background: var(--white);
+  box-shadow: 0 10px 30px rgba(192, 192, 192, 0.2);
+}
+
+.dash-rest-day {
+  color: var(--gray);
+  font-size: 1.05rem;
+  font-style: italic;
+  font-family: var(--font-accent);
+}
+
+/* ── Week View ── */
+
+.dash-week {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dash-day {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem 0.25rem;
+  background: var(--black-lighter);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dash-day:hover {
+  border-color: var(--silver-dark);
+}
+
+.dash-day.today {
+  border-color: var(--silver);
+}
+
+.dash-day-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-dark);
+  margin-bottom: 0.5rem;
+}
+
+.dash-day-status {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dash-day-status.completed { color: #4ade80; }
+.dash-day-status.missed { color: #f87171; }
+.dash-day-status.scheduled { color: var(--silver); }
+.dash-day-status.rest { color: var(--gray-dark); }
+
+/* ── Quick Check-in ── */
+
+.dash-checkin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.dash-slider-group label {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-light);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.dash-slider-val {
+  color: var(--silver);
+  font-weight: 600;
+}
+
+.dash-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border-color);
+  outline: none;
+  border-radius: 2px;
+}
+
+.dash-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--silver);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--white);
+}
+
+.dash-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: var(--silver);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--white);
+}
+
+.dash-checkin-btn {
+  padding: 0.75rem 2rem;
+  background: transparent;
+  color: var(--silver);
+  border: 1px solid var(--silver);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.dash-checkin-btn:hover {
+  background: var(--silver);
+  color: var(--black);
+}
+
+.dash-checkin-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dash-checkin-success {
+  color: #4ade80;
+  font-size: 0.9rem;
+  display: none;
+  margin-top: 0.5rem;
+}
+
+/* ── Trends (SVG bars) ── */
+
+.dash-trends {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 100px;
+  padding-top: 1rem;
+}
+
+.dash-trend-bar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.4s ease;
+  position: relative;
+}
+
+.dash-trend-bar.good { background: #4ade80; }
+.dash-trend-bar.moderate { background: #fbbf24; }
+.dash-trend-bar.low { background: #f87171; }
+
+.dash-trend-labels {
+  display: flex;
+  gap: 4px;
+  margin-top: 0.5rem;
+}
+
+.dash-trend-labels span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.6rem;
+  color: var(--gray-dark);
+  font-family: var(--font-heading);
+}
+
+/* ── Account Section ── */
+
+.dash-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dash-account-row:last-child {
+  border-bottom: none;
+}
+
+.dash-account-label {
+  color: var(--gray);
+  font-size: 0.9rem;
+}
+
+.dash-account-value {
+  color: var(--off-white);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dash-account-link {
+  color: var(--silver);
+  font-size: 0.85rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+}
+
+.dash-account-link:hover {
+  color: var(--white);
+}
+
+/* ── Messages ── */
+
+.dash-message {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dash-message:last-child { border-bottom: none; }
+
+.dash-message-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.dash-message-channel {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--silver-dark);
+}
+
+.dash-message-date {
+  font-size: 0.75rem;
+  color: var(--gray-dark);
+}
+
+.dash-message-content {
+  color: var(--gray-light);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Loading ── */
+
+.dash-loading {
+  color: var(--gray);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .dash-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-week {
+    flex-wrap: wrap;
+  }
+
+  .dash-day {
+    min-width: calc(14.28% - 0.5rem);
+  }
+
+  .dash-checkin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-section {
+    padding-top: 5.5rem;
+  }
+}
