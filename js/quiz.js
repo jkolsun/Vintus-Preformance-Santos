@@ -248,13 +248,9 @@
         }
     }
 
-    // Show results page
+    // Show results page — redirect to results.html with all plans
     function showResults() {
-        // Hide form
-        elements.form.style.display = 'none';
-        elements.backButton.style.display = 'none';
-
-        // Save quiz answers to localStorage for booking page
+        // Save quiz answers to localStorage for results page
         localStorage.setItem('vintusQuizData', JSON.stringify({
             primary_goal: state.answers.primary_goal,
             training_days: state.answers.training_days,
@@ -266,21 +262,8 @@
             phone: state.answers.phone
         }));
 
-        // Generate AI summary
-        generateAISummary();
-
-        // Initialize calendar embed
-        initCalendarEmbed();
-
-        // Show results
-        elements.results.style.display = 'block';
-
-        // Update progress to 100%
-        elements.progressBar.style.width = '100%';
-        elements.steps.forEach(step => step.classList.add('completed'));
-
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Redirect to results page to show all plans
+        window.location.href = 'results.html?source=quiz';
     }
 
     // Initialize Google Calendar embed
