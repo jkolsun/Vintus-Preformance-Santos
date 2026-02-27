@@ -404,6 +404,346 @@
   font-style: italic;
 }
 
+/* ====================================================
+   Calendar Week View
+   ==================================================== */
+
+.cal-card {
+  padding: 1.5rem;
+}
+
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.cal-header h3 {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+.cal-nav-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--silver);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cal-nav-btn:hover {
+  border-color: var(--silver);
+  color: var(--white);
+}
+
+.cal-adherence {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--gray);
+  margin-bottom: 1rem;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── 7-Column Grid ── */
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  min-height: 180px;
+}
+
+.cal-day {
+  background: var(--black-lighter);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+  transition: border-color var(--transition-fast);
+}
+
+.cal-day--today {
+  border-color: var(--silver);
+}
+
+.cal-day--past {
+  opacity: 0.7;
+}
+
+.cal-day--dragover {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(192, 192, 192, 0.2);
+}
+
+.cal-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cal-day-name {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-dark);
+}
+
+.cal-day-num {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray);
+}
+
+.cal-day--today .cal-day-num {
+  color: var(--off-white);
+  background: rgba(192, 192, 192, 0.25);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+}
+
+.cal-day-body {
+  flex: 1;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+/* ── Workout Cards Inside Days ── */
+
+.cal-workout {
+  padding: 0.4rem 0.5rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-left: 3px solid var(--silver);
+  background: rgba(192, 192, 192, 0.05);
+}
+
+.cal-workout[draggable="true"] {
+  cursor: grab;
+}
+
+.cal-workout[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.cal-workout:hover {
+  background: rgba(192, 192, 192, 0.1);
+}
+
+.cal-workout--completed {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.cal-workout--missed {
+  border-left-color: #f87171;
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.cal-workout--skipped {
+  border-left-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.cal-workout--scheduled {
+  border-left-color: var(--silver);
+}
+
+.cal-workout--rescheduled {
+  border-left-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.06);
+}
+
+.cal-workout-type {
+  font-family: var(--font-heading);
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray);
+  margin-bottom: 2px;
+}
+
+.cal-workout-title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--off-white);
+  line-height: 1.2;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-workout-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: var(--gray);
+}
+
+.cal-workout-status {
+  font-weight: 700;
+}
+
+.cal-workout--completed .cal-workout-status { color: #4ade80; }
+.cal-workout--missed .cal-workout-status { color: #f87171; }
+
+/* Drag ghost */
+.cal-workout--dragging {
+  opacity: 0.4;
+}
+
+/* Missed workout replan button */
+.cal-workout-replan {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 3px 6px;
+  font-size: 0.6rem;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #f87171;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.cal-workout-replan:hover {
+  background: rgba(248, 113, 113, 0.25);
+  border-color: #f87171;
+}
+
+/* ── Mobile Move Modal ── */
+
+.cal-move-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.cal-move-modal-content {
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.cal-move-modal-content p {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--silver);
+  margin-bottom: 1rem;
+}
+
+.cal-move-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+.cal-move-day-btn {
+  padding: 0.75rem 0.25rem;
+  text-align: center;
+  background: var(--black-lighter);
+  border: 1px solid var(--border-color);
+  color: var(--off-white);
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  line-height: 1.4;
+  transition: all var(--transition-fast);
+}
+
+.cal-move-day-btn:hover,
+.cal-move-day-btn:focus {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.08);
+}
+
+.cal-move-day-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cal-move-cancel {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--gray);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cal-move-cancel:hover {
+  border-color: var(--silver);
+  color: var(--off-white);
+}
+
+/* ── Toast ── */
+
+.cal-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  color: var(--off-white);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  z-index: 9999;
+  animation: calToastIn 0.2s ease;
+}
+
+@keyframes calToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
@@ -421,6 +761,41 @@
 
   .dash-checkin-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Calendar mobile: single column list */
+  .cal-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .cal-day {
+    min-height: auto;
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .cal-day-header {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    min-width: 60px;
+    border-bottom: none;
+    border-right: 1px solid var(--border-color);
+    padding: 0.5rem;
+  }
+
+  .cal-day-body {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .cal-workout {
+    min-width: 140px;
   }
 }
 

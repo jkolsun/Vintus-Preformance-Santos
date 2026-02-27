@@ -57,11 +57,28 @@
                 <div id="todayWorkout"><span class="dash-loading">Loading...</span></div>
             </div>
 
-            <!-- This Week -->
-            <div class="dash-card">
-                <h3>This Week</h3>
-                <div class="dash-week" id="weekView">
+            <!-- Calendar Week View -->
+            <div class="dash-card dash-card-full cal-card">
+                <div class="cal-header">
+                    <button class="cal-nav-btn" id="calPrev" aria-label="Previous week">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <h3 id="calTitle">This Week</h3>
+                    <button class="cal-nav-btn" id="calNext" aria-label="Next week">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+                <div class="cal-adherence" id="calAdherence"></div>
+                <div class="cal-grid" id="calGrid">
                     <span class="dash-loading">Loading...</span>
+                </div>
+                <!-- Mobile move modal -->
+                <div class="cal-move-modal" id="calMoveModal" style="display:none;">
+                    <div class="cal-move-modal-content">
+                        <p id="calMoveTitle">Move workout to:</p>
+                        <div class="cal-move-days" id="calMoveDays"></div>
+                        <button class="cal-move-cancel" id="calMoveCancel">Cancel</button>
+                    </div>
                 </div>
             </div>
 
