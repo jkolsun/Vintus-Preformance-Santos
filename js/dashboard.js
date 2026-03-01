@@ -173,7 +173,13 @@
     }
 
     // Always render the calendar (empty if no sessions)
-    renderCalendar();
+    try {
+      renderCalendar();
+    } catch (renderErr) {
+      console.error('Calendar render error:', renderErr);
+      document.getElementById('calGrid').innerHTML =
+        '<div style="padding:1rem;color:#f87171;font-size:0.85rem;">Calendar failed to render. Please hard-refresh (Ctrl+Shift+R).</div>';
+    }
   }
 
   function getWeekMonday(offset) {
