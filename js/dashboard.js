@@ -134,41 +134,46 @@
   async function loadWeek(offset) {
     if (typeof offset === 'number') currentWeekOffset = offset;
 
+    // Update title regardless of API success
+    var monday = getWeekMonday(currentWeekOffset);
+    var sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    var titleEl = document.getElementById('calTitle');
+
+    if (currentWeekOffset === 0) {
+      titleEl.textContent = 'This Week';
+    } else if (currentWeekOffset === -1) {
+      titleEl.textContent = 'Last Week';
+    } else if (currentWeekOffset === 1) {
+      titleEl.textContent = 'Next Week';
+    } else {
+      titleEl.textContent = formatShortDate(monday) + ' \u2013 ' + formatShortDate(sunday);
+    }
+
     try {
       var res = await apiGet('/api/v1/dashboard/week/' + currentWeekOffset);
-      if (!res.success || !res.data) return;
-
-      weekSessions = res.data.sessions || [];
-
-      // Update title
-      var monday = getWeekMonday(currentWeekOffset);
-      var sunday = new Date(monday);
-      sunday.setDate(sunday.getDate() + 6);
-      var titleEl = document.getElementById('calTitle');
-
-      if (currentWeekOffset === 0) {
-        titleEl.textContent = 'This Week';
-      } else if (currentWeekOffset === -1) {
-        titleEl.textContent = 'Last Week';
-      } else if (currentWeekOffset === 1) {
-        titleEl.textContent = 'Next Week';
+      if (res.success && res.data) {
+        weekSessions = res.data.sessions || [];
       } else {
-        titleEl.textContent = formatShortDate(monday) + ' \u2013 ' + formatShortDate(sunday);
+        weekSessions = [];
       }
 
       // Adherence
       var adhEl = document.getElementById('calAdherence');
-      var adhRate = res.data.adherenceRate;
+      var adhRate = res.data && res.data.adherenceRate;
       if (adhRate != null && weekSessions.length > 0) {
         adhEl.textContent = Math.round(adhRate * 100) + '% adherence';
       } else {
         adhEl.textContent = '';
       }
-
-      renderCalendar();
     } catch (err) {
-      // Calendar stays at loading
+      console.error('Failed to load week data:', err);
+      weekSessions = [];
+      document.getElementById('calAdherence').textContent = '';
     }
+
+    // Always render the calendar (empty if no sessions)
+    renderCalendar();
   }
 
   function getWeekMonday(offset) {
@@ -217,7 +222,7 @@
 
       if (daySessions.length === 0) {
         var restLabel = document.createElement('span');
-        restLabel.style.cssText = 'color:var(--gray-dark);font-size:0.65rem;font-style:italic;padding:0.25rem;';
+        restLabel.className = 'cal-rest-label';
         restLabel.textContent = 'Rest';
         body.appendChild(restLabel);
       } else {
