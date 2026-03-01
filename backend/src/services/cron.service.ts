@@ -373,6 +373,44 @@ export async function dailyReviewForClient(
         }
       }
     }
+    // Catch-up: if check-in exists today but no CHECKIN_RESPONSE was sent
+    // (e.g., server restarted during the 3-minute setTimeout window)
+    const existingCheckinResponse = await prisma.messageLog.findFirst({
+      where: { userId, category: "CHECKIN_RESPONSE" as MessageCategory, sentAt: { gte: today } },
+    });
+    if (!existingCheckinResponse) {
+      try {
+        // Recompute tone (matches scheduleCheckinResponse formula)
+        const energy = todayReadiness.perceivedEnergy ?? 5;
+        const soreness = todayReadiness.perceivedSoreness ?? 5;
+        const mood = todayReadiness.perceivedMood ?? 5;
+        const sleep = todayReadiness.sleepQualityManual ?? 5;
+        const composite = (energy + mood + sleep + (11 - soreness)) / 4;
+
+        let readinessTone: "supportive" | "energized" | "balanced";
+        if (composite < 4.5) readinessTone = "supportive";
+        else if (composite > 7) readinessTone = "energized";
+        else readinessTone = "balanced";
+
+        // Evaluate flags (matches readiness.service logic)
+        const cronFlags: string[] = [];
+        if (energy < 4 && soreness > 7) cronFlags.push("high_fatigue");
+        if (sleep < 4) cronFlags.push("low_sleep");
+
+        await messagingService.sendMessage(userId, "CHECKIN_RESPONSE", "SMS", {
+          firstName: profile.firstName,
+          perceivedEnergy: todayReadiness.perceivedEnergy ?? undefined,
+          perceivedSoreness: todayReadiness.perceivedSoreness ?? undefined,
+          perceivedMood: todayReadiness.perceivedMood ?? undefined,
+          sleepQualityManual: todayReadiness.sleepQualityManual ?? undefined,
+          readinessTone,
+          readinessFlags: cronFlags,
+        });
+        logger.info({ userId }, "Cron catch-up: sent missed CHECKIN_RESPONSE");
+      } catch (err) {
+        logger.error({ err, userId }, "Cron catch-up: failed to send CHECKIN_RESPONSE");
+      }
+    }
   } else if (!todayReadiness && isMorningReview) {
     // No check-in yet and it's the morning review → prompt check-in (dedup)
     const existingCheckInMsg = await prisma.messageLog.findFirst({

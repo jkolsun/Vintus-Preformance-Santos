@@ -50,6 +50,12 @@ interface MessageContext {
   bookingLink?: string;
   checkInLink?: string;
   channel?: "SMS" | "EMAIL";
+  perceivedEnergy?: number;
+  perceivedSoreness?: number;
+  perceivedMood?: number;
+  sleepQualityManual?: number;
+  readinessTone?: "supportive" | "energized" | "balanced";
+  readinessFlags?: string[];
   [key: string]: unknown;
 }
 
@@ -268,6 +274,12 @@ export async function generateMessage(
     if (context.sleepScore != null) contextLines.push(`Sleep score: ${context.sleepScore}`);
     if (context.sleepDurationMin != null) contextLines.push(`Sleep duration: ${Math.round(context.sleepDurationMin / 60 * 10) / 10} hours`);
     if (context.bookingLink) contextLines.push(`Booking link (include if escalation): ${context.bookingLink}`);
+    if (context.perceivedEnergy != null) contextLines.push(`Perceived energy: ${context.perceivedEnergy}/10`);
+    if (context.perceivedSoreness != null) contextLines.push(`Perceived soreness: ${context.perceivedSoreness}/10`);
+    if (context.perceivedMood != null) contextLines.push(`Perceived mood: ${context.perceivedMood}/10`);
+    if (context.sleepQualityManual != null) contextLines.push(`Sleep quality: ${context.sleepQualityManual}/10`);
+    if (context.readinessTone) contextLines.push(`Tone: ${context.readinessTone}`);
+    if (context.readinessFlags?.length) contextLines.push(`Readiness flags: ${context.readinessFlags.join(", ")}`);
 
     if (previousMessages.length > 0) {
       contextLines.push(`\nPrevious messages sent to this athlete (DO NOT repeat any of these):`);
