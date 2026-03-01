@@ -159,6 +159,15 @@
     currentStep = step;
     hideError();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Auto-redirect to dashboard after reaching step 4
+    if (step === 4) {
+      var redirectNote = document.createElement('p');
+      redirectNote.style.cssText = 'color:var(--gray);font-size:0.85rem;margin-top:1rem;text-align:center;';
+      redirectNote.textContent = 'Redirecting to your dashboard...';
+      if (target) target.querySelector('.onboard-success').appendChild(redirectNote);
+      setTimeout(function () { window.location.href = 'dashboard.html'; }, 2500);
+    }
   }
 
   function showError(msg) {

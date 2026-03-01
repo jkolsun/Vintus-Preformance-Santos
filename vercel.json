@@ -6,6 +6,7 @@
     { "source": "/onboarding", "destination": "/onboarding.html" },
     { "source": "/login", "destination": "/login.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/calendar", "destination": "/calendar.html" },
     { "source": "/workout", "destination": "/workout.html" },
     { "source": "/start", "destination": "/start.html" },
     { "source": "/features", "destination": "/features.html" },

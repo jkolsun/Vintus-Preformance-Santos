@@ -57,6 +57,25 @@ async function findOrCreateUser(
   return { id: user.id, isNew: true };
 }
 
+/** Normalize quiz-specific values to canonical values for AI processing */
+function normalizeGoal(goal: string): string {
+  const map: Record<string, string> = {
+    "improve-endurance": "endurance",
+    "overall-health": "well-rounded",
+  };
+  return map[goal] || goal;
+}
+
+function normalizeChallenge(challenge: string): string {
+  const map: Record<string, string> = {
+    "consistency": "structure",
+    "nutrition": "energy",
+    "motivation": "unsure",
+    "time": "structure",
+  };
+  return map[challenge] || challenge;
+}
+
 /** Process a simple intake submission (from the existing quiz flow) */
 export async function submitSimpleIntake(data: SimpleIntake): Promise<IntakeResult> {
   const { id: userId, isNew } = await findOrCreateUser(
@@ -66,17 +85,19 @@ export async function submitSimpleIntake(data: SimpleIntake): Promise<IntakeResu
   );
 
   const trainingDaysPerWeek = mapTrainingDays(data.training_days);
+  const normalizedGoal = normalizeGoal(data.primary_goal);
+  const normalizedChallenge = normalizeChallenge(data.challenge);
 
   const profileData = {
     firstName: data.firstName,
     lastName: data.lastName,
     phone: data.phone ?? null,
-    primaryGoal: data.primary_goal,
+    primaryGoal: normalizedGoal,
     secondaryGoals: [] as string[],
     trainingDaysPerWeek,
     experienceLevel: data.experience,
     equipmentAccess: "full-gym" as const,
-    biggestChallenge: data.challenge,
+    biggestChallenge: normalizedChallenge,
     riskFlags: [] as string[],
     recoveryPractices: [] as string[],
   };
@@ -91,11 +112,11 @@ export async function submitSimpleIntake(data: SimpleIntake): Promise<IntakeResu
     update: profileData,
   });
 
-  // Run AI/rule-based classification
+  // Run AI/rule-based classification (use normalized values)
   const aiResult = await processIntake({
     firstName: data.firstName,
     lastName: data.lastName,
-    primaryGoal: data.primary_goal,
+    primaryGoal: normalizedGoal,
     experienceLevel: data.experience,
     trainingDaysPerWeek,
     equipmentAccess: "full-gym",

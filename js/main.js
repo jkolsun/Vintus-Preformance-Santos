@@ -312,7 +312,7 @@ function throttle(func, limit) {
     const contactForm = document.getElementById('contactForm');
 
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
+        contactForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             // Get form data
@@ -338,19 +338,35 @@ function throttle(func, limit) {
             submitBtn.innerHTML = 'Sending...';
             submitBtn.disabled = true;
 
-            // Simulate form submission (replace with actual form handling)
-            setTimeout(() => {
-                // Reset form
-                contactForm.reset();
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+            try {
+                var apiUrl = (window.VINTUS_CONFIG && window.VINTUS_CONFIG.API_URL) || '';
+                var response = await fetch(apiUrl + '/api/v1/leads/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        firstName: data.firstName,
+                        lastName: data.lastName || undefined,
+                        email: data.email,
+                        phone: data.phone || undefined,
+                        interest: data.interest || undefined,
+                        goals: data.goals || undefined,
+                        referral: data.referral || undefined
+                    })
+                });
 
-                // Show success message
-                showNotification('Message sent successfully! We\'ll be in touch within 24 hours.', 'success');
+                if (response.ok) {
+                    contactForm.reset();
+                    showNotification('Message sent successfully! We\'ll be in touch within 24 hours.', 'success');
+                } else {
+                    showNotification('Something went wrong. Please email us directly at vintusperformance@gmail.com', 'error');
+                }
+            } catch (error) {
+                console.error('Contact form error:', error);
+                showNotification('Something went wrong. Please email us directly at vintusperformance@gmail.com', 'error');
+            }
 
-                // Log form data (for development - remove in production)
-                console.log('Form submitted:', data);
-            }, 1500);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         });
     }
 
@@ -531,21 +547,44 @@ function throttle(func, limit) {
             submitLoading.style.display = 'inline-flex';
             submitBtn.disabled = true;
 
+            // Submit to real intake API
+            var heroProfileId = null;
             try {
-                // Submit to API
-                await fetch('/api/submit-lead', {
+                var heroApiUrl = (window.VINTUS_CONFIG && window.VINTUS_CONFIG.API_URL) || '';
+                var heroRes = await fetch(heroApiUrl + '/api/v1/intake/simple', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        ...quizState.answers,
-                        timestamp: new Date().toISOString(),
-                        source: 'hero-quiz'
+                        firstName: quizState.answers.first_name,
+                        lastName: quizState.answers.last_name,
+                        email: quizState.answers.email,
+                        phone: quizState.answers.phone || undefined,
+                        primary_goal: quizState.answers.primary_goal,
+                        training_days: quizState.answers.training_days,
+                        experience: quizState.answers.experience,
+                        challenge: quizState.answers.challenge
                     })
                 });
+                if (heroRes.ok) {
+                    var heroResult = await heroRes.json();
+                    heroProfileId = heroResult.data && heroResult.data.profileId;
+                }
             } catch (error) {
-                console.error('Form submission error:', error);
+                console.error('Hero quiz submission error:', error);
                 // Continue to show results regardless
             }
+
+            // Save quiz data to localStorage for results page
+            localStorage.setItem('vintusQuizData', JSON.stringify({
+                primary_goal: quizState.answers.primary_goal,
+                training_days: quizState.answers.training_days,
+                experience: quizState.answers.experience,
+                challenge: quizState.answers.challenge,
+                first_name: quizState.answers.first_name,
+                last_name: quizState.answers.last_name,
+                email: quizState.answers.email,
+                phone: quizState.answers.phone
+            }));
 
             // Generate AI summary and show results
             generateHeroAISummary();

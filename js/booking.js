@@ -100,52 +100,6 @@
     }
 
     // ====================================
-    // Simulated Busy Schedule Generator
-    // ====================================
-    function generateSimulatedBookings() {
-        // This creates a realistic-looking busy schedule
-        // Some days have more bookings, some times are more popular
-        const bookings = {};
-        const today = new Date();
-
-        for (let i = 0; i < CONFIG.maxAdvanceDays; i++) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + i);
-
-            // Skip weekends
-            if (!CONFIG.availableDays.includes(date.getDay())) continue;
-
-            const dateKey = getDateKey(date);
-            bookings[dateKey] = [];
-
-            // Randomly book 40-70% of slots to look busy
-            const bookingRate = 0.4 + Math.random() * 0.3;
-
-            CONFIG.availableHours.forEach(hour => {
-                // Morning slots (9-11) are slightly more popular
-                const isMorning = hour >= 9 && hour <= 11;
-                const adjustedRate = isMorning ? bookingRate + 0.1 : bookingRate;
-
-                // Book 0 or 30 minute slot
-                [0, 30].forEach(minute => {
-                    if (Math.random() < adjustedRate) {
-                        bookings[dateKey].push(`${hour}:${minute.toString().padStart(2, '0')}`);
-                    }
-                });
-            });
-
-            // Ensure at least 2-3 slots are available per day
-            const totalSlots = CONFIG.availableHours.length * 2;
-            const maxBooked = totalSlots - 3;
-            if (bookings[dateKey].length > maxBooked) {
-                bookings[dateKey] = bookings[dateKey].slice(0, maxBooked);
-            }
-        }
-
-        return bookings;
-    }
-
-    // ====================================
     // API Functions
     // ====================================
     async function fetchAvailability() {
@@ -153,21 +107,21 @@
         showLoading(true);
 
         try {
-            // Try to fetch from API
-            const response = await fetch('/api/calendar-slots');
+            var apiUrl = (window.VINTUS_CONFIG && window.VINTUS_CONFIG.API_URL) || '';
+            var month = state.currentMonth + 1;
+            var year = state.currentYear;
+            var response = await fetch(apiUrl + '/api/v1/leads/slots?month=' + month + '&year=' + year);
 
             if (response.ok) {
-                const data = await response.json();
-                state.bookedSlots = data.bookedSlots || {};
+                var result = await response.json();
+                state.bookedSlots = (result.data && result.data.bookedSlots) || {};
             } else {
-                // Fallback to simulated data
-                console.log('Using simulated booking data');
-                state.bookedSlots = generateSimulatedBookings();
+                // On error, default to no bookings (all slots open)
+                state.bookedSlots = {};
             }
         } catch (error) {
-            // Fallback to simulated data
-            console.log('Using simulated booking data:', error.message);
-            state.bookedSlots = generateSimulatedBookings();
+            console.warn('Could not fetch availability, defaulting to all open:', error.message);
+            state.bookedSlots = {};
         }
 
         state.isLoading = false;
@@ -180,38 +134,39 @@
         showLoading(true);
 
         // Get quiz data from localStorage if available
-        let quizData = {};
+        var quizData = {};
         try {
-            const stored = localStorage.getItem('vintusQuizData');
+            var stored = localStorage.getItem('vintusQuizData');
             if (stored) {
                 quizData = JSON.parse(stored);
             }
         } catch (e) {
-            console.log('No quiz data found');
+            // no quiz data
         }
 
-        const bookingData = {
-            name: formData.get('name'),
+        // Read tier from URL param
+        var urlParams = new URLSearchParams(window.location.search);
+        var tier = urlParams.get('tier') || undefined;
+
+        var nameParts = (formData.get('name') || '').split(' ');
+        var firstName = nameParts[0] || '';
+        var lastName = nameParts.slice(1).join(' ') || undefined;
+
+        var bookingData = {
+            firstName: firstName,
+            lastName: lastName,
             email: formData.get('email'),
-            phone: formData.get('phone'),
-            date: getDateKey(state.selectedDate),
-            time: state.selectedTime,
-            datetime: new Date(
-                state.selectedDate.getFullYear(),
-                state.selectedDate.getMonth(),
-                state.selectedDate.getDate(),
-                parseInt(state.selectedTime.split(':')[0]),
-                parseInt(state.selectedTime.split(':')[1])
-            ).toISOString(),
-            // Include quiz personalization data
-            primary_goal: quizData.primary_goal || '',
-            training_days: quizData.training_days || '',
-            experience: quizData.experience || '',
-            challenge: quizData.challenge || ''
+            phone: formData.get('phone') || undefined,
+            preferredDate: getDateKey(state.selectedDate),
+            preferredTime: state.selectedTime,
+            tier: tier,
+            primaryGoal: quizData.primary_goal || undefined,
+            experience: quizData.experience || undefined
         };
 
         try {
-            const response = await fetch('/api/book-appointment', {
+            var apiUrl = (window.VINTUS_CONFIG && window.VINTUS_CONFIG.API_URL) || '';
+            var response = await fetch(apiUrl + '/api/v1/leads/consultation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookingData)
@@ -220,17 +175,30 @@
             if (response.ok) {
                 showSuccessModal();
             } else {
-                // Even if API fails, show success (we'll capture in sheets)
-                showSuccessModal();
+                var errBody = await response.json().catch(function() { return {}; });
+                showErrorMessage(errBody.error || 'Booking failed. Please try again or email us at vintusperformance@gmail.com');
             }
         } catch (error) {
             console.error('Booking error:', error);
-            // Show success anyway - user experience first
-            showSuccessModal();
+            showErrorMessage('Something went wrong. Please email us at vintusperformance@gmail.com');
         }
 
         state.isLoading = false;
         showLoading(false);
+    }
+
+    function showErrorMessage(msg) {
+        var existing = document.querySelector('.booking-error-msg');
+        if (existing) existing.remove();
+
+        var errorDiv = document.createElement('div');
+        errorDiv.className = 'booking-error-msg';
+        errorDiv.style.cssText = 'color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:0.75rem 1rem;margin-top:1rem;font-size:0.85rem;text-align:center;';
+        errorDiv.textContent = msg;
+
+        if (elements.bookingForm) {
+            elements.bookingForm.appendChild(errorDiv);
+        }
     }
 
     // ====================================
@@ -453,7 +421,7 @@
             state.currentYear = maxDate.getFullYear();
         }
 
-        renderCalendar();
+        fetchAvailability();
     }
 
     // ====================================

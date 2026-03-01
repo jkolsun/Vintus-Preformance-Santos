@@ -398,3 +398,28 @@ model DeviceConnection {
 
   @@unique([userId, provider])
 }
+
+// ============================================================
+// Lead — Contact form + Consultation booking requests
+// ============================================================
+
+model Lead {
+  id             String   @id @default(cuid())
+  type           String   // "CONTACT" | "CONSULTATION"
+  firstName      String
+  lastName       String?
+  email          String
+  phone          String?
+  interest       String?  // contact form
+  goals          String?  // contact form
+  referral       String?  // contact form
+  preferredDate  String?  // booking
+  preferredTime  String?  // booking
+  tier           String?  // booking (e.g. "PRIVATE_COACHING")
+  primaryGoal    String?  // from quiz data
+  experience     String?  // from quiz data
+  notes          String?
+  status         String   @default("NEW")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

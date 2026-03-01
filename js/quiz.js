@@ -200,19 +200,21 @@
         elements.submitButton.disabled = true;
 
         try {
-            // Submit to API
+            // Submit to real intake API
             const response = await submitLead(state.answers);
 
-            if (response.success) {
-                // Show results
-                showResults();
+            if (response.success && response.data) {
+                // API succeeded — redirect with profileId for AI-generated results
+                showResults(response.data.profileId);
             } else {
-                throw new Error(response.message || 'Submission failed');
+                // API failed — still show generic results from localStorage
+                console.warn('Intake API failed, showing generic results:', response.error);
+                showResults(null);
             }
         } catch (error) {
             console.error('Submission error:', error);
             // Still show results even if API fails (don't block the user)
-            showResults();
+            showResults(null);
         } finally {
             // Reset button state
             submitText.style.display = 'inline';
@@ -221,35 +223,42 @@
         }
     }
 
-    // Submit lead to API
+    // Submit lead to real intake API
     async function submitLead(data) {
         try {
-            const response = await fetch('/api/submit-lead', {
+            var apiUrl = (window.VINTUS_CONFIG && window.VINTUS_CONFIG.API_URL) || '';
+            var response = await fetch(apiUrl + '/api/v1/intake/simple', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    ...data,
-                    timestamp: new Date().toISOString(),
-                    source: 'quiz'
+                    firstName: data.first_name,
+                    lastName: data.last_name,
+                    email: data.email,
+                    phone: data.phone || undefined,
+                    primary_goal: data.primary_goal,
+                    training_days: data.training_days,
+                    experience: data.experience,
+                    challenge: data.challenge
                 })
             });
 
             if (!response.ok) {
-                throw new Error('API request failed');
+                var errBody = await response.json().catch(function() { return {}; });
+                throw new Error(errBody.error || 'Submission failed');
             }
 
-            return await response.json();
+            var result = await response.json();
+            return { success: true, data: result.data };
         } catch (error) {
-            console.error('API Error:', error);
-            // Return success anyway to not block user experience
-            return { success: true, fallback: true };
+            console.error('Intake API Error:', error);
+            return { success: false, error: error.message };
         }
     }
 
     // Show results page — redirect to results.html with all plans
-    function showResults() {
+    function showResults(profileId) {
         // Save quiz answers to localStorage for results page
         localStorage.setItem('vintusQuizData', JSON.stringify({
             primary_goal: state.answers.primary_goal,
@@ -262,8 +271,12 @@
             phone: state.answers.phone
         }));
 
-        // Redirect to results page to show all plans
-        window.location.href = 'results.html?source=quiz';
+        // Redirect to results page — with profileId for AI results, or quiz fallback
+        if (profileId) {
+            window.location.href = 'results.html?id=' + profileId + '&source=quiz';
+        } else {
+            window.location.href = 'results.html?source=quiz';
+        }
     }
 
     // Initialize Google Calendar embed

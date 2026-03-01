@@ -128,9 +128,9 @@
     btn.addEventListener('click', async function () {
       var tier = this.getAttribute('data-tier');
 
-      // Private Coaching → book a consultation call
+      // Private Coaching → book a consultation call (pass tier context)
       if (tier === 'PRIVATE_COACHING') {
-        window.location.href = 'book.html';
+        window.location.href = 'book.html?tier=PRIVATE_COACHING';
         return;
       }
 

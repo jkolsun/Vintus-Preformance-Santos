@@ -7,6 +7,8 @@ const goalEnum = z.enum([
   "well-rounded",
   "recomposition",
   "other",
+  "improve-endurance",
+  "overall-health",
 ]);
 
 export const simpleIntakeSchema = z.object({
@@ -17,7 +19,7 @@ export const simpleIntakeSchema = z.object({
   primary_goal: goalEnum,
   training_days: z.enum(["1-2", "2-3", "4-5", "6+"]),
   experience: z.enum(["beginner", "intermediate", "advanced"]),
-  challenge: z.enum(["structure", "no-results", "energy", "unsure"]),
+  challenge: z.enum(["structure", "no-results", "energy", "unsure", "consistency", "nutrition", "motivation", "time"]),
 });
 
 export const expandedIntakeSchema = z.object({

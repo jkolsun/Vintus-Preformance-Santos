@@ -1,0 +1,625 @@
+/* Calendar Page — Vintus Performance Client Portal */
+
+.calendar-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-section {
+  flex: 1;
+  padding: 7rem 5% 4rem;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Page Header ── */
+
+.cal-page-header {
+  margin-bottom: 2rem;
+}
+
+.cal-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--gray);
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  margin-bottom: 0.75rem;
+}
+
+.cal-back-link:hover {
+  color: var(--silver);
+}
+
+.cal-page-header h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--off-white);
+}
+
+/* ── Calendar Card ── */
+
+.cal-card {
+  background: var(--black-card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 1px 3px rgba(255, 255, 255, 0.04);
+}
+
+.cal-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.cal-header h3 {
+  margin: 0 !important;
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--gray);
+  flex: 1;
+  text-align: center;
+}
+
+.cal-nav-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--silver);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.cal-nav-btn:hover {
+  border-color: var(--silver);
+  color: var(--white);
+  background: rgba(192, 192, 192, 0.06);
+}
+
+.cal-adherence {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--gray);
+  margin-bottom: 1rem;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Loading Shimmer ── */
+
+.cal-loading-shimmer {
+  height: 200px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── 7-Column Grid ── */
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  min-height: 200px;
+}
+
+.cal-day {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+  transition: border-color var(--transition-fast);
+}
+
+.cal-day--today {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.04);
+}
+
+.cal-day--past {
+  opacity: 0.65;
+}
+
+.cal-day--dragover {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(192, 192, 192, 0.2);
+}
+
+.cal-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.6rem 0.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cal-day-name {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-dark);
+}
+
+.cal-day-num {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray);
+}
+
+.cal-day--today .cal-day-num {
+  color: var(--off-white);
+  background: rgba(192, 192, 192, 0.25);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+}
+
+.cal-day-body {
+  flex: 1;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.cal-rest-label {
+  color: var(--gray-dark);
+  font-size: 0.65rem;
+  font-style: italic;
+  padding: 0.25rem;
+}
+
+/* ── Workout Cards ── */
+
+.cal-workout {
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-left: 3px solid var(--silver);
+  background: rgba(192, 192, 192, 0.04);
+}
+
+.cal-workout[draggable="true"] {
+  cursor: grab;
+}
+
+.cal-workout[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.cal-workout:hover {
+  background: rgba(192, 192, 192, 0.1);
+  transform: translateY(-1px);
+}
+
+.cal-workout--completed {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.cal-workout--missed {
+  border-left-color: #f87171;
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.cal-workout--skipped {
+  border-left-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.cal-workout--scheduled {
+  border-left-color: var(--silver);
+}
+
+.cal-workout--rescheduled {
+  border-left-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.06);
+}
+
+.cal-workout-type {
+  font-family: var(--font-heading);
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray);
+  margin-bottom: 2px;
+}
+
+.cal-workout-title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--off-white);
+  line-height: 1.2;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-workout-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: var(--gray);
+}
+
+.cal-workout-status {
+  font-weight: 700;
+}
+
+.cal-workout--completed .cal-workout-status { color: #4ade80; }
+.cal-workout--missed .cal-workout-status { color: #f87171; }
+
+/* Drag ghost */
+.cal-workout--dragging {
+  opacity: 0.4;
+}
+
+/* Missed workout replan button */
+.cal-workout-replan {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 4px 6px;
+  font-size: 0.6rem;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 4px;
+  color: #f87171;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.cal-workout-replan:hover {
+  background: rgba(248, 113, 113, 0.25);
+  border-color: #f87171;
+}
+
+/* ── Mobile Move Modal ── */
+
+.cal-move-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.cal-move-modal-content {
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px 12px 0 0;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.cal-move-modal-content p {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--silver);
+  margin-bottom: 1rem;
+}
+
+.cal-move-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+.cal-move-day-btn {
+  padding: 0.75rem 0.25rem;
+  text-align: center;
+  background: var(--black-lighter);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--off-white);
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  line-height: 1.4;
+  transition: all var(--transition-fast);
+}
+
+.cal-move-day-btn:hover,
+.cal-move-day-btn:focus {
+  border-color: var(--silver);
+  background: rgba(192, 192, 192, 0.08);
+}
+
+.cal-move-day-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cal-move-cancel {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--gray);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cal-move-cancel:hover {
+  border-color: var(--silver);
+  color: var(--off-white);
+}
+
+/* ── Toast ── */
+
+.cal-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--off-white);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  z-index: 9999;
+  animation: calToastIn 0.2s ease;
+  white-space: nowrap;
+}
+
+@keyframes calToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ====================================================
+   Responsive — Tablet
+   ==================================================== */
+
+@media (max-width: 1024px) {
+  .cal-grid {
+    gap: 4px;
+  }
+
+  .cal-day {
+    min-height: 150px;
+  }
+
+  .cal-workout-type {
+    font-size: 0.5rem;
+  }
+
+  .cal-workout-title {
+    font-size: 0.7rem;
+  }
+
+  .cal-workout-meta {
+    font-size: 0.6rem;
+  }
+}
+
+/* ====================================================
+   Responsive — Mobile
+   ==================================================== */
+
+@media (max-width: 768px) {
+  .cal-section {
+    padding: 5rem 4% 3rem;
+  }
+
+  .cal-page-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .cal-card {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .cal-header {
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .cal-header h3 {
+    font-size: 0.75rem !important;
+  }
+
+  /* Stacked rows on mobile */
+  .cal-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .cal-day {
+    min-height: auto;
+    flex-direction: row;
+    align-items: stretch;
+    border-radius: 6px;
+  }
+
+  .cal-day-header {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 56px;
+    min-width: 56px;
+    border-bottom: none;
+    border-right: 1px solid var(--border-color);
+    padding: 0.5rem 0.25rem;
+    gap: 2px;
+  }
+
+  .cal-day-body {
+    flex: 1;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding: 0.5rem;
+    overflow-x: hidden;
+    overflow-y: visible;
+    min-height: 48px;
+  }
+
+  .cal-rest-label {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  .cal-workout {
+    min-width: 0;
+    width: 100%;
+    border-radius: 4px;
+  }
+
+  .cal-workout-title {
+    white-space: normal;
+    font-size: 0.72rem;
+  }
+
+  /* Mobile move modal */
+  .cal-move-days {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .cal-move-day-btn {
+    padding: 0.85rem 0.25rem;
+    font-size: 0.7rem;
+  }
+
+  /* Toast on mobile */
+  .cal-toast {
+    left: 1rem;
+    right: 1rem;
+    transform: none;
+    text-align: center;
+    white-space: normal;
+  }
+
+  @keyframes calToastIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ====================================================
+   Responsive — Small Mobile
+   ==================================================== */
+
+@media (max-width: 480px) {
+  .cal-section {
+    padding: 4.5rem 3% 2rem;
+  }
+
+  .cal-page-header h1 {
+    font-size: 1.2rem;
+  }
+
+  .cal-card {
+    padding: 0.75rem;
+  }
+
+  .cal-day-header {
+    width: 48px;
+    min-width: 48px;
+  }
+
+  .cal-day-name {
+    font-size: 0.55rem;
+  }
+
+  .cal-day-num {
+    font-size: 0.65rem;
+  }
+
+  .cal-workout {
+    padding: 0.3rem 0.4rem;
+  }
+
+  .cal-workout-type {
+    font-size: 0.5rem;
+  }
+
+  .cal-workout-title {
+    font-size: 0.68rem;
+  }
+
+  .cal-workout-meta {
+    font-size: 0.55rem;
+  }
+
+  .cal-workout-replan {
+    font-size: 0.55rem;
+    padding: 2px 4px;
+  }
+
+  .cal-move-days {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

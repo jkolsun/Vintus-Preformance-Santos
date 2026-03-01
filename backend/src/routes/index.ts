@@ -9,6 +9,7 @@ import readinessRoutes from "./readiness.routes.js";
 import messagingRoutes from "./messaging.routes.js";
 import adminRoutes from "./admin.routes.js";
 import deviceRoutes from "./device.routes.js";
+import leadsRoutes from "./leads.routes.js";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/readiness", readinessRoutes);
 router.use("/messaging", messagingRoutes);
 router.use("/admin", adminRoutes);
 router.use("/device", deviceRoutes);
+router.use("/leads", leadsRoutes);
 
 export default router;
