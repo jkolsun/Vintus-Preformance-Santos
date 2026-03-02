@@ -7,6 +7,9 @@
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
     var loggedIn = !!localStorage.getItem('vintus_token');
+    var userRole = localStorage.getItem('vintus_role');
+    var portalHref = userRole === 'ADMIN' ? 'admin.html' : 'dashboard.html';
+    var portalLabel = userRole === 'ADMIN' ? 'Admin' : 'Portal';
 
     // ── Desktop Nav ──
     var navLinks = document.querySelector('ul.nav-links');
@@ -15,8 +18,8 @@
       var a = document.createElement('a');
 
       if (loggedIn) {
-        a.href = 'dashboard.html';
-        a.textContent = 'Portal';
+        a.href = portalHref;
+        a.textContent = portalLabel;
       } else {
         a.href = 'login.html';
         a.textContent = 'Login';
@@ -39,8 +42,8 @@
       var mobileLink = document.createElement('a');
 
       if (loggedIn) {
-        mobileLink.href = 'dashboard.html';
-        mobileLink.textContent = 'Portal';
+        mobileLink.href = portalHref;
+        mobileLink.textContent = portalLabel;
       } else {
         mobileLink.href = 'login.html';
         mobileLink.textContent = 'Login';
@@ -57,8 +60,8 @@
     if (loggedIn) {
       var navCta = document.querySelector('.nav-cta');
       if (navCta) {
-        navCta.href = 'dashboard.html';
-        navCta.textContent = 'My Dashboard';
+        navCta.href = portalHref;
+        navCta.textContent = userRole === 'ADMIN' ? 'Admin Panel' : 'My Dashboard';
       }
     }
   });

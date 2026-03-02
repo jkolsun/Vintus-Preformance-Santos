@@ -34,7 +34,7 @@ router.post(
 
       res.status(201).json({
         success: true,
-        data: { token: result.token, userId: result.userId },
+        data: { token: result.token, userId: result.userId, role: "CLIENT" },
       });
     } catch (err) {
       next(err);

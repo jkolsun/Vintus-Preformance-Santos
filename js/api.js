@@ -41,6 +41,7 @@ async function apiFetch(path, options) {
   }
 
   options.headers = headers;
+  options.credentials = 'include';
 
   var res;
   try {
@@ -49,9 +50,10 @@ async function apiFetch(path, options) {
     throw new Error('Network error. Please check your connection.');
   }
 
-  // 401 → clear token and redirect to login
+  // 401 → clear token + role and redirect to login
   if (res.status === 401) {
     clearToken();
+    localStorage.removeItem('vintus_role');
     if (!window.location.pathname.includes('login.html')) {
       window.location.href = 'login.html';
     }

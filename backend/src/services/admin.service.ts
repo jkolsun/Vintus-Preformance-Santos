@@ -1,3 +1,4 @@
+import { PlanTier, SubscriptionStatus } from "@prisma/client";
 import type { Prisma, MessageChannel, MessageCategory } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
@@ -60,13 +61,23 @@ export async function getClients(options: {
   }
 
   if (tier) {
-    where.subscription = { planTier: tier as Prisma.EnumPlanTierFilter };
+    if (!Object.values(PlanTier).includes(tier as PlanTier)) {
+      const err = new Error("Invalid tier: " + tier) as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    }
+    where.subscription = { planTier: tier as PlanTier };
   }
 
   if (status) {
+    if (!Object.values(SubscriptionStatus).includes(status as SubscriptionStatus)) {
+      const err = new Error("Invalid status: " + status) as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    }
     where.subscription = {
       ...where.subscription as Prisma.SubscriptionWhereInput,
-      status: status as Prisma.EnumSubscriptionStatusFilter,
+      status: status as SubscriptionStatus,
     };
   }
 
@@ -156,9 +167,13 @@ export async function getClientDetail(userId: string): Promise<unknown> {
                   scheduledDate: true,
                   sessionType: true,
                   title: true,
+                  description: true,
                   status: true,
                   completedAt: true,
                   actualDuration: true,
+                  prescribedDuration: true,
+                  prescribedTSS: true,
+                  athleteNotes: true,
                   rpe: true,
                 },
               },
@@ -813,6 +828,7 @@ async function getConsecutiveMissedForAdmin(userId: string): Promise<number> {
     where: {
       workoutPlan: { athleteProfileId: profile.id },
       scheduledDate: { lte: new Date() },
+      status: { in: ["COMPLETED", "MISSED", "SKIPPED"] },
     },
     orderBy: { scheduledDate: "desc" },
     take: 30,
@@ -823,8 +839,6 @@ async function getConsecutiveMissedForAdmin(userId: string): Promise<number> {
   for (const session of recentSessions) {
     if (session.status === "MISSED" || session.status === "SKIPPED") {
       streak++;
-    } else if (session.status === "COMPLETED") {
-      break;
     } else {
       break;
     }

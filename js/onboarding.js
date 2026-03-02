@@ -72,6 +72,7 @@
       var pwRes = await apiPost('/api/v1/onboarding/set-password', { userId: userId, sessionId: sessionId, password: pw });
       if (pwRes.success && pwRes.data && pwRes.data.token) {
         setToken(pwRes.data.token);
+        localStorage.setItem('vintus_role', 'CLIENT');
         goToStep(2);
       } else {
         showError('Failed to set password. Please try again.');

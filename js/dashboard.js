@@ -565,6 +565,7 @@
       // Logout API may fail but we still clear local state
     }
     clearToken();
+    localStorage.removeItem('vintus_role');
     window.location.href = 'login.html';
   });
 

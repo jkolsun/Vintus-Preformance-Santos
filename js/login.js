@@ -3,9 +3,10 @@
  */
 
 (function () {
-  // If already logged in, redirect to dashboard
+  // If already logged in, redirect based on role
   if (isLoggedIn()) {
-    window.location.href = 'dashboard.html';
+    var savedRole = localStorage.getItem('vintus_role');
+    window.location.href = savedRole === 'ADMIN' ? 'admin.html' : 'dashboard.html';
     return;
   }
 
@@ -33,7 +34,14 @@
 
       if (res.success && res.data && res.data.token) {
         setToken(res.data.token);
-        window.location.href = 'dashboard.html';
+        if (res.data.role) {
+          localStorage.setItem('vintus_role', res.data.role);
+        }
+        if (res.data.role === 'ADMIN') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
       } else {
         showError('Login failed. Please check your credentials.');
       }
