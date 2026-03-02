@@ -907,6 +907,25 @@
   color: var(--white);
 }
 
+.dash-account-row--muted {
+  border-bottom: none;
+  padding-top: 0.5rem;
+  opacity: 0.18;
+}
+
+.dash-account-row--muted .dash-account-label {
+  font-size: 0.75rem;
+}
+
+.dash-account-row--muted .dash-account-link {
+  font-size: 0.75rem;
+  color: var(--gray);
+}
+
+.dash-account-row--muted .dash-account-link:hover {
+  color: var(--gray);
+}
+
 /* ── Legacy Loading ── */
 
 .dash-loading {
