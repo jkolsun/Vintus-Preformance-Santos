@@ -128,35 +128,35 @@
                 </div>
             </div>
 
-            <!-- Account -->
-            <div class="dash-card">
-                <h3>Account</h3>
-                <div class="dash-account-row">
-                    <span class="dash-account-label">Plan</span>
-                    <span class="dash-account-value" id="accountTier">&mdash;</span>
+            <!-- Account & Coach — unified bottom bar -->
+            <div class="dash-card dash-card-full dash-bottom-bar">
+                <div class="dash-bottom-left">
+                    <div class="dash-bottom-item">
+                        <span class="dash-bottom-label">Plan</span>
+                        <span class="dash-bottom-value" id="accountTier">&mdash;</span>
+                    </div>
+                    <div class="dash-bottom-divider"></div>
+                    <div class="dash-bottom-item">
+                        <span class="dash-bottom-label">Devices</span>
+                        <a href="onboarding.html" class="dash-bottom-link">Setup</a>
+                    </div>
+                    <div class="dash-bottom-divider"></div>
+                    <div class="dash-bottom-item">
+                        <span class="dash-bottom-label">Session</span>
+                        <button class="dash-bottom-link" id="logoutBtn">Sign Out</button>
+                    </div>
+                    <div class="dash-bottom-divider dash-bottom-divider--muted"></div>
+                    <div class="dash-bottom-item dash-bottom-item--muted">
+                        <span class="dash-bottom-label">Billing</span>
+                        <button class="dash-bottom-link" id="manageSubBtn">Manage</button>
+                    </div>
                 </div>
-                <div class="dash-account-row">
-                    <span class="dash-account-label">Devices</span>
-                    <a href="onboarding.html" class="dash-account-link">Setup</a>
+                <div class="dash-bottom-right">
+                    <button class="dash-chat-open-btn" id="chatOpenBtn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Message Coach Jerry
+                    </button>
                 </div>
-                <div class="dash-account-row">
-                    <span class="dash-account-label">Session</span>
-                    <button class="dash-account-link" id="logoutBtn">Sign Out</button>
-                </div>
-                <div class="dash-account-row dash-account-row--muted">
-                    <span class="dash-account-label">Billing</span>
-                    <button class="dash-account-link" id="manageSubBtn">Manage</button>
-                </div>
-            </div>
-
-            <!-- Coach Chat Card -->
-            <div class="dash-card dash-chat-card">
-                <h3>Coach Jerry</h3>
-                <p class="dash-chat-teaser">Ask about your training, recovery, or plan adjustments.</p>
-                <button class="dash-chat-open-btn" id="chatOpenBtn">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Message Coach Jerry
-                </button>
             </div>
         </div>
     </section>

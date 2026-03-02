@@ -864,66 +864,84 @@
   }
 }
 
-/* ── Account Section ── */
+/* ── Bottom Bar (Account + Coach CTA) ── */
 
-.dash-account-row {
+.dash-bottom-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 2rem;
+  padding: 1.1rem 1.75rem;
 }
 
-.dash-account-row:last-child {
-  border-bottom: none;
+.dash-bottom-bar h3 { display: none; }
+
+.dash-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
 }
 
-.dash-account-label {
-  color: var(--gray);
-  font-size: 0.9rem;
+.dash-bottom-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.dash-account-value {
+.dash-bottom-label {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.75rem;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dash-bottom-value {
   color: var(--off-white);
   font-family: var(--font-heading);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.dash-account-link {
-  color: var(--silver);
-  font-size: 0.85rem;
+.dash-bottom-link {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.75rem;
   text-decoration: none;
   cursor: pointer;
-  transition: color var(--transition-fast);
+  transition: color 0.15s;
   background: none;
   border: none;
   font-family: var(--font-body);
+  padding: 0;
 }
 
-.dash-account-link:hover {
-  color: var(--white);
+.dash-bottom-link:hover {
+  color: var(--silver);
 }
 
-.dash-account-row--muted {
-  border-bottom: none;
-  padding-top: 0.5rem;
-  opacity: 0.18;
+.dash-bottom-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.dash-account-row--muted .dash-account-label {
-  font-size: 0.75rem;
+.dash-bottom-divider--muted {
+  opacity: 0.3;
 }
 
-.dash-account-row--muted .dash-account-link {
-  font-size: 0.75rem;
-  color: var(--gray);
+.dash-bottom-item--muted {
+  opacity: 0.2;
 }
 
-.dash-account-row--muted .dash-account-link:hover {
-  color: var(--gray);
+.dash-bottom-item--muted .dash-bottom-link:hover {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dash-bottom-right {
+  flex-shrink: 0;
 }
 
 /* ── Legacy Loading ── */
@@ -1039,17 +1057,21 @@
     height: 120px;
   }
 
-  /* Account */
-  .dash-account-row {
-    padding: 0.6rem 0;
+  /* Bottom bar */
+  .dash-bottom-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
   }
 
-  .dash-account-label {
-    font-size: 0.8rem;
+  .dash-bottom-left {
+    gap: 0.75rem 1rem;
   }
 
-  .dash-account-link {
-    font-size: 0.8rem;
+  .dash-bottom-right {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 1rem;
   }
 }
 
@@ -1146,42 +1168,29 @@
    Coach Chat Card & Slide-Out Panel
    ==================================================== */
 
-.dash-chat-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.dash-chat-teaser {
-  color: var(--gray);
-  font-size: 0.85rem;
-  margin-bottom: 1.25rem;
-  line-height: 1.5;
-}
-
 .dash-chat-open-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.25rem;
   background: transparent;
   color: var(--silver);
-  border: 1px solid var(--silver);
+  border: 1px solid rgba(192, 192, 192, 0.3);
   border-radius: 6px;
   font-family: var(--font-heading);
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  width: 100%;
-  justify-content: center;
+  transition: all 0.15s;
+  white-space: nowrap;
 }
 
 .dash-chat-open-btn:hover {
   background: var(--silver);
   color: var(--black);
+  border-color: var(--silver);
 }
 
 /* ── Overlay ── */
