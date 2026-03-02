@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
 import type { CheckinInput } from "../routes/schemas/readiness.schemas.js";
+import { scheduleCheckinResponse } from "./messaging.service.js";
 
 // ============================================================
 // submitCheckin — upsert today's readiness + evaluate flags
@@ -71,6 +72,14 @@ export async function submitCheckin(
   }
 
   logger.info({ userId, metricId: metric.id, flagged }, "Readiness check-in submitted");
+
+  // Fire-and-forget: schedule personalized SMS response 3 min after check-in
+  scheduleCheckinResponse(userId, {
+    perceivedEnergy: data.perceivedEnergy,
+    perceivedSoreness: data.perceivedSoreness,
+    perceivedMood: data.perceivedMood,
+    sleepQualityManual: data.sleepQualityManual,
+  }, flags).catch(err => logger.error({ err, userId }, "Failed to schedule check-in response"));
 
   return { id: metric.id, flagged, flags };
 }

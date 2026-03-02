@@ -27,6 +27,7 @@ model User {
   escalationEvents EscalationEvent[]
   deviceConnections DeviceConnection[]
   sessions        Session[]
+  chatConversation ChatConversation?
 }
 
 enum Role {
@@ -312,6 +313,7 @@ enum MessageCategory {
   WORKOUT_MISSED
   ESCALATION
   CHECK_IN
+  CHECKIN_RESPONSE
   SYSTEM
 }
 
@@ -422,4 +424,28 @@ model Lead {
   status         String   @default("NEW")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+// ============================================================
+// CHAT — AI Coach Conversations
+// ============================================================
+
+model ChatConversation {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  messages      ChatMessage[]
+}
+
+model ChatMessage {
+  id              String   @id @default(cuid())
+  conversationId  String
+  conversation    ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String
+  content         String
+  metadata        Json?
+  createdAt       DateTime @default(now())
 }

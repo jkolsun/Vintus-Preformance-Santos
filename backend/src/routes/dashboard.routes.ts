@@ -97,4 +97,24 @@ router.get(
   }
 );
 
+// GET /dashboard/daily-summary?days=14 — graded daily performance data
+router.get(
+  "/daily-summary",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const days = Math.min(Math.max(parseInt(req.query.days as string, 10) || 14, 7), 30);
+
+      const data = await dashboardService.getDailySummary(userId, days);
+
+      res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 export default router;

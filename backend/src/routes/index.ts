@@ -10,6 +10,7 @@ import messagingRoutes from "./messaging.routes.js";
 import adminRoutes from "./admin.routes.js";
 import deviceRoutes from "./device.routes.js";
 import leadsRoutes from "./leads.routes.js";
+import chatRoutes from "./chat.routes.js";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use("/messaging", messagingRoutes);
 router.use("/admin", adminRoutes);
 router.use("/device", deviceRoutes);
 router.use("/leads", leadsRoutes);
+router.use("/chat", chatRoutes);
 
 export default router;

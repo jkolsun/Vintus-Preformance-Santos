@@ -26,6 +26,12 @@ interface MessageContext {
   trainingDaysPerWeek?: number;
   bookingLink?: string;
   checkInLink?: string;
+  perceivedEnergy?: number;
+  perceivedSoreness?: number;
+  perceivedMood?: number;
+  sleepQualityManual?: number;
+  readinessTone?: "supportive" | "energized" | "balanced";
+  readinessFlags?: string[];
   [key: string]: unknown;
 }
 
@@ -66,6 +72,7 @@ function getSubjectForCategory(category: string): string {
     MOTIVATION: "Today's Focus",
     RECOVERY_TIP: "Recovery Insight",
     CHECK_IN: "Daily Check-In",
+    CHECKIN_RESPONSE: "Your Readiness Update",
     SYSTEM: "Vintus Update",
     HUMOR: "A Quick Note",
     EDUCATION: "Training Insight",
@@ -105,9 +112,28 @@ export async function sendMessage(
 
   // 1. Filter templates by category + channel compatibility
   const categoryTemplates = messageTemplates[category] ?? [];
-  const channelCompatible = categoryTemplates.filter(
+  let channelCompatible = categoryTemplates.filter(
     (t) => t.channel === channel || t.channel === "BOTH"
   );
+
+  // 1b. Tone-aware filtering for CHECKIN_RESPONSE templates
+  if (fullContext.readinessTone && channelCompatible.length > 0) {
+    const toneTagMap: Record<string, string> = {
+      supportive: "low-readiness",
+      energized: "high-readiness",
+      balanced: "mixed-readiness",
+    };
+    const toneTag = toneTagMap[fullContext.readinessTone];
+    if (toneTag) {
+      const toneMatched = channelCompatible.filter(
+        (t) => t.tags.includes(toneTag) || t.tags.includes("generic")
+      );
+      // Only narrow the pool if tone-matched templates exist
+      if (toneMatched.length > 0) {
+        channelCompatible = toneMatched;
+      }
+    }
+  }
 
   // 2. Exclude templates used within their cooldownHours
   const recentLogs = await prisma.messageLog.findMany({
@@ -307,4 +333,97 @@ export async function getMessageStats(userId: string): Promise<{
     byCategory,
     lastSentAt: lastMessage?.sentAt ?? null,
   };
+}
+
+// ============================================================
+// scheduleCheckinResponse — personalized SMS 3 min after check-in
+// ============================================================
+
+const pendingCheckinResponses = new Map<string, NodeJS.Timeout>();
+
+interface CheckinData {
+  perceivedEnergy: number;
+  perceivedSoreness: number;
+  perceivedMood: number;
+  sleepQualityManual: number;
+}
+
+export async function scheduleCheckinResponse(
+  userId: string,
+  checkinData: CheckinData,
+  flags: string[]
+): Promise<void> {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const dateStr = today.toISOString().split("T")[0];
+  const dedupKey = `checkin-response:${userId}:${dateStr}`;
+
+  // Debounce — if user resubmits within 3 min, reset the timer
+  const existingTimeout = pendingCheckinResponses.get(dedupKey);
+  if (existingTimeout) {
+    clearTimeout(existingTimeout);
+    logger.info({ userId }, "Check-in response debounced (re-submission)");
+  }
+
+  // Compute readiness tone from composite score
+  const composite = (
+    checkinData.perceivedEnergy +
+    checkinData.perceivedMood +
+    checkinData.sleepQualityManual +
+    (11 - checkinData.perceivedSoreness)
+  ) / 4;
+
+  let readinessTone: "supportive" | "energized" | "balanced";
+  if (composite < 4.5) {
+    readinessTone = "supportive";
+  } else if (composite > 7) {
+    readinessTone = "energized";
+  } else {
+    readinessTone = "balanced";
+  }
+
+  const DELAY_MS = 3 * 60 * 1000; // 3 minutes
+
+  const timeout = setTimeout(async () => {
+    pendingCheckinResponses.delete(dedupKey);
+
+    try {
+      // DB dedup — check if already sent today
+      const existingResponse = await prisma.messageLog.findFirst({
+        where: {
+          userId,
+          category: "CHECKIN_RESPONSE" as MessageCategory,
+          sentAt: { gte: today },
+        },
+      });
+
+      if (existingResponse) {
+        logger.info({ userId }, "Check-in response already sent today, skipping");
+        return;
+      }
+
+      await sendMessage(userId, "CHECKIN_RESPONSE", "SMS", {
+        perceivedEnergy: checkinData.perceivedEnergy,
+        perceivedSoreness: checkinData.perceivedSoreness,
+        perceivedMood: checkinData.perceivedMood,
+        sleepQualityManual: checkinData.sleepQualityManual,
+        readinessTone,
+        readinessFlags: flags,
+      });
+
+      logger.info(
+        { userId, readinessTone, flags },
+        "Check-in response SMS sent"
+      );
+    } catch (err) {
+      logger.error({ err, userId }, "Check-in response SMS failed");
+    }
+  }, DELAY_MS);
+
+  pendingCheckinResponses.set(dedupKey, timeout);
+
+  logger.info(
+    { userId, readinessTone, delayMs: DELAY_MS },
+    "Check-in response SMS scheduled"
+  );
 }

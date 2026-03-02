@@ -803,6 +803,80 @@ export const messageTemplates: Record<string, MessageTemplate[]> = {
       tags: ["morning"],
     },
   ],
+
+  // ============================================================
+  // CHECKIN_RESPONSE — Post-check-in personalized SMS (8 templates)
+  // ============================================================
+  CHECKIN_RESPONSE: [
+    // Low readiness (supportive tone)
+    {
+      id: "cr-low-1",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "Noted, {{firstName}}. Energy at {{perceivedEnergy}}, soreness at {{perceivedSoreness}}. Today's plan accounts for where you are.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "low-readiness"],
+    },
+    {
+      id: "cr-low-2",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "Tough morning, {{firstName}}. Sleep at {{sleepQualityManual}} — your session is adjusted. Recovery is part of the plan.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "low-readiness"],
+    },
+    // High readiness (energized tone)
+    {
+      id: "cr-high-1",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "Energy {{perceivedEnergy}}, mood {{perceivedMood}} — solid. Your session has a clear runway today, {{firstName}}.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "high-readiness"],
+    },
+    {
+      id: "cr-high-2",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "Strong numbers across the board, {{firstName}}. Today is a day to push. The plan reflects that.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "high-readiness"],
+    },
+    // Mixed readiness (balanced tone)
+    {
+      id: "cr-mix-1",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "{{firstName}}, sleep was solid but soreness is up. Plan is calibrated — trust the adjustments.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "mixed-readiness"],
+    },
+    {
+      id: "cr-mix-2",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "Mixed signals today — that's normal. Your programming adapts to exactly this, {{firstName}}.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "mixed-readiness"],
+    },
+    // Generic fallback
+    {
+      id: "cr-gen-1",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "Check-in logged, {{firstName}}. Your day is calibrated.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "generic"],
+    },
+    {
+      id: "cr-gen-2",
+      category: "CHECKIN_RESPONSE",
+      channel: "SMS",
+      content: "Data received, {{firstName}}. Your plan is adjusting — show up and let the structure work.",
+      cooldownHours: 20,
+      tags: ["checkin-response", "generic"],
+    },
+  ],
 };
 
 /**

@@ -207,197 +207,290 @@
   }
 
   // ============================================================
-  // Readiness Trends — SVG Area Chart
+  // 14-Day Performance — Clickable Bar Chart + Detail Panel
   // ============================================================
+
+  var dailySummaryData = null;
+  var selectedDate = null;
 
   async function loadTrends() {
     try {
-      var res = await apiGet('/api/v1/readiness/history?days=14');
+      var res = await apiGet('/api/v1/dashboard/daily-summary?days=14');
       if (!res.success || !res.data) return;
 
-      var records = res.data;
-      if (!records.length) {
+      dailySummaryData = res.data;
+
+      if (!dailySummaryData.days || !dailySummaryData.days.length) {
         document.getElementById('trendsChart').innerHTML =
-          '<div class="dash-trends-empty">No check-in data yet. Submit your first check-in above to see your trends.</div>';
+          '<div class="dash-trends-empty">No data yet. Submit your first check-in above to see your performance.</div>';
         return;
       }
 
-      var sorted = records.sort(function (a, b) {
-        return new Date(a.date) - new Date(b.date);
-      });
+      // Update header score
+      var scoreEl = document.getElementById('trendsScore');
+      if (dailySummaryData.averageScore != null) {
+        var avg = dailySummaryData.averageScore;
+        var cls = avg >= 75 ? 'good' : avg >= 50 ? 'moderate' : 'low';
+        scoreEl.className = 'dash-trends-score dash-trends-score--' + cls;
+        scoreEl.innerHTML = '<strong>' + avg + '</strong> Avg';
+      } else {
+        scoreEl.textContent = '';
+      }
 
-      renderTrendsChart(sorted);
+      renderDailyChart(dailySummaryData.days);
     } catch (err) {
       document.getElementById('trendsChart').innerHTML =
-        '<div class="dash-trends-empty">Unable to load trends.</div>';
+        '<div class="dash-trends-empty">Unable to load performance data.</div>';
     }
   }
 
-  function renderTrendsChart(records) {
+  function getGradeColor(grade) {
+    if (grade === 'green') return '#4ade80';
+    if (grade === 'yellow') return '#fbbf24';
+    if (grade === 'red') return '#f87171';
+    return 'rgba(255,255,255,0.08)';
+  }
+
+  function renderDailyChart(days) {
     var container = document.getElementById('trendsChart');
     container.innerHTML = '';
 
-    var chartW = container.offsetWidth || 600;
-    var chartH = 160;
-    var padL = 28;
-    var padR = 10;
-    var padT = 15;
-    var padB = 25;
-    var plotW = chartW - padL - padR;
-    var plotH = chartH - padT - padB;
+    var chart = document.createElement('div');
+    chart.className = 'daily-chart';
 
-    // Compute avg readiness for each record
-    var points = records.map(function (r, i) {
-      var avg = ((r.perceivedEnergy || 5) + (r.sleepQualityManual || 5) + (10 - (r.perceivedSoreness || 5))) / 3;
-      var x = padL + (records.length === 1 ? plotW / 2 : (i / (records.length - 1)) * plotW);
-      var y = padT + plotH - (avg / 10) * plotH;
-      return { x: x, y: y, avg: avg, date: r.date };
+    var todayStr = toLocalDateStr(today);
+    var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    days.forEach(function (day) {
+      var group = document.createElement('div');
+      group.className = 'daily-chart__bar-group';
+      group.setAttribute('data-date', day.date);
+
+      var d = new Date(day.date + 'T12:00:00');
+      var isToday = day.date === todayStr;
+
+      if (isToday) group.classList.add('daily-chart__bar-group--today');
+
+      var bar = document.createElement('div');
+      bar.className = 'daily-chart__bar';
+
+      if (day.score != null) {
+        bar.style.height = Math.max(8, day.score) + '%';
+        bar.style.background = getGradeColor(day.grade);
+      } else {
+        bar.style.height = '15%';
+        bar.classList.add('daily-chart__bar--gray');
+      }
+
+      var label = document.createElement('div');
+      label.className = 'daily-chart__label';
+      label.textContent = dayNames[d.getDay()].charAt(0);
+
+      var dateLabel = document.createElement('div');
+      dateLabel.className = 'daily-chart__date';
+      dateLabel.textContent = d.getDate();
+
+      group.appendChild(bar);
+      group.appendChild(label);
+      group.appendChild(dateLabel);
+
+      // Click handler
+      if (day.dayType !== 'future') {
+        group.addEventListener('click', function () {
+          if (selectedDate === day.date) {
+            closeDailyDetail();
+          } else {
+            openDailyDetail(day);
+            // Update active state
+            chart.querySelectorAll('.daily-chart__bar-group--active').forEach(function (el) {
+              el.classList.remove('daily-chart__bar-group--active');
+            });
+            group.classList.add('daily-chart__bar-group--active');
+          }
+        });
+      } else {
+        group.style.opacity = '0.3';
+        group.style.cursor = 'default';
+      }
+
+      chart.appendChild(group);
     });
 
-    // Current readiness score
-    var lastAvg = points[points.length - 1].avg;
-    var scoreEl = document.getElementById('trendsScore');
-    var scoreClass = lastAvg >= 7 ? 'good' : lastAvg >= 4 ? 'moderate' : 'low';
-    scoreEl.className = 'dash-trends-score dash-trends-score--' + scoreClass;
-    scoreEl.innerHTML = '<strong>' + lastAvg.toFixed(1) + '</strong> Current';
+    container.appendChild(chart);
 
-    // Build SVG
-    var svgNS = 'http://www.w3.org/2000/svg';
-    var svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('viewBox', '0 0 ' + chartW + ' ' + chartH);
-    svg.setAttribute('preserveAspectRatio', 'none');
-    svg.style.width = '100%';
-    svg.style.height = chartH + 'px';
+    // Detail panel placeholder
+    var detail = document.createElement('div');
+    detail.className = 'daily-detail';
+    detail.id = 'dailyDetail';
+    detail.style.display = 'none';
+    container.appendChild(detail);
+  }
 
-    // Y-axis gridlines
-    [0, 2.5, 5, 7.5, 10].forEach(function (val) {
-      var y = padT + plotH - (val / 10) * plotH;
+  function openDailyDetail(day) {
+    selectedDate = day.date;
+    var panel = document.getElementById('dailyDetail');
+    var d = new Date(day.date + 'T12:00:00');
+    var dateDisplay = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-      var line = document.createElementNS(svgNS, 'line');
-      line.setAttribute('x1', padL);
-      line.setAttribute('y1', y);
-      line.setAttribute('x2', chartW - padR);
-      line.setAttribute('y2', y);
-      line.setAttribute('stroke', 'rgba(255,255,255,0.06)');
-      line.setAttribute('stroke-width', '1');
-      svg.appendChild(line);
+    var html = '';
 
-      if (val === 0 || val === 5 || val === 10) {
-        var label = document.createElementNS(svgNS, 'text');
-        label.setAttribute('x', padL - 6);
-        label.setAttribute('y', y + 3);
-        label.setAttribute('text-anchor', 'end');
-        label.setAttribute('font-size', '9');
-        label.setAttribute('fill', '#666');
-        label.setAttribute('font-family', 'Oswald, sans-serif');
-        label.textContent = val;
-        svg.appendChild(label);
-      }
-    });
-
-    // Gradient fill definition
-    var defs = document.createElementNS(svgNS, 'defs');
-    var grad = document.createElementNS(svgNS, 'linearGradient');
-    grad.setAttribute('id', 'trendFill');
-    grad.setAttribute('x1', '0');
-    grad.setAttribute('y1', '0');
-    grad.setAttribute('x2', '0');
-    grad.setAttribute('y2', '1');
-
-    var stop1 = document.createElementNS(svgNS, 'stop');
-    stop1.setAttribute('offset', '0%');
-    stop1.setAttribute('stop-color', scoreClass === 'good' ? '#4ade80' : scoreClass === 'moderate' ? '#fbbf24' : '#f87171');
-    stop1.setAttribute('stop-opacity', '0.3');
-    grad.appendChild(stop1);
-
-    var stop2 = document.createElementNS(svgNS, 'stop');
-    stop2.setAttribute('offset', '100%');
-    stop2.setAttribute('stop-color', scoreClass === 'good' ? '#4ade80' : scoreClass === 'moderate' ? '#fbbf24' : '#f87171');
-    stop2.setAttribute('stop-opacity', '0.02');
-    grad.appendChild(stop2);
-
-    defs.appendChild(grad);
-    svg.appendChild(defs);
-
-    // Area path
-    if (points.length > 1) {
-      var areaPath = 'M' + points[0].x + ',' + points[0].y;
-      for (var i = 1; i < points.length; i++) {
-        areaPath += ' L' + points[i].x + ',' + points[i].y;
-      }
-      areaPath += ' L' + points[points.length - 1].x + ',' + (padT + plotH);
-      areaPath += ' L' + points[0].x + ',' + (padT + plotH) + ' Z';
-
-      var area = document.createElementNS(svgNS, 'path');
-      area.setAttribute('d', areaPath);
-      area.setAttribute('fill', 'url(#trendFill)');
-      svg.appendChild(area);
-
-      // Line path
-      var linePath = 'M' + points[0].x + ',' + points[0].y;
-      for (var j = 1; j < points.length; j++) {
-        linePath += ' L' + points[j].x + ',' + points[j].y;
-      }
-
-      var lineEl = document.createElementNS(svgNS, 'path');
-      lineEl.setAttribute('d', linePath);
-      lineEl.setAttribute('fill', 'none');
-      lineEl.setAttribute('stroke', scoreClass === 'good' ? '#4ade80' : scoreClass === 'moderate' ? '#fbbf24' : '#f87171');
-      lineEl.setAttribute('stroke-width', '2');
-      lineEl.setAttribute('stroke-linejoin', 'round');
-      svg.appendChild(lineEl);
+    // Header
+    var titleText = dateDisplay;
+    if (day.workout) {
+      titleText += ' — ' + escapeHtml(day.workout.title);
+    } else if (day.dayType === 'rest') {
+      titleText += ' — Rest Day';
+    } else if (day.dayType === 'no_data') {
+      titleText += ' — No Data';
     }
 
-    // Data points
-    var tooltip = document.createElement('div');
-    tooltip.className = 'dash-trend-tooltip';
-    container.appendChild(tooltip);
-
-    points.forEach(function (pt) {
-      var circle = document.createElementNS(svgNS, 'circle');
-      circle.setAttribute('cx', pt.x);
-      circle.setAttribute('cy', pt.y);
-      circle.setAttribute('r', '4');
-      circle.setAttribute('fill', '#0a0a0a');
-      circle.setAttribute('stroke', scoreClass === 'good' ? '#4ade80' : scoreClass === 'moderate' ? '#fbbf24' : '#f87171');
-      circle.setAttribute('stroke-width', '2');
-      circle.style.cursor = 'pointer';
-
-      circle.addEventListener('mouseenter', function (e) {
-        var d = new Date(pt.date);
-        tooltip.textContent = (d.getMonth() + 1) + '/' + d.getDate() + ' — ' + pt.avg.toFixed(1);
-        tooltip.style.display = 'block';
-        var rect = container.getBoundingClientRect();
-        tooltip.style.left = (pt.x - 30) + 'px';
-        tooltip.style.top = (pt.y - 32) + 'px';
-      });
-
-      circle.addEventListener('mouseleave', function () {
-        tooltip.style.display = 'none';
-      });
-
-      svg.appendChild(circle);
-    });
-
-    container.insertBefore(svg, tooltip);
-
-    // Date labels
-    var labelsDiv = document.createElement('div');
-    labelsDiv.className = 'dash-trends-labels';
-
-    // Show up to 7 evenly spaced labels
-    var labelCount = Math.min(points.length, 7);
-    var step = points.length <= 1 ? 1 : (points.length - 1) / (labelCount - 1);
-    for (var k = 0; k < labelCount; k++) {
-      var idx = Math.round(k * step);
-      if (idx >= points.length) idx = points.length - 1;
-      var dateObj = new Date(points[idx].date);
-      var span = document.createElement('span');
-      span.textContent = (dateObj.getMonth() + 1) + '/' + dateObj.getDate();
-      labelsDiv.appendChild(span);
+    var gradeBadge = '';
+    if (day.score != null) {
+      gradeBadge = '<span class="daily-detail__grade daily-detail__grade--' + day.grade + '">' + day.score + '</span>';
     }
 
-    container.appendChild(labelsDiv);
+    html += '<div class="daily-detail__header">' +
+      '<div class="daily-detail__title">' + titleText + gradeBadge + '</div>' +
+      '<button class="daily-detail__close" id="detailClose">&times;</button>' +
+    '</div>';
+
+    // Status message for missed/skipped
+    if (day.dayType === 'missed' || day.dayType === 'skipped') {
+      var statusLabel = day.dayType === 'skipped' ? 'Skipped' : 'Missed';
+      var statusMsg = '';
+      if (day.readiness) {
+        if (day.readiness.readinessAvg < 4) {
+          statusMsg = day.dayType === 'skipped'
+            ? 'Readiness was low (' + day.readiness.readinessAvg.toFixed(1) + '/10). Smart decision.'
+            : 'Readiness was low (' + day.readiness.readinessAvg.toFixed(1) + '/10). Your body needed rest.';
+        } else if (day.readiness.readinessAvg < 6) {
+          statusMsg = statusLabel + '. Readiness was moderate (' + day.readiness.readinessAvg.toFixed(1) + '/10).';
+        } else {
+          statusMsg = statusLabel + '. Readiness was good (' + day.readiness.readinessAvg.toFixed(1) + '/10) — you had the capacity.';
+        }
+      } else {
+        statusMsg = statusLabel + '. No check-in data for this day.';
+      }
+      html += '<div class="daily-detail__status daily-detail__status--' + day.dayType + '">' +
+        '<strong>' + statusLabel + '</strong> ' + statusMsg +
+      '</div>';
+    }
+
+    // Deload badge
+    if (day.isDeloadWeek) {
+      html += '<div class="daily-detail__deload-badge">Deload Week</div>';
+    }
+
+    // Score breakdown (completed workouts)
+    if (day.breakdown && day.dayType === 'workout' && day.workout && day.workout.status === 'COMPLETED') {
+      html += '<div class="daily-detail__section">';
+      html += '<div class="daily-detail__section-title">Score Breakdown</div>';
+
+      if (day.breakdown.durationAdherence != null) {
+        var durText = '';
+        if (day.workout.actualDuration && day.workout.prescribedDuration) {
+          durText = day.workout.actualDuration + '/' + day.workout.prescribedDuration + ' min';
+        }
+        html += buildBreakdownRow('Duration', day.breakdown.durationAdherence, durText);
+      }
+      if (day.breakdown.tssAdherence != null) {
+        var tssText = '';
+        if (day.workout.actualTSS && day.workout.prescribedTSS) {
+          tssText = Math.round(day.workout.actualTSS) + '/' + Math.round(day.workout.prescribedTSS) + ' TSS';
+        }
+        html += buildBreakdownRow('Intensity', day.breakdown.tssAdherence, tssText);
+      }
+      if (day.breakdown.rpeAppropriateness != null) {
+        html += buildBreakdownRow('Effort (RPE ' + day.workout.rpe + ')', day.breakdown.rpeAppropriateness, '');
+      }
+      if (day.breakdown.readinessQuality != null) {
+        html += buildBreakdownRow('Readiness', day.breakdown.readinessQuality, '');
+      }
+
+      html += '</div>';
+    }
+
+    // Readiness section
+    if (day.readiness) {
+      html += '<div class="daily-detail__section">';
+      html += '<div class="daily-detail__section-title">Check-in Data</div>';
+      html += '<div class="daily-detail__readiness">';
+      html += buildReadinessItem('Energy', day.readiness.perceivedEnergy);
+      html += buildReadinessItem('Soreness', day.readiness.perceivedSoreness);
+      html += buildReadinessItem('Mood', day.readiness.perceivedMood);
+      html += buildReadinessItem('Sleep', day.readiness.sleepQualityManual);
+      html += '</div>';
+      html += '</div>';
+    }
+
+    // Wearable data
+    if (day.hasWearableData && day.readiness) {
+      html += '<div class="daily-detail__section">';
+      html += '<div class="daily-detail__section-title">Device Data</div>';
+      html += '<div class="daily-detail__readiness">';
+      if (day.readiness.hrvMs != null) html += buildReadinessItem('HRV', day.readiness.hrvMs + 'ms');
+      if (day.readiness.restingHr != null) html += buildReadinessItem('RHR', day.readiness.restingHr + 'bpm');
+      if (day.readiness.sleepScore != null) html += buildReadinessItem('Sleep Score', Math.round(day.readiness.sleepScore));
+      if (day.readiness.sleepDurationMin != null) html += buildReadinessItem('Sleep', Math.round(day.readiness.sleepDurationMin / 60 * 10) / 10 + 'h');
+      if (day.readiness.steps != null) html += buildReadinessItem('Steps', day.readiness.steps.toLocaleString());
+      html += '</div>';
+      html += '</div>';
+    } else if (dailySummaryData && dailySummaryData.connectedDevices && dailySummaryData.connectedDevices.length === 0) {
+      html += '<div class="daily-detail__section">';
+      html += '<div class="daily-detail__device-prompt">' +
+        'Connect a wearable to see HRV, sleep, and recovery metrics. <a href="onboarding.html">Setup</a>' +
+      '</div>';
+      html += '</div>';
+    }
+
+    // Athlete notes
+    if (day.workout && day.workout.athleteNotes) {
+      html += '<div class="daily-detail__section">';
+      html += '<div class="daily-detail__section-title">Notes</div>';
+      html += '<div class="daily-detail__notes">' + escapeHtml(day.workout.athleteNotes) + '</div>';
+      html += '</div>';
+    }
+
+    // No data message
+    if (day.dayType === 'no_data') {
+      html += '<div class="daily-detail__empty">' +
+        'No check-in or workout data for this day. Regular check-ins help personalize your plan.' +
+      '</div>';
+    }
+
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+
+    // Close button handler
+    document.getElementById('detailClose').addEventListener('click', function () {
+      closeDailyDetail();
+    });
+  }
+
+  function closeDailyDetail() {
+    selectedDate = null;
+    var panel = document.getElementById('dailyDetail');
+    if (panel) panel.style.display = 'none';
+    document.querySelectorAll('.daily-chart__bar-group--active').forEach(function (el) {
+      el.classList.remove('daily-chart__bar-group--active');
+    });
+  }
+
+  function buildBreakdownRow(label, score, subtext) {
+    var color = score >= 75 ? '#4ade80' : score >= 50 ? '#fbbf24' : '#f87171';
+    return '<div class="daily-detail__breakdown-row">' +
+      '<span class="daily-detail__breakdown-label">' + label + '</span>' +
+      '<div class="daily-detail__breakdown-bar"><div class="daily-detail__breakdown-fill" style="width:' + score + '%;background:' + color + ';"></div></div>' +
+      '<span class="daily-detail__breakdown-value">' + score + '</span>' +
+      (subtext ? '<span class="daily-detail__breakdown-sub">' + subtext + '</span>' : '') +
+    '</div>';
+  }
+
+  function buildReadinessItem(label, value) {
+    return '<div class="daily-detail__readiness-item">' +
+      '<span class="daily-detail__readiness-value">' + value + '</span>' +
+      '<span class="daily-detail__readiness-label">' + label + '</span>' +
+    '</div>';
   }
 
   // ============================================================
@@ -481,4 +574,233 @@
     div.textContent = str;
     return div.innerHTML;
   }
+
+  // ============================================================
+  // Coach Chat — Slide-Out Panel
+  // ============================================================
+
+  var chatPanel = document.getElementById('chatPanel');
+  var chatOverlay = document.getElementById('chatOverlay');
+  var chatMessages = document.getElementById('chatMessages');
+  var chatInput = document.getElementById('chatInput');
+  var chatForm = document.getElementById('chatForm');
+  var chatSendBtn = document.getElementById('chatSendBtn');
+  var chatTyping = document.getElementById('chatTyping');
+  var chatOpenBtn = document.getElementById('chatOpenBtn');
+  var chatCloseBtn = document.getElementById('chatCloseBtn');
+  var chatHistoryLoaded = false;
+  var chatSending = false;
+
+  // ── Open / Close ──
+
+  function openChat() {
+    chatPanel.classList.add('open');
+    chatOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    if (!chatHistoryLoaded) {
+      loadChatHistory();
+    }
+
+    setTimeout(function() { chatInput.focus(); }, 350);
+  }
+
+  function closeChat() {
+    chatPanel.classList.remove('open');
+    chatOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  chatOpenBtn.addEventListener('click', openChat);
+  chatCloseBtn.addEventListener('click', closeChat);
+  chatOverlay.addEventListener('click', closeChat);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && chatPanel.classList.contains('open')) {
+      closeChat();
+    }
+  });
+
+  // ── Load History ──
+
+  async function loadChatHistory() {
+    try {
+      var res = await apiGet('/api/v1/chat/history');
+      chatHistoryLoaded = true;
+
+      if (res.success && res.data && res.data.messages && res.data.messages.length > 0) {
+        chatMessages.innerHTML = '';
+        res.data.messages.forEach(function(msg) {
+          appendBubble(msg.role, msg.content, msg.createdAt);
+        });
+        scrollChatToBottom();
+      } else {
+        renderChatWelcome();
+      }
+    } catch (err) {
+      chatHistoryLoaded = true;
+      renderChatWelcome();
+    }
+  }
+
+  function renderChatWelcome() {
+    chatMessages.innerHTML =
+      '<div class="chat-welcome">' +
+        '<div class="chat-welcome-title">Coach Jerry</div>' +
+        '<div class="chat-welcome-text">Ask me anything about your training, recovery, or how to adjust your plan.</div>' +
+        '<div class="chat-welcome-suggestions">' +
+          '<button class="chat-suggestion-chip" data-msg="How should I approach today\'s workout?">How should I approach today\'s workout?</button>' +
+          '<button class="chat-suggestion-chip" data-msg="I\'m feeling sore today. Should I modify anything?">I\'m feeling sore. Should I modify anything?</button>' +
+          '<button class="chat-suggestion-chip" data-msg="Can you explain my current training block?">Explain my current training block</button>' +
+        '</div>' +
+      '</div>';
+
+    chatMessages.querySelectorAll('.chat-suggestion-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        var msg = this.getAttribute('data-msg');
+        chatInput.value = msg;
+        chatSendBtn.disabled = false;
+        handleChatSend();
+      });
+    });
+  }
+
+  // ── Send Message with Human-Like Delays ──
+
+  chatInput.addEventListener('input', function() {
+    chatSendBtn.disabled = !this.value.trim();
+  });
+
+  chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    handleChatSend();
+  });
+
+  async function handleChatSend() {
+    var messageText = chatInput.value.trim();
+    if (!messageText || chatSending) return;
+
+    chatSending = true;
+    chatInput.value = '';
+    chatSendBtn.disabled = true;
+
+    // Clear welcome state if present
+    var welcome = chatMessages.querySelector('.chat-welcome');
+    if (welcome) welcome.remove();
+
+    // 1. Show user bubble immediately
+    appendBubble('user', messageText, new Date().toISOString());
+    scrollChatToBottom();
+
+    // 2. Read-before-type delay (200-400ms)
+    var readDelay = 200 + Math.random() * 200;
+    var typingShown = false;
+
+    var typingTimer = setTimeout(function() {
+      showChatTyping();
+      scrollChatToBottom();
+      typingShown = true;
+    }, readDelay);
+
+    // 3. Send to API
+    var sendStart = Date.now();
+    try {
+      var res = await apiPost('/api/v1/chat/send', { message: messageText });
+
+      if (res.success && res.data && res.data.assistantMessage) {
+        var responseText = res.data.assistantMessage.content;
+        var responseTime = res.data.assistantMessage.createdAt;
+        var apiElapsed = Date.now() - sendStart;
+
+        // 4. Calculate human-like typing delay
+        var baseDelay = 1500;
+        var perCharDelay = 15;
+        var charCount = responseText.length;
+        var typingDuration = Math.min(4000, Math.max(1500, baseDelay + (charCount * perCharDelay)));
+        typingDuration += (Math.random() - 0.5) * 600;
+
+        // Subtract API time already elapsed
+        var remainingDelay = Math.max(400, typingDuration - apiElapsed);
+
+        // Ensure typing indicator is showing before we wait
+        if (!typingShown) {
+          clearTimeout(typingTimer);
+          showChatTyping();
+          scrollChatToBottom();
+        }
+
+        await chatSleep(remainingDelay);
+
+        // 5. Show response
+        hideChatTyping();
+        appendBubble('assistant', responseText, responseTime);
+        scrollChatToBottom();
+      } else {
+        clearTimeout(typingTimer);
+        hideChatTyping();
+        appendBubble('assistant', 'Something went wrong. Try sending that again.', new Date().toISOString());
+        scrollChatToBottom();
+      }
+    } catch (err) {
+      clearTimeout(typingTimer);
+      if (typingShown) {
+        await chatSleep(600);
+      }
+      hideChatTyping();
+
+      var errorMsg = (err && err.status === 429)
+        ? "Let's pace this a bit. Try again in a few minutes."
+        : 'Connection issue. Try again in a moment.';
+
+      appendBubble('assistant', errorMsg, new Date().toISOString());
+      scrollChatToBottom();
+    }
+
+    chatSending = false;
+    chatInput.focus();
+  }
+
+  function chatSleep(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms); });
+  }
+
+  // ── DOM Helpers ──
+
+  function appendBubble(role, content, timestamp) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'chat-bubble chat-bubble--' + role;
+
+    var escapedContent = escapeHtml(content);
+    var formattedContent = escapedContent.replace(/\n/g, '<br>');
+
+    wrapper.innerHTML = formattedContent +
+      '<div class="chat-bubble-time">' + formatChatTime(timestamp) + '</div>';
+
+    chatMessages.appendChild(wrapper);
+  }
+
+  function formatChatTime(isoString) {
+    var d = new Date(isoString);
+    var now = new Date();
+    var isToday = d.toDateString() === now.toDateString();
+
+    if (isToday) {
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+      ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function showChatTyping() {
+    chatTyping.style.display = 'flex';
+  }
+
+  function hideChatTyping() {
+    chatTyping.style.display = 'none';
+  }
+
+  function scrollChatToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
 })();
