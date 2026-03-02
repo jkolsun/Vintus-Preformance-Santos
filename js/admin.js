@@ -67,6 +67,11 @@
     return tier.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
 
+  function profileOption(value, label, current) {
+    var selected = (current && current.toLowerCase() === value.toLowerCase()) ? ' selected' : '';
+    return '<option value="' + esc(value) + '"' + selected + '>' + esc(label) + '</option>';
+  }
+
   function statusBadge(status) {
     if (!status) return '<span class="admin-badge">—</span>';
     var cls = 'admin-badge';
@@ -334,18 +339,85 @@
 
       var html = '';
 
-      // Profile section
+      // Profile section — editable form
       html += '<div class="admin-detail-section">' +
         '<div class="admin-detail-section-title">Profile</div>' +
         detailRow('Email', d.email) +
-        detailRow('Goal', prof.primaryGoal) +
-        detailRow('Experience', prof.experienceLevel) +
         detailRow('Persona', prof.personaType) +
-        detailRow('Training Days/Week', prof.trainingDaysPerWeek) +
-        detailRow('Stress Level', prof.stressLevel ? prof.stressLevel + '/10' : null) +
-        detailRow('Injury History', prof.injuryHistory) +
         detailRow('Risk Flags', Array.isArray(prof.riskFlags) && prof.riskFlags.length ? prof.riskFlags.join(', ') : 'None') +
         detailRow('Consecutive Missed', d.consecutiveMissed || 0) +
+        '</div>';
+
+      // Editable training fields
+      html += '<div class="admin-detail-section">' +
+        '<div class="admin-detail-section-title">Training Settings</div>' +
+        '<div class="admin-form-row">' +
+          '<div class="admin-form-group">' +
+            '<label for="editGoal">Primary Goal</label>' +
+            '<select class="admin-select" id="editGoal">' +
+              profileOption('build-muscle', 'Build Muscle', prof.primaryGoal) +
+              profileOption('lose-fat', 'Lose Fat', prof.primaryGoal) +
+              profileOption('endurance', 'Endurance', prof.primaryGoal) +
+              profileOption('recomposition', 'Recomposition', prof.primaryGoal) +
+              profileOption('well-rounded', 'Well Rounded', prof.primaryGoal) +
+            '</select>' +
+          '</div>' +
+          '<div class="admin-form-group">' +
+            '<label for="editExperience">Experience Level</label>' +
+            '<select class="admin-select" id="editExperience">' +
+              profileOption('beginner', 'Beginner', prof.experienceLevel) +
+              profileOption('intermediate', 'Intermediate', prof.experienceLevel) +
+              profileOption('advanced', 'Advanced', prof.experienceLevel) +
+              profileOption('elite', 'Elite', prof.experienceLevel) +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-form-row">' +
+          '<div class="admin-form-group">' +
+            '<label for="editTrainingDays">Training Days/Week</label>' +
+            '<input type="number" class="admin-input" id="editTrainingDays" min="1" max="7" value="' + (prof.trainingDaysPerWeek || 3) + '">' +
+          '</div>' +
+          '<div class="admin-form-group">' +
+            '<label for="editStress">Stress Level (1-10)</label>' +
+            '<input type="number" class="admin-input" id="editStress" min="1" max="10" value="' + (prof.stressLevel || '') + '">' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-form-row">' +
+          '<div class="admin-form-group">' +
+            '<label for="editEquipment">Equipment Access</label>' +
+            '<select class="admin-select" id="editEquipment">' +
+              profileOption('full-gym', 'Full Gym', prof.equipmentAccess) +
+              profileOption('home-gym', 'Home Gym', prof.equipmentAccess) +
+              profileOption('minimal', 'Minimal', prof.equipmentAccess) +
+              profileOption('bodyweight-only', 'Bodyweight Only', prof.equipmentAccess) +
+            '</select>' +
+          '</div>' +
+          '<div class="admin-form-group">' +
+            '<label for="editTrainingTime">Preferred Time</label>' +
+            '<select class="admin-select" id="editTrainingTime">' +
+              profileOption('morning', 'Morning', prof.preferredTrainingTime) +
+              profileOption('midday', 'Midday', prof.preferredTrainingTime) +
+              profileOption('evening', 'Evening', prof.preferredTrainingTime) +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-form-group">' +
+          '<label for="editTimezone">Timezone</label>' +
+          '<select class="admin-select" id="editTimezone">' +
+            profileOption('America/New_York', 'Eastern (ET)', prof.timezone) +
+            profileOption('America/Chicago', 'Central (CT)', prof.timezone) +
+            profileOption('America/Denver', 'Mountain (MT)', prof.timezone) +
+            profileOption('America/Los_Angeles', 'Pacific (PT)', prof.timezone) +
+            profileOption('America/Anchorage', 'Alaska (AKT)', prof.timezone) +
+            profileOption('Pacific/Honolulu', 'Hawaii (HT)', prof.timezone) +
+          '</select>' +
+        '</div>' +
+        '<div class="admin-form-group">' +
+          '<label for="editInjury">Injury History</label>' +
+          '<textarea class="admin-textarea" id="editInjury" rows="2" placeholder="None">' + esc(prof.injuryHistory || '') + '</textarea>' +
+        '</div>' +
+        '<button class="admin-btn-primary admin-btn-small" id="saveProfileBtn" style="margin-top:0.5rem;">Save Profile</button>' +
+        '<div id="profileAlert"></div>' +
         '</div>';
 
       // Subscription section
@@ -476,6 +548,46 @@
   }
 
   function bindDetailEvents(userId, sessions) {
+    // Save profile
+    var saveProfileBtn = document.getElementById('saveProfileBtn');
+    if (saveProfileBtn) {
+      saveProfileBtn.addEventListener('click', async function () {
+        saveProfileBtn.disabled = true;
+        saveProfileBtn.textContent = 'Saving...';
+        try {
+          var payload = {};
+          var goal = document.getElementById('editGoal').value;
+          if (goal) payload.primaryGoal = goal;
+          var exp = document.getElementById('editExperience').value;
+          if (exp) payload.experienceLevel = exp;
+          var days = document.getElementById('editTrainingDays').value;
+          if (days) payload.trainingDaysPerWeek = parseInt(days, 10);
+          var stress = document.getElementById('editStress').value;
+          if (stress) payload.stressLevel = parseInt(stress, 10);
+          var equip = document.getElementById('editEquipment').value;
+          if (equip) payload.equipmentAccess = equip;
+          var time = document.getElementById('editTrainingTime').value;
+          if (time) payload.preferredTrainingTime = time;
+          var tz = document.getElementById('editTimezone').value;
+          if (tz) payload.timezone = tz;
+          var injury = document.getElementById('editInjury').value.trim();
+          payload.injuryHistory = injury || null;
+
+          await apiPut('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/profile', payload);
+          document.getElementById('profileAlert').innerHTML = '<div class="admin-alert admin-alert--success">Profile saved</div>';
+          setTimeout(function () {
+            var el = document.getElementById('profileAlert');
+            if (el) el.innerHTML = '';
+          }, 3000);
+        } catch (err) {
+          document.getElementById('profileAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+        } finally {
+          saveProfileBtn.disabled = false;
+          saveProfileBtn.textContent = 'Save Profile';
+        }
+      });
+    }
+
     // Save notes
     var saveNotesBtn = document.getElementById('saveNotesBtn');
     if (saveNotesBtn) {

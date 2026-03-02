@@ -252,6 +252,41 @@ export async function getClientDetail(userId: string): Promise<unknown> {
 /**
  * Add/update admin notes on a client's profile.
  */
+/**
+ * Update a client's athlete profile fields (admin-editable subset).
+ */
+export async function updateClientProfile(
+  userId: string,
+  updates: {
+    primaryGoal?: string;
+    trainingDaysPerWeek?: number;
+    experienceLevel?: string;
+    equipmentAccess?: string;
+    injuryHistory?: string | null;
+    stressLevel?: number;
+    preferredTrainingTime?: string;
+    timezone?: string;
+  }
+): Promise<{ success: boolean }> {
+  const profile = await prisma.athleteProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!profile) {
+    const err = new Error("Athlete profile not found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  await prisma.athleteProfile.update({
+    where: { userId },
+    data: updates,
+  });
+
+  logger.info({ userId, fields: Object.keys(updates) }, "Admin updated client profile");
+  return { success: true };
+}
+
 export async function updateClientNotes(
   userId: string,
   notes: string

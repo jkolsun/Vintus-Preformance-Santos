@@ -38,6 +38,18 @@ export const workoutOverrideSchema = z.object({
   athleteNotes: z.string().max(2000).optional(),
 });
 
+export const profileEditSchema = z.object({
+  primaryGoal: z.string().min(1).max(100).optional(),
+  trainingDaysPerWeek: z.number().int().min(1).max(7).optional(),
+  experienceLevel: z.string().min(1).max(50).optional(),
+  equipmentAccess: z.string().min(1).max(50).optional(),
+  injuryHistory: z.string().max(1000).optional().nullable(),
+  stressLevel: z.number().int().min(1).max(10).optional(),
+  preferredTrainingTime: z.string().min(1).max(20).optional(),
+  timezone: z.string().min(1).max(50).optional(),
+});
+
 export type ClientNotes = z.infer<typeof clientNotesSchema>;
 export type CustomMessage = z.infer<typeof customMessageSchema>;
 export type WorkoutOverride = z.infer<typeof workoutOverrideSchema>;
+export type ProfileEdit = z.infer<typeof profileEditSchema>;

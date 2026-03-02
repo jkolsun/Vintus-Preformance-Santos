@@ -7,6 +7,7 @@ import {
   clientNotesSchema,
   customMessageSchema,
   workoutOverrideSchema,
+  profileEditSchema,
 } from "./schemas/admin.schemas.js";
 import { dailyReviewForClient } from "../services/cron.service.js";
 import * as adminService from "../services/admin.service.js";
@@ -72,6 +73,25 @@ router.put(
       const { notes } = req.body;
 
       const result = await adminService.updateClientNotes(userId, notes);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PUT /admin/clients/:userId/profile — edit client profile
+router.put(
+  "/clients/:userId/profile",
+  validate(profileEditSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.params.userId as string;
+      const result = await adminService.updateClientProfile(userId, req.body);
 
       res.status(200).json({
         success: true,

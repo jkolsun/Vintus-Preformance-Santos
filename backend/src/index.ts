@@ -60,8 +60,13 @@ app.listen(PORT, "0.0.0.0", () => {
   logger.info(`Vintus Performance API running on port ${PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
 
-  // Start cron jobs
-  startCrons();
+  // Start cron jobs (if enabled)
+  if (env.CRON_ENABLED) {
+    startCrons();
+    logger.info("Cron jobs started");
+  } else {
+    logger.info("Cron jobs disabled (CRON_ENABLED=false)");
+  }
 });
 
 export default app;

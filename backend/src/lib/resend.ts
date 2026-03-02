@@ -71,6 +71,11 @@ export async function sendEmail(
   subject: string,
   textContent: string
 ): Promise<string | null> {
+  if (!env.MESSAGING_ENABLED) {
+    logger.info({ to, subject }, "Email skipped (MESSAGING_ENABLED=false)");
+    return "dry-run-email";
+  }
+
   try {
     const html = buildBrandedHTML(textContent, subject);
 

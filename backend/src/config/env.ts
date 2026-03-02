@@ -42,6 +42,10 @@ const envSchema = z.object({
 
   // Encryption
   ENCRYPTION_KEY: z.string().min(32, "ENCRYPTION_KEY must be at least 32 characters"),
+
+  // Feature toggles (string "true" → true, anything else → false)
+  MESSAGING_ENABLED: z.string().default("false").transform((val) => val === "true"),
+  CRON_ENABLED: z.string().default("false").transform((val) => val === "true"),
 });
 
 export type Env = z.infer<typeof envSchema>;

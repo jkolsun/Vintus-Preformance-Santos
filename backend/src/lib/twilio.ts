@@ -17,6 +17,11 @@ export async function sendSMS(
   to: string,
   body: string
 ): Promise<string | null> {
+  if (!env.MESSAGING_ENABLED) {
+    logger.info({ to, bodyLength: body.length }, "SMS skipped (MESSAGING_ENABLED=false)");
+    return "dry-run-sms";
+  }
+
   try {
     const message = await twilioClient.messages.create({
       to,
