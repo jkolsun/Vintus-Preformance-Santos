@@ -10,6 +10,10 @@
     window.location.href = 'login.html';
     return;
   }
+  if (localStorage.getItem('vintus_role') === 'ADMIN') {
+    window.location.href = 'admin.html';
+    return;
+  }
 
   var params = new URLSearchParams(window.location.search);
   var sessionId = params.get('id');

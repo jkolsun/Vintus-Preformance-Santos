@@ -9,6 +9,10 @@
     window.location.href = 'login.html';
     return;
   }
+  if (localStorage.getItem('vintus_role') === 'ADMIN') {
+    window.location.href = 'admin.html';
+    return;
+  }
 
   var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var today = new Date();

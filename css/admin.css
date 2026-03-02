@@ -885,6 +885,143 @@
   font-style: italic;
 }
 
+/* ── Message Thread ── */
+.admin-msg-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.admin-msg-item {
+  background: rgba(192, 192, 192, 0.03);
+  border: 1px solid rgba(192, 192, 192, 0.06);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.admin-msg-item--failed {
+  border-color: rgba(248, 113, 113, 0.15);
+}
+
+.admin-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.admin-msg-channel {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0a0a0a;
+  background: rgba(192, 192, 192, 0.7);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+
+.admin-msg-category {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(192, 192, 192, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-msg-time {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(192, 192, 192, 0.3);
+  margin-left: auto;
+}
+
+.admin-msg-status {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.admin-msg-status--sent {
+  color: #4ade80;
+}
+
+.admin-msg-status--failed {
+  color: #f87171;
+}
+
+.admin-msg-content {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(192, 192, 192, 0.7);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-msg-error {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(248, 113, 113, 0.7);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+/* ── Messaging Toggle ── */
+.admin-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-toggle input {
+  display: none;
+}
+
+.admin-toggle-slider {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: #4ade80;
+  border-radius: 9px;
+  transition: background 0.25s;
+}
+
+.admin-toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #0a0a0a;
+  border-radius: 50%;
+  transition: transform 0.25s;
+}
+
+.admin-toggle input:checked + .admin-toggle-slider {
+  background: #f87171;
+}
+
+.admin-toggle input:checked + .admin-toggle-slider::after {
+  transform: translateX(14px);
+}
+
+.admin-toggle-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(192, 192, 192, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 /* ── Adherence Chart ── */
 .admin-chart-wrap {
   position: relative;

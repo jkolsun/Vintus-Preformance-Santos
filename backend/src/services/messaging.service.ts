@@ -103,6 +103,16 @@ export async function sendMessage(
     throw err;
   }
 
+  // Per-client messaging kill switch
+  if (user.athleteProfile?.messagingDisabled) {
+    logger.info({ userId, category, channel }, "Message skipped (messagingDisabled=true for this client)");
+    return {
+      messageId: "disabled-" + userId,
+      content: "",
+      channel,
+    };
+  }
+
   // Build context with user data
   const fullContext: MessageContext = {
     firstName: user.athleteProfile?.firstName ?? "",

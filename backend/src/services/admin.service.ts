@@ -266,6 +266,7 @@ export async function updateClientProfile(
     stressLevel?: number;
     preferredTrainingTime?: string;
     timezone?: string;
+    messagingDisabled?: boolean;
   }
 ): Promise<{ success: boolean }> {
   const profile = await prisma.athleteProfile.findUnique({

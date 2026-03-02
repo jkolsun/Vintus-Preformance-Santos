@@ -76,6 +76,9 @@ model AthleteProfile {
   travelFrequency String?       // rarely | monthly | weekly
   biggestChallenge String?      // structure | no-results | energy | unsure | free text
 
+  // Admin controls
+  messagingDisabled Boolean @default(false)
+
   // AI classification output
   personaType     String?       // executive-athlete | endurance-competitor | hybrid-builder | recovery-first
   aiSummary       String?       // AI-generated summary paragraph

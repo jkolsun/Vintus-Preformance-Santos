@@ -47,6 +47,7 @@ export const profileEditSchema = z.object({
   stressLevel: z.number().int().min(1).max(10).optional(),
   preferredTrainingTime: z.string().min(1).max(20).optional(),
   timezone: z.string().min(1).max(50).optional(),
+  messagingDisabled: z.boolean().optional(),
 });
 
 export type ClientNotes = z.infer<typeof clientNotesSchema>;

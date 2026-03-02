@@ -463,23 +463,40 @@
         html += '</tbody></table></div>';
       }
 
-      // Recent messages
+      // Messaging toggle + thread
+      var msgDisabled = prof.messagingDisabled || false;
+      html += '<div class="admin-detail-section">' +
+        '<div class="admin-detail-section-title" style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<span>Messages</span>' +
+          '<label class="admin-toggle">' +
+            '<input type="checkbox" id="msgToggle"' + (msgDisabled ? ' checked' : '') + '>' +
+            '<span class="admin-toggle-slider"></span>' +
+            '<span class="admin-toggle-label">' + (msgDisabled ? 'Paused' : 'Active') + '</span>' +
+          '</label>' +
+        '</div>';
+
       if (d.messageLogs && d.messageLogs.length) {
-        html += '<div class="admin-detail-section">' +
-          '<div class="admin-detail-section-title">Recent Messages</div>' +
-          '<table class="admin-mini-table"><thead><tr><th>Date</th><th>Ch</th><th>Type</th><th>Status</th></tr></thead><tbody>';
+        html += '<div class="admin-msg-thread">';
         for (var m = 0; m < d.messageLogs.length; m++) {
           var msg = d.messageLogs[m];
-          var msgStatus = msg.failedAt ? '<span style="color:#f87171">Failed</span>' : '<span style="color:#4ade80">Sent</span>';
-          html += '<tr>' +
-            '<td>' + fmtDateTime(msg.sentAt) + '</td>' +
-            '<td>' + esc(msg.channel) + '</td>' +
-            '<td>' + esc(msg.category) + '</td>' +
-            '<td>' + msgStatus + '</td>' +
-            '</tr>';
+          var msgFailed = !!msg.failedAt;
+          var channelIcon = msg.channel === 'SMS' ? 'SMS' : 'EMAIL';
+          html += '<div class="admin-msg-item' + (msgFailed ? ' admin-msg-item--failed' : '') + '">' +
+            '<div class="admin-msg-meta">' +
+              '<span class="admin-msg-channel">' + esc(channelIcon) + '</span>' +
+              '<span class="admin-msg-category">' + esc(msg.category) + '</span>' +
+              '<span class="admin-msg-time">' + fmtDateTime(msg.sentAt) + '</span>' +
+              (msgFailed ? '<span class="admin-msg-status admin-msg-status--failed">Failed</span>' : '<span class="admin-msg-status admin-msg-status--sent">Sent</span>') +
+            '</div>' +
+            '<div class="admin-msg-content">' + esc(msg.content || '') + '</div>' +
+            (msg.failureReason ? '<div class="admin-msg-error">' + esc(msg.failureReason) + '</div>' : '') +
+          '</div>';
         }
-        html += '</tbody></table></div>';
+        html += '</div>';
+      } else {
+        html += '<div class="admin-empty" style="padding:1rem;">No messages sent yet</div>';
       }
+      html += '</div>';
 
       // Escalation events
       if (d.escalationEvents && d.escalationEvents.length) {
@@ -613,6 +630,25 @@
         } finally {
           saveNotesBtn.disabled = false;
           saveNotesBtn.textContent = 'Save Notes';
+        }
+      });
+    }
+
+    // Messaging toggle (per-client disable)
+    var msgToggle = document.getElementById('msgToggle');
+    if (msgToggle) {
+      msgToggle.addEventListener('change', async function () {
+        var disabled = msgToggle.checked;
+        var label = msgToggle.parentElement.querySelector('.admin-toggle-label');
+        try {
+          await apiPut('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/profile', {
+            messagingDisabled: disabled
+          });
+          if (label) label.textContent = disabled ? 'Paused' : 'Active';
+        } catch (err) {
+          // Revert on failure
+          msgToggle.checked = !disabled;
+          alert('Failed to update messaging: ' + err.message);
         }
       });
     }

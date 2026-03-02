@@ -9,6 +9,11 @@
     window.location.href = 'login.html';
     return;
   }
+  // Admins should never see the client dashboard
+  if (localStorage.getItem('vintus_role') === 'ADMIN') {
+    window.location.href = 'admin.html';
+    return;
+  }
 
   var DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   var TIER_DISPLAY = {
