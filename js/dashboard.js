@@ -519,6 +519,7 @@
       if (res.success) {
         var successEl = document.getElementById('checkinSuccess');
         successEl.classList.add('show');
+        setTimeout(function () { successEl.classList.remove('show'); }, 4000);
         checkinBtn.textContent = 'Submitted';
         loadTrends();
       } else {

@@ -679,6 +679,8 @@
           });
           document.getElementById('msgAlert').innerHTML = '<div class="admin-alert admin-alert--success">Message sent via ' + esc(channel) + '</div>';
           document.getElementById('detailMsgContent').value = '';
+          // Refresh thread to show the new message
+          loadClientDetail(userId);
           setTimeout(function () {
             var el = document.getElementById('msgAlert');
             if (el) el.innerHTML = '';

@@ -9,8 +9,17 @@ import {
   deviceSelectionSchema,
 } from "./schemas/onboarding.schemas.js";
 import * as onboardingService from "../services/onboarding.service.js";
+import { env } from "../config/env.js";
 
 const router = Router();
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: "/",
+};
 
 // POST /onboarding/verify-session — public — body: { sessionId }
 router.post(
@@ -38,6 +47,8 @@ router.post(
     try {
       const { userId, sessionId, password } = req.body;
       const result = await onboardingService.setInitialPassword(userId, sessionId, password);
+
+      res.cookie("vintus_token", result.token, cookieOptions);
 
       res.status(200).json({
         success: true,

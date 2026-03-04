@@ -54,6 +54,9 @@ router.post(
 
       const { actualDuration, rpe, athleteNotes } = req.body;
 
+      // Estimate TSS from RPE and duration
+      const estimatedTSS = Math.round(actualDuration * (rpe / 10) * 1.5);
+
       // Update session
       const updated = await prisma.workoutSession.update({
         where: { id: sessionId },
@@ -63,11 +66,11 @@ router.post(
           actualDuration,
           rpe,
           athleteNotes: athleteNotes ?? null,
+          actualTSS: estimatedTSS,
         },
       });
 
-      // Update plan actualTSS (estimate from RPE and duration)
-      const estimatedTSS = Math.round(actualDuration * (rpe / 10) * 1.5);
+      // Update plan actualTSS
       await prisma.workoutPlan.update({
         where: { id: session.workoutPlanId },
         data: {
