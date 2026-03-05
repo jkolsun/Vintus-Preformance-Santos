@@ -49,10 +49,10 @@ export async function getOverview(userId: string): Promise<unknown> {
     streakData,
     recentMessages,
   ] = await Promise.all([
-    // Today's workout
+    // Today's workout (only from active plan)
     prisma.workoutSession.findFirst({
       where: {
-        workoutPlan: { athleteProfileId: profile.id },
+        workoutPlan: { athleteProfileId: profile.id, isActive: true },
         scheduledDate: { gte: today, lt: tomorrow },
       },
       include: { workoutPlan: { select: { name: true } } },
@@ -270,9 +270,22 @@ async function getWeekSessions(profileId: string, weekOffset: number): Promise<u
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
+  // Find the most recent plan covering this week to avoid duplicates from old regenerated plans
+  const plan = await prisma.workoutPlan.findFirst({
+    where: {
+      athleteProfileId: profileId,
+      startDate: { lte: weekEnd },
+      endDate: { gte: weekStart },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+
+  if (!plan) return [];
+
   return prisma.workoutSession.findMany({
     where: {
-      workoutPlan: { athleteProfileId: profileId },
+      workoutPlanId: plan.id,
       scheduledDate: { gte: weekStart, lt: weekEnd },
     },
     orderBy: [{ scheduledDate: "asc" }, { scheduledOrder: "asc" }],
@@ -435,7 +448,7 @@ export async function getDailySummary(
         scheduledDate: { gte: startDate, lt: tomorrow },
       },
       include: {
-        workoutPlan: { select: { name: true, blockType: true } },
+        workoutPlan: { select: { id: true, name: true, blockType: true, createdAt: true } },
       },
       orderBy: { scheduledDate: "asc" },
     }),
@@ -458,8 +471,9 @@ export async function getDailySummary(
   const workoutsByDate = new Map<string, typeof workoutSessions[number]>();
   for (const w of workoutSessions) {
     const dateStr = new Date(w.scheduledDate).toISOString().split("T")[0];
-    // Keep the first workout (primary session)
-    if (!workoutsByDate.has(dateStr)) {
+    const existing = workoutsByDate.get(dateStr);
+    // Keep session from the most recently created plan (avoids duplicates from regenerated plans)
+    if (!existing || w.workoutPlan.createdAt > existing.workoutPlan.createdAt) {
       workoutsByDate.set(dateStr, w);
     }
   }
