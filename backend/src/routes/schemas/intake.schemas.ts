@@ -13,7 +13,7 @@ const goalEnum = z.enum([
 
 export const simpleIntakeSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  lastName: z.string().optional().default(""),
   email: z.string().email("Must be a valid email address"),
   phone: z.string().optional(),
   primary_goal: goalEnum,

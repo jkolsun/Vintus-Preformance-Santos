@@ -586,15 +586,12 @@ function throttle(func, limit) {
                 phone: quizState.answers.phone
             }));
 
-            // Generate AI summary and show results
-            generateHeroAISummary();
-            showQuizResults();
-
-            // Reset button state
-            submitText.style.display = 'inline';
-            submitArrow.style.display = 'inline';
-            submitLoading.style.display = 'none';
-            submitBtn.disabled = false;
+            // Redirect to results page with plans
+            if (heroProfileId) {
+              window.location.href = 'results.html?id=' + heroProfileId + '&source=quiz';
+            } else {
+              window.location.href = 'results.html?source=quiz';
+            }
         });
 
         // Generate AI Summary

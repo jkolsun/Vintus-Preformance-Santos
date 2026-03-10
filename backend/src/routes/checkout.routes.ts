@@ -5,6 +5,7 @@ import { validate } from "../middleware/validate.js";
 import { createCheckoutSchema } from "./schemas/checkout.schemas.js";
 import * as checkoutService from "../services/checkout.service.js";
 import { prisma } from "../lib/prisma.js";
+import { verifyToken } from "../services/auth.service.js";
 
 const router = Router();
 
@@ -20,16 +21,22 @@ router.post(
       let userId: string | undefined;
 
       // Try to extract userId from auth token (if present)
-      try {
-        await new Promise<void>((resolve, reject) => {
-          authenticate(req, res, (err?: unknown) => {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-        userId = req.user?.userId;
-      } catch {
-        // No valid token — that's fine for new users
+      // NOTE: We do NOT use the authenticate middleware here because it
+      // sends a 401 response directly when no token is found, which would
+      // block the unauthenticated profileId fallback path.
+      let token: string | undefined;
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith("Bearer ")) {
+        token = authHeader.slice(7);
+      }
+      if (!token && req.cookies?.vintus_token) {
+        token = req.cookies.vintus_token as string;
+      }
+      if (token) {
+        const payload = await verifyToken(token);
+        if (payload) {
+          userId = payload.userId;
+        }
       }
 
       // If no auth, require profileId and look up userId from the profile

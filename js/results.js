@@ -16,11 +16,12 @@
   var errorMsg = document.getElementById('resultsErrorMsg');
   var contentEl = document.getElementById('resultsContent');
 
-  // Quick quiz flow — no profileId needed
-  if (source === 'quiz') {
-    renderQuizResults();
-  } else if (profileId) {
+  // If profileId is available, try to fetch the AI-generated summary from the backend.
+  // Falls back to client-side quiz summary if the API call fails or no profileId.
+  if (profileId) {
     loadResults();
+  } else if (source === 'quiz') {
+    renderQuizResults();
   } else {
     showError('No assessment ID found. Please complete the assessment first.');
   }
@@ -31,12 +32,16 @@
       var res = await apiGet('/api/v1/intake/results/' + profileId);
 
       if (!res.success || !res.data) {
+        // Fall back to quiz-generated summary if backend fails
+        if (source === 'quiz') { renderQuizResults(); return; }
         showError('Unable to load your results. Please try again.');
         return;
       }
 
       renderResults(res.data);
     } catch (err) {
+      // Fall back to quiz-generated summary if backend fails
+      if (source === 'quiz') { renderQuizResults(); return; }
       showError(err.message || 'Failed to load results.');
     }
   }
@@ -81,7 +86,9 @@
       'build-muscle': 'building muscle and gaining strength',
       'lose-fat': 'losing fat and getting lean',
       'improve-endurance': 'improving endurance and stamina',
-      'overall-health': 'improving overall health and wellness'
+      'endurance': 'improving endurance and conditioning',
+      'overall-health': 'improving overall health and wellness',
+      'well-rounded': 'becoming well-rounded with both strength and performance'
     };
     var experienceMap = {
       'beginner': 'someone new to structured training',
@@ -92,7 +99,11 @@
       'consistency': 'staying consistent with your routine',
       'nutrition': 'dialing in your nutrition',
       'motivation': 'maintaining motivation',
-      'time': 'finding time in your busy schedule'
+      'time': 'finding time in your busy schedule',
+      'structure': 'lack of structure and accountability',
+      'no-results': 'not seeing results despite your effort',
+      'energy': 'inconsistent energy and recovery',
+      'unsure': 'uncertainty about how to train and fuel properly'
     };
     var daysMap = {
       '2-3': '2-3 days per week',
@@ -134,8 +145,8 @@
         return;
       }
 
-      // For authenticated users with a profileId → Stripe Checkout
-      if (profileId && isLoggedIn()) {
+      // For users with a profileId → Stripe Checkout
+      if (profileId) {
         btn.disabled = true;
         btn.textContent = 'Processing...';
 

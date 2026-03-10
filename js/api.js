@@ -51,10 +51,16 @@ async function apiFetch(path, options) {
   }
 
   // 401 → clear token + role and redirect to login
+  // Skip redirect on public-facing pages (results, onboarding) where
+  // unauthenticated API calls are expected (e.g. checkout, verify-session)
   if (res.status === 401) {
-    clearToken();
-    localStorage.removeItem('vintus_role');
-    if (!window.location.pathname.includes('login.html')) {
+    var path = window.location.pathname;
+    var isPublicPage = path.includes('results.html') ||
+                       path.includes('onboarding.html') ||
+                       path.includes('login.html');
+    if (!isPublicPage) {
+      clearToken();
+      localStorage.removeItem('vintus_role');
       window.location.href = 'login.html';
     }
     throw new Error('Session expired. Please log in again.');

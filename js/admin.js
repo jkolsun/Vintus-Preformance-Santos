@@ -747,7 +747,7 @@
     document.getElementById('overrideDesc').value = (data && data.description) || '';
     document.getElementById('overrideType').value = (data && data.sessionType) || 'STRENGTH_UPPER';
     document.getElementById('overrideStatus').value = (data && data.status) || 'SCHEDULED';
-    document.getElementById('overrideDuration').value = (data && data.actualDuration) || (data && data.prescribedDuration) || '';
+    document.getElementById('overrideDuration').value = (data && data.prescribedDuration) || (data && data.actualDuration) || '';
     document.getElementById('overrideTSS').value = (data && data.prescribedTSS) || '';
     document.getElementById('overrideNotes').value = (data && data.athleteNotes) || '';
     overrideOverlay.classList.add('admin-modal-overlay--open');
