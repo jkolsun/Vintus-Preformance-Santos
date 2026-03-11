@@ -17,6 +17,7 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/video-showcase.css">
     <style>
         /* Features Page Specific Styles */
         .pricing-badge {
@@ -187,40 +188,6 @@
                 font-size: 1.5rem;
             }
 
-            /* Video grid - horizontal scroll carousel on mobile */
-            .video-grid {
-                display: flex !important;
-                overflow-x: auto !important;
-                scroll-snap-type: x mandatory !important;
-                -webkit-overflow-scrolling: touch !important;
-                gap: 1rem !important;
-                padding: 1rem !important;
-                padding-right: calc(7.5% + 1rem) !important;
-                scrollbar-width: none !important;
-                -ms-overflow-style: none !important;
-                max-width: 100vw !important;
-                margin: 0 !important;
-            }
-
-            .video-grid::-webkit-scrollbar {
-                display: none;
-            }
-
-            .video-grid .image-grid-item {
-                flex: 0 0 85% !important;
-                max-width: 85% !important;
-                scroll-snap-align: center !important;
-                height: 70vh !important;
-                max-height: 550px !important;
-                min-height: 400px !important;
-                border-radius: 12px;
-                overflow: hidden;
-            }
-
-            .video-grid .image-grid-item:first-child {
-                margin-left: calc(7.5% - 0.5rem);
-            }
-
             /* Pricing badge mobile adjustment */
             .pricing-badge {
                 font-size: 0.65rem;
@@ -305,37 +272,79 @@
         </div>
     </section>
 
-    <!-- Services Video Banner -->
-    <section style="background: var(--black);">
+    <!-- Services Video Showcase -->
+    <section class="video-showcase" id="videoShowcase">
+        <div class="video-showcase-stage">
+            <!-- Panel 1: Strength -->
+            <div class="video-panel active" data-index="0">
+                <video class="showcase-video" muted loop playsinline preload="none" poster="images/poster-strength.jpg">
+                    <source data-src="Strength.mp4" type="video/mp4">
+                </video>
+                <div class="video-panel-overlay">
+                    <div class="video-panel-content">
+                        <span class="video-panel-number">01</span>
+                        <h3 class="video-panel-title">Strength</h3>
+                        <p class="video-panel-subtitle">Build raw power</p>
+                        <a href="#coaching" class="video-panel-link">
+                            Learn more
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Conditioning -->
+            <div class="video-panel" data-index="1">
+                <video class="showcase-video" muted loop playsinline preload="none" poster="images/poster-conditioning.jpg">
+                    <source data-src="Conditioning.mp4" type="video/mp4">
+                </video>
+                <div class="video-panel-overlay">
+                    <div class="video-panel-content">
+                        <span class="video-panel-number">02</span>
+                        <h3 class="video-panel-title">Conditioning</h3>
+                        <p class="video-panel-subtitle">Elite endurance</p>
+                        <a href="#training" class="video-panel-link">
+                            Learn more
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 3: Nutrition -->
+            <div class="video-panel" data-index="2">
+                <video class="showcase-video" muted loop playsinline preload="none" poster="images/poster-nutrition.jpg">
+                    <source data-src="Nutrition.mp4" type="video/mp4">
+                </video>
+                <div class="video-panel-overlay">
+                    <div class="video-panel-content">
+                        <span class="video-panel-number">03</span>
+                        <h3 class="video-panel-title">Nutrition</h3>
+                        <p class="video-panel-subtitle">Fuel performance</p>
+                        <a href="#nutrition" class="video-panel-link">
+                            Learn more
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
         <div class="container">
-            <div class="image-grid video-grid">
-                <a href="#coaching" class="image-grid-item video-link">
-                    <video class="image-grid-video" autoplay muted loop playsinline>
-                        <source src="Strength.mp4" type="video/mp4">
-                    </video>
-                    <div class="image-grid-overlay visible">
-                        <h4>Strength</h4>
-                        <p>Build raw power</p>
-                    </div>
-                </a>
-                <a href="#training" class="image-grid-item video-link">
-                    <video class="image-grid-video" autoplay muted loop playsinline>
-                        <source src="Conditioning.mp4" type="video/mp4">
-                    </video>
-                    <div class="image-grid-overlay visible">
-                        <h4>Conditioning</h4>
-                        <p>Elite endurance</p>
-                    </div>
-                </a>
-                <a href="#nutrition" class="image-grid-item video-link">
-                    <video class="image-grid-video" autoplay muted loop playsinline>
-                        <source src="Nutrition.mp4" type="video/mp4">
-                    </video>
-                    <div class="image-grid-overlay visible">
-                        <h4>Nutrition</h4>
-                        <p>Fuel performance</p>
-                    </div>
-                </a>
+            <div class="video-showcase-tabs">
+                <button class="showcase-tab active" data-index="0">
+                    <span class="tab-label">Strength</span>
+                    <span class="tab-progress"><span class="tab-progress-bar"></span></span>
+                </button>
+                <button class="showcase-tab" data-index="1">
+                    <span class="tab-label">Conditioning</span>
+                    <span class="tab-progress"><span class="tab-progress-bar"></span></span>
+                </button>
+                <button class="showcase-tab" data-index="2">
+                    <span class="tab-label">Nutrition</span>
+                    <span class="tab-progress"><span class="tab-progress-bar"></span></span>
+                </button>
             </div>
         </div>
     </section>
@@ -937,6 +946,7 @@
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/video-showcase.js"></script>
     <script src="js/nav-auth.js"></script>
 </body>
 </html>

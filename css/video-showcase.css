@@ -1,0 +1,258 @@
+/* ====================================
+ * Video Showcase — Cinematic Tab Carousel
+ * ==================================== */
+
+.video-showcase {
+    padding: 4rem 0 3rem;
+    background: var(--black);
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- Header --- */
+.video-showcase-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.video-showcase-header h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1.1;
+    color: var(--white);
+}
+
+/* --- Stage (video container) --- */
+.video-showcase-stage {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 9 / 16;
+    max-height: 680px;
+    margin: 0 auto 2.5rem;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        0 0 80px rgba(192, 192, 192, 0.04);
+    border: 1px solid var(--border-color);
+}
+
+/* --- Video Panels (stacked, crossfade) --- */
+.video-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.video-panel.active {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 2;
+}
+
+.showcase-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* --- Text Overlay --- */
+.video-panel-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 5rem 2rem 2rem;
+    background: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.85) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    z-index: 3;
+}
+
+.video-panel-number {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: var(--silver);
+    opacity: 0.5;
+    margin-bottom: 0.5rem;
+}
+
+.video-panel-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--white);
+    margin: 0 0 0.25rem;
+    line-height: 1.1;
+}
+
+.video-panel-subtitle {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 1rem;
+}
+
+.video-panel-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--silver);
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color var(--transition-normal), gap var(--transition-normal);
+}
+
+.video-panel-link:hover {
+    color: var(--white);
+    gap: 0.75rem;
+}
+
+.video-panel-link svg {
+    flex-shrink: 0;
+}
+
+/* --- Tab Navigation --- */
+.video-showcase-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.showcase-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 1.5rem 1rem 1rem;
+    cursor: pointer;
+    position: relative;
+    text-align: center;
+    outline: none;
+}
+
+.tab-label {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray-dark);
+    transition: color var(--transition-normal);
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.showcase-tab.active .tab-label {
+    color: var(--silver);
+}
+
+.showcase-tab:hover .tab-label {
+    color: var(--gray-light);
+}
+
+.tab-progress {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: rgba(192, 192, 192, 0.1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 1px;
+}
+
+.tab-progress-bar {
+    display: block;
+    width: 0%;
+    height: 100%;
+    background: var(--silver-dark);
+    border-radius: 1px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .video-showcase {
+        padding: 3rem 0 2rem;
+    }
+
+    .video-showcase-header {
+        margin-bottom: 2rem;
+    }
+
+    .video-showcase-stage {
+        max-width: 80vw;
+        max-height: 65vh;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .video-panel-title {
+        font-size: 1.5rem;
+    }
+
+    .video-panel-overlay {
+        padding: 4rem 1.5rem 1.5rem;
+    }
+
+    .video-showcase-tabs {
+        max-width: 100%;
+        padding: 0 5%;
+    }
+
+    .tab-label {
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-showcase-stage {
+        max-width: 88vw;
+        border-radius: 10px;
+    }
+
+    .video-panel-overlay {
+        padding: 3rem 1.25rem 1.25rem;
+    }
+
+    .video-panel-title {
+        font-size: 1.25rem;
+        letter-spacing: 1px;
+    }
+
+    .video-panel-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .showcase-tab {
+        padding: 1.25rem 0.5rem 0.75rem;
+    }
+}
+
+/* --- Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+    .video-panel {
+        transition: none;
+    }
+
+    .tab-progress-bar {
+        transition: none !important;
+    }
+}
