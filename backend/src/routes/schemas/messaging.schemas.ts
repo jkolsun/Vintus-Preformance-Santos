@@ -13,6 +13,7 @@ export const sendMessageSchema = z.object({
     "WORKOUT_MISSED",
     "ESCALATION",
     "CHECK_IN",
+    "CHECKIN_RESPONSE",
     "SYSTEM",
   ]),
   channel: z.enum(["SMS", "EMAIL"]),

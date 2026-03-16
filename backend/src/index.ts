@@ -10,6 +10,7 @@ import { logger } from "./lib/logger.js";
 import { startCrons } from "./services/cron.service.js";
 import apiRoutes from "./routes/index.js";
 import webhookRoutes from "./routes/webhook.routes.js";
+import smsWebhookRoutes from "./routes/sms-webhook.routes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(morgan("short"));
 // Stripe webhook signature verification requires the raw request body.
 // ---------------------------------------------------------------------------
 app.use("/api/webhooks", webhookRoutes);
+app.use("/api/webhooks", smsWebhookRoutes);
 
 // ---------------------------------------------------------------------------
 // JSON body parser — applied AFTER webhook routes

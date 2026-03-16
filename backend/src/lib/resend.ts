@@ -27,7 +27,7 @@ function buildBrandedHTML(content: string, subject: string): string {
           <!-- Header -->
           <tr>
             <td style="padding:40px 40px 20px;border-bottom:1px solid #222222;text-align:center;">
-              <img src="https://vintusperformance.org/images/Vintus_LOGO.PNG" alt="Vintus Performance" style="max-width:180px;height:auto;">
+              <img src="${env.FRONTEND_URL.replace(/\/$/, "")}/images/Vintus_LOGO.PNG" alt="Vintus Performance" style="max-width:180px;height:auto;">
             </td>
           </tr>
 

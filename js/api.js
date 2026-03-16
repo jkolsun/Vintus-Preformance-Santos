@@ -54,10 +54,10 @@ async function apiFetch(path, options) {
   // Skip redirect on public-facing pages (results, onboarding) where
   // unauthenticated API calls are expected (e.g. checkout, verify-session)
   if (res.status === 401) {
-    var path = window.location.pathname;
-    var isPublicPage = path.includes('results.html') ||
-                       path.includes('onboarding.html') ||
-                       path.includes('login.html');
+    var pagePath = window.location.pathname;
+    var isPublicPage = pagePath.includes('results.html') ||
+                       pagePath.includes('onboarding.html') ||
+                       pagePath.includes('login.html');
     if (!isPublicPage) {
       clearToken();
       localStorage.removeItem('vintus_role');

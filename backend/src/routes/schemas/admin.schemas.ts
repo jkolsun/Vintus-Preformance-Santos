@@ -50,6 +50,11 @@ export const profileEditSchema = z.object({
   messagingDisabled: z.boolean().optional(),
 });
 
+export const clientStatusSchema = z.object({
+  action: z.enum(["pause", "activate"]),
+});
+
+export type ClientStatus = z.infer<typeof clientStatusSchema>;
 export type ClientNotes = z.infer<typeof clientNotesSchema>;
 export type CustomMessage = z.infer<typeof customMessageSchema>;
 export type WorkoutOverride = z.infer<typeof workoutOverrideSchema>;

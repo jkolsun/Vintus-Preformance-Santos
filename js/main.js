@@ -577,6 +577,7 @@ function throttle(func, limit) {
             // Save quiz data to localStorage for results page
             localStorage.setItem('vintusQuizData', JSON.stringify({
                 primary_goal: quizState.answers.primary_goal,
+                primary_goal_other: quizState.answers.primary_goal_other || '',
                 training_days: quizState.answers.training_days,
                 experience: quizState.answers.experience,
                 challenge: quizState.answers.challenge,
@@ -593,105 +594,6 @@ function throttle(func, limit) {
               window.location.href = 'results.html?source=quiz';
             }
         });
-
-        // Generate AI Summary
-        function generateHeroAISummary() {
-            const { primary_goal, primary_goal_other, training_days, experience, challenge, first_name } = quizState.answers;
-
-            // Goal mapping
-            const goalMap = {
-                'build-muscle': 'build lean muscle',
-                'lose-fat': 'lose body fat',
-                'endurance': 'improve endurance and conditioning',
-                'well-rounded': 'become well-rounded with both strength and performance',
-                'other': primary_goal_other || 'achieve your fitness goals'
-            };
-
-            // Experience mapping
-            const experienceMap = {
-                'beginner': 'beginner',
-                'intermediate': 'intermediate',
-                'advanced': 'advanced'
-            };
-
-            // Training focus based on experience
-            const trainingFocusMap = {
-                'beginner': 'building a strong foundation with proper form and consistency',
-                'intermediate': 'progressive overload and breaking through plateaus',
-                'advanced': 'periodized programming to optimize peak performance'
-            };
-
-            // Challenge mapping
-            const challengeMap = {
-                'structure': 'lack of structure and accountability',
-                'no-results': 'not seeing results despite your effort',
-                'energy': 'inconsistent energy and recovery',
-                'unsure': 'uncertainty about how to train and fuel properly'
-            };
-
-            // Days mapping
-            const daysMap = {
-                '2-3': '2-3 days per week',
-                '4-5': '4-5 days per week',
-                '6+': '6+ days per week'
-            };
-
-            // Generate personalized content
-            const goalText = goalMap[primary_goal] || goalMap['other'];
-            const expText = experienceMap[experience] || 'intermediate';
-            const focusText = trainingFocusMap[experience] || trainingFocusMap['intermediate'];
-            const challengeText = challengeMap[challenge] || 'overcoming obstacles';
-            const daysText = daysMap[training_days] || '4-5 days per week';
-
-            const html = `
-                <p>Based on your goal to <strong>${goalText}</strong>, your ability to train <strong>${daysText}</strong>, and your <strong>${expText}</strong> experience level, your ideal regimen focuses on ${focusText}.</p>
-
-                <p>Your biggest limiter right now isn't effort—it's <strong>${challengeText}</strong>. This is exactly what we address in our coaching methodology. With the right structure, you'll see results faster than you thought possible.</p>
-
-                <p>Your custom program will include:</p>
-                <ul style="margin: 1rem 0; padding-left: 1.5rem;">
-                    <li>Personalized workout splits optimized for your ${daysText} schedule</li>
-                    <li>Progressive programming designed for ${expText} athletes</li>
-                    <li>Accountability systems to eliminate ${challengeText.replace('lack of ', '').replace('uncertainty about ', '')}</li>
-                    <li>Nutrition guidance aligned with your goal to ${goalText}</li>
-                </ul>
-            `;
-
-            if (heroAiContent) {
-                heroAiContent.innerHTML = html;
-            }
-
-            // Update name in results header
-            const resultName = document.getElementById('resultName');
-            if (resultName && first_name) {
-                resultName.textContent = first_name;
-            }
-        }
-
-        // Show quiz results
-        function showQuizResults() {
-            // Hide form
-            heroQuizForm.style.display = 'none';
-            if (heroQuizBack) heroQuizBack.style.display = 'none';
-
-            // Show results
-            if (heroQuizResults) {
-                heroQuizResults.style.display = 'block';
-            }
-
-            // Update progress to 100%
-            if (heroQuizProgress) {
-                heroQuizProgress.style.width = '100%';
-            }
-
-            // Hide carousel navigation buttons
-            const carouselNav = document.querySelector('.carousel-nav');
-            const carouselDots = document.querySelector('.carousel-dots');
-            const carouselProgress = document.querySelector('.carousel-progress');
-            if (carouselNav) carouselNav.style.display = 'none';
-            if (carouselDots) carouselDots.style.display = 'none';
-            if (carouselProgress) carouselProgress.style.display = 'none';
-        }
 
         // Initialize progress
         updateQuizProgress();

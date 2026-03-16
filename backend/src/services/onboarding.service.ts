@@ -157,12 +157,28 @@ export async function submitRoutineQuestionnaire(
     },
   });
 
-  // Create initial ReadinessMetric as baseline
-  await prisma.readinessMetric.create({
-    data: {
+  // Create or update initial ReadinessMetric as baseline (upsert to handle re-submission)
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  await prisma.readinessMetric.upsert({
+    where: {
+      athleteProfileId_date_source: {
+        athleteProfileId: profile.id,
+        date: today,
+        source: "MANUAL",
+      },
+    },
+    create: {
       athleteProfileId: profile.id,
-      date: new Date(),
+      date: today,
       source: "MANUAL",
+      perceivedEnergy: data.typicalEnergyLevel,
+      perceivedSoreness: data.typicalSorenessLevel,
+      perceivedMood: data.typicalMoodLevel,
+      sleepQualityManual: data.typicalSleepQuality,
+      notes: "Baseline from onboarding questionnaire",
+    },
+    update: {
       perceivedEnergy: data.typicalEnergyLevel,
       perceivedSoreness: data.typicalSorenessLevel,
       perceivedMood: data.typicalMoodLevel,

@@ -6,6 +6,17 @@ import { processIntake } from "./ai.service.js";
 import { getPlanRecommendations, type PlanRecommendation } from "./plan.service.js";
 import type { SimpleIntake, ExpandedIntake } from "../routes/schemas/intake.schemas.js";
 
+/** Normalize a phone number to E.164 format for consistent storage/matching. */
+function normalizePhone(phone: string | undefined | null): string | null {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 0) return null;
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  if (phone.startsWith("+")) return phone;
+  return `+${digits}`;
+}
+
 interface IntakeResult {
   userId: string;
   profileId: string;
@@ -91,7 +102,7 @@ export async function submitSimpleIntake(data: SimpleIntake): Promise<IntakeResu
   const profileData = {
     firstName: data.firstName,
     lastName: data.lastName,
-    phone: data.phone ?? null,
+    phone: normalizePhone(data.phone),
     primaryGoal: normalizedGoal,
     secondaryGoals: [] as string[],
     trainingDaysPerWeek,
@@ -162,7 +173,7 @@ export async function submitExpandedIntake(data: ExpandedIntake): Promise<Intake
   const profileData = {
     firstName: data.firstName,
     lastName: data.lastName,
-    phone: data.phone ?? null,
+    phone: normalizePhone(data.phone),
     timezone: data.timezone,
     dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
     primaryGoal: data.primaryGoal,

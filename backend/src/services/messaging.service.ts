@@ -45,7 +45,7 @@ interface SendResult {
 // interpolateTemplate — replace {{variables}}
 // ============================================================
 
-function interpolateTemplate(
+export function interpolateTemplate(
   template: string,
   context: MessageContext
 ): string {
@@ -247,7 +247,9 @@ export async function sendMessage(
 }
 
 // ============================================================
-// sendWelcomeSequence — 3 messages over 24 hours
+// sendWelcomeSequence — 3 messages, cron-safe (no setTimeout)
+// Step 1 fires immediately, Steps 2-3 are picked up by the
+// cron loop via checkWelcomeSequence() on subsequent ticks.
 // ============================================================
 
 export async function sendWelcomeSequence(userId: string): Promise<void> {
@@ -258,27 +260,61 @@ export async function sendWelcomeSequence(userId: string): Promise<void> {
     logger.error({ err, userId }, "Welcome SMS failed");
   }
 
-  // 2. +2 hours: email with full summary
-  setTimeout(async () => {
-    try {
-      await sendMessage(userId, "WELCOME", "EMAIL");
-    } catch (err) {
-      logger.error({ err, userId }, "Welcome email failed");
-    }
-  }, 2 * 60 * 60 * 1000);
+  logger.info({ userId }, "Welcome sequence initiated (step 1 sent, steps 2-3 will be sent by cron)");
+}
 
-  // 3. +24 hours: follow-up SMS
-  setTimeout(async () => {
-    try {
-      await sendMessage(userId, "CHECK_IN", "SMS", {
-        checkInLink: `${env.FRONTEND_URL}/dashboard/checkin`,
-      });
-    } catch (err) {
-      logger.error({ err, userId }, "Welcome follow-up SMS failed");
-    }
-  }, 24 * 60 * 60 * 1000);
+/**
+ * checkWelcomeSequence — called by the cron loop for recently subscribed users.
+ * Sends the welcome email (~2+ hours after signup) and the 24h follow-up check-in SMS.
+ * Fully idempotent via DB dedup.
+ */
+export async function checkWelcomeSequence(userId: string): Promise<void> {
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId },
+    select: { createdAt: true, status: true },
+  });
 
-  logger.info({ userId }, "Welcome sequence initiated (3 messages scheduled)");
+  if (!subscription || subscription.status !== "ACTIVE") return;
+
+  const hoursSinceSignup = (Date.now() - subscription.createdAt.getTime()) / (1000 * 60 * 60);
+
+  // Only run for users who signed up in the last 48 hours
+  if (hoursSinceSignup > 48) return;
+
+  const signupDate = new Date(subscription.createdAt);
+  signupDate.setUTCHours(0, 0, 0, 0);
+
+  // Step 2: Welcome email — send after 2+ hours
+  if (hoursSinceSignup >= 2) {
+    const existingWelcomeEmail = await prisma.messageLog.findFirst({
+      where: { userId, category: "WELCOME", channel: "EMAIL", sentAt: { gte: signupDate } },
+    });
+    if (!existingWelcomeEmail) {
+      try {
+        await sendMessage(userId, "WELCOME", "EMAIL");
+        logger.info({ userId }, "Welcome email sent (cron step 2)");
+      } catch (err) {
+        logger.error({ err, userId }, "Welcome email failed (cron step 2)");
+      }
+    }
+  }
+
+  // Step 3: Follow-up check-in SMS — send after 24+ hours
+  if (hoursSinceSignup >= 24) {
+    const existingFollowUp = await prisma.messageLog.findFirst({
+      where: { userId, category: "CHECK_IN", channel: "SMS", sentAt: { gte: signupDate } },
+    });
+    if (!existingFollowUp) {
+      try {
+        await sendMessage(userId, "CHECK_IN", "SMS", {
+          checkInLink: `${env.FRONTEND_URL}/dashboard.html`,
+        });
+        logger.info({ userId }, "Welcome follow-up SMS sent (cron step 3)");
+      } catch (err) {
+        logger.error({ err, userId }, "Welcome follow-up SMS failed (cron step 3)");
+      }
+    }
+  }
 }
 
 // ============================================================

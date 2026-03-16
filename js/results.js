@@ -112,7 +112,7 @@
     };
 
     var firstName = quiz.first_name || 'There';
-    var goal = goalMap[quiz.primary_goal] || 'achieving your fitness goals';
+    var goal = goalMap[quiz.primary_goal] || (quiz.primary_goal_other ? quiz.primary_goal_other : 'achieving your fitness goals');
     var exp = experienceMap[quiz.experience] || 'someone looking to level up';
     var days = daysMap[quiz.training_days] || 'your available schedule';
     var challenge = challengeMap[quiz.challenge] || 'overcoming obstacles';

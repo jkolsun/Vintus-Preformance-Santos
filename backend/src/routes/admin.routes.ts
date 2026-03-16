@@ -5,6 +5,7 @@ import { adminOnly } from "../middleware/adminOnly.js";
 import { validate } from "../middleware/validate.js";
 import {
   clientNotesSchema,
+  clientStatusSchema,
   customMessageSchema,
   workoutOverrideSchema,
   profileEditSchema,
@@ -92,6 +93,46 @@ router.put(
     try {
       const userId = req.params.userId as string;
       const result = await adminService.updateClientProfile(userId, req.body);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PUT /admin/clients/:userId/status — pause or reactivate client
+router.put(
+  "/clients/:userId/status",
+  validate(clientStatusSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.params.userId as string;
+      const { action } = req.body;
+
+      const result = await adminService.setClientStatus(userId, action);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// DELETE /admin/clients/:userId — permanently remove client
+router.delete(
+  "/clients/:userId",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.params.userId as string;
+
+      const result = await adminService.deleteClient(userId);
 
       res.status(200).json({
         success: true,

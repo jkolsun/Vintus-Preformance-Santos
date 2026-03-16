@@ -5,6 +5,7 @@ import { logger } from "../lib/logger.js";
 import { env } from "../config/env.js";
 import { sendEmail } from "../lib/resend.js";
 import * as messagingService from "./messaging.service.js";
+import { checkWelcomeSequence } from "./messaging.service.js";
 import * as adherenceService from "./adherence.service.js";
 import * as workoutService from "./workout.service.js";
 import * as readinessService from "./readiness.service.js";
@@ -96,7 +97,7 @@ function getWeekStart(date: Date): Date {
 export function startCrons(): void {
   logger.info("Registering cron jobs...");
 
-  // Hourly — daily reviews and weekly digest checks
+  // Hourly — daily reviews, weekly digest, and welcome sequence checks
   cron.schedule("0 * * * *", async () => {
     logger.info("Hourly cron tick...");
     try {
@@ -108,6 +109,11 @@ export function startCrons(): void {
       await weeklyDigestCron();
     } catch (err) {
       logger.error({ err }, "Weekly digest cron failed");
+    }
+    try {
+      await welcomeSequenceCron();
+    } catch (err) {
+      logger.error({ err }, "Welcome sequence cron failed");
     }
   });
 
@@ -420,7 +426,7 @@ export async function dailyReviewForClient(
       try {
         await messagingService.sendMessage(userId, "CHECK_IN", "SMS", {
           firstName: profile.firstName,
-          checkInLink: `${env.FRONTEND_URL}/dashboard/checkin`,
+          checkInLink: `${env.FRONTEND_URL}/dashboard.html`,
         });
       } catch (err) {
         logger.error({ err, userId }, "Failed to send CHECK_IN message");
@@ -673,6 +679,12 @@ async function sendWeeklyDigest(userId: string): Promise<void> {
 
   if (!user?.athleteProfile) return;
 
+  // Respect per-client messaging kill switch
+  if (user.athleteProfile.messagingDisabled) {
+    logger.info({ userId }, "Weekly digest skipped (messagingDisabled=true)");
+    return;
+  }
+
   const profile = user.athleteProfile;
 
   // Last week's Monday-Sunday
@@ -783,4 +795,34 @@ async function sendWeeklyDigest(userId: string): Promise<void> {
     { userId, completedCount, scheduledCount, adherenceRate, trend: trends.trend },
     "Weekly digest sent"
   );
+}
+
+// ============================================================
+// welcomeSequenceCron — deliver delayed welcome messages
+// Checks recently subscribed users (last 48h) and sends
+// welcome email (2h+) and follow-up check-in SMS (24h+).
+// ============================================================
+
+async function welcomeSequenceCron(): Promise<void> {
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+  const recentSubscriptions = await prisma.subscription.findMany({
+    where: { status: "ACTIVE", createdAt: { gte: cutoff } },
+    select: { userId: true },
+  });
+
+  let processed = 0;
+
+  for (const sub of recentSubscriptions) {
+    try {
+      await checkWelcomeSequence(sub.userId);
+      processed++;
+    } catch (err) {
+      logger.error({ err, userId: sub.userId }, "Welcome sequence check failed for client");
+    }
+  }
+
+  if (processed > 0) {
+    logger.info({ processed }, "Welcome sequence cron completed");
+  }
 }

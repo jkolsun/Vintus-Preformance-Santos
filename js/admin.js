@@ -233,7 +233,7 @@
 
       var body = document.getElementById('clientsBody');
       if (!data.clients.length) {
-        body.innerHTML = '<tr><td colspan="6" class="admin-empty">No clients found</td></tr>';
+        body.innerHTML = '<tr><td colspan="7" class="admin-empty">No clients found</td></tr>';
       } else {
         var html = '';
         for (var i = 0; i < data.clients.length; i++) {
@@ -244,6 +244,7 @@
           var plan = c.subscription ? esc(fmtTier(c.subscription.planTier)) : '—';
           var st = c.subscription ? statusBadge(c.subscription.status) : '—';
           var adh = c.adherence ? fmtPct(c.adherence.rate) : '—';
+          var cIsPaused = c.subscription && c.subscription.status === 'PAUSED';
           html += '<tr class="admin-table-clickable" data-userid="' + esc(c.id) + '">' +
             '<td>' + name.trim() + '</td>' +
             '<td>' + esc(c.email) + '</td>' +
@@ -251,16 +252,63 @@
             '<td>' + st + '</td>' +
             '<td>' + adh + '</td>' +
             '<td>' + fmtDate(c.createdAt) + '</td>' +
+            '<td class="admin-row-actions" style="white-space:nowrap;">' +
+              '<button class="admin-btn-small admin-row-pause" data-pause-id="' + esc(c.id) + '" style="border:1px solid ' + (cIsPaused ? '#22c55e' : '#f59e0b') + ';color:' + (cIsPaused ? '#22c55e' : '#f59e0b') + ';background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-right:0.25rem;">' + (cIsPaused ? 'Activate' : 'Pause') + '</button>' +
+              '<button class="admin-btn-small admin-row-remove" data-remove-id="' + esc(c.id) + '" style="border:1px solid #ef4444;color:#ef4444;background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;">Remove</button>' +
+            '</td>' +
             '</tr>';
         }
         body.innerHTML = html;
 
-        // Click handler for rows
+        // Click handler for rows (open detail on click, except action buttons)
         var rows = body.querySelectorAll('.admin-table-clickable');
         rows.forEach(function (row) {
-          row.addEventListener('click', function () {
+          row.addEventListener('click', function (e) {
+            if (e.target.closest('.admin-row-actions')) return;
             var userId = row.getAttribute('data-userid');
             openClientDetail(userId);
+          });
+        });
+
+        // Pause/Activate buttons on table rows
+        body.querySelectorAll('.admin-row-pause').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var uid = btn.getAttribute('data-pause-id');
+            var isPaused = btn.textContent.trim() === 'Activate';
+            var action = isPaused ? 'activate' : 'pause';
+            var msg = isPaused ? 'Reactivate this client?' : 'Pause this client?';
+            if (!confirm(msg)) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+              await apiPut('/api/v1/admin/clients/' + encodeURIComponent(uid) + '/status', { action: action });
+              loadClients();
+            } catch (err) {
+              alert('Failed: ' + err.message);
+              btn.disabled = false;
+              btn.textContent = isPaused ? 'Activate' : 'Pause';
+            }
+          });
+        });
+
+        // Remove buttons on table rows
+        body.querySelectorAll('.admin-row-remove').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var uid = btn.getAttribute('data-remove-id');
+            if (!confirm('Permanently remove this client? This cannot be undone.')) return;
+            if (!confirm('All data will be deleted. Are you sure?')) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+              await apiDelete('/api/v1/admin/clients/' + encodeURIComponent(uid));
+              loadClients();
+            } catch (err) {
+              alert('Failed: ' + err.message);
+              btn.disabled = false;
+              btn.textContent = 'Remove';
+            }
           });
         });
       }
@@ -272,7 +320,7 @@
       });
 
     } catch (err) {
-      document.getElementById('clientsBody').innerHTML = '<tr><td colspan="6" class="admin-alert admin-alert--error">' + esc(err.message) + '</td></tr>';
+      document.getElementById('clientsBody').innerHTML = '<tr><td colspan="7" class="admin-alert admin-alert--error">' + esc(err.message) + '</td></tr>';
     }
   }
 
@@ -542,11 +590,17 @@
         '<div id="msgAlert"></div>' +
         '</div>';
 
-      // Trigger review
+      // Actions: trigger review, pause/activate, remove
+      var isPaused = sub && sub.status === 'PAUSED';
       html += '<div class="admin-detail-section">' +
         '<div class="admin-detail-section-title">Actions</div>' +
+        '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">' +
         '<button class="admin-btn-secondary" id="triggerReviewBtn">Trigger Daily Review</button>' +
+        '<button class="admin-btn-secondary" id="pauseClientBtn" style="border-color:' + (isPaused ? '#22c55e' : '#f59e0b') + ';color:' + (isPaused ? '#22c55e' : '#f59e0b') + ';">' + (isPaused ? 'Reactivate Client' : 'Pause Client') + '</button>' +
+        '<button class="admin-btn-secondary" id="removeClientBtn" style="border-color:#ef4444;color:#ef4444;">Remove Client</button>' +
+        '</div>' +
         '<div id="reviewAlert" style="margin-top:0.5rem;"></div>' +
+        '<div id="statusAlert" style="margin-top:0.5rem;"></div>' +
         '</div>';
 
       detailBody.innerHTML = html;
@@ -713,6 +767,52 @@
         } finally {
           triggerBtn.disabled = false;
           triggerBtn.textContent = 'Trigger Daily Review';
+        }
+      });
+    }
+
+    // Pause / Reactivate client
+    var pauseBtn = document.getElementById('pauseClientBtn');
+    if (pauseBtn) {
+      pauseBtn.addEventListener('click', async function () {
+        var isPaused = pauseBtn.textContent.trim().indexOf('Reactivate') === 0;
+        var action = isPaused ? 'activate' : 'pause';
+        var confirmMsg = isPaused
+          ? 'Reactivate this client? Their subscription and messaging will resume.'
+          : 'Pause this client? Their subscription will be paused and messaging will stop.';
+        if (!confirm(confirmMsg)) return;
+        pauseBtn.disabled = true;
+        pauseBtn.textContent = 'Updating...';
+        try {
+          await apiPut('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/status', { action: action });
+          document.getElementById('statusAlert').innerHTML = '<div class="admin-alert admin-alert--success">Client ' + (action === 'pause' ? 'paused' : 'reactivated') + '</div>';
+          // Refresh detail panel and client list
+          loadClientDetail(userId);
+          loadClients();
+        } catch (err) {
+          document.getElementById('statusAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+          pauseBtn.disabled = false;
+          pauseBtn.textContent = isPaused ? 'Reactivate Client' : 'Pause Client';
+        }
+      });
+    }
+
+    // Remove client permanently
+    var removeBtn = document.getElementById('removeClientBtn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', async function () {
+        if (!confirm('Are you sure you want to permanently remove this client? This cannot be undone.')) return;
+        if (!confirm('This will delete ALL their data (profile, workouts, messages, subscription). Type OK to confirm.')) return;
+        removeBtn.disabled = true;
+        removeBtn.textContent = 'Removing...';
+        try {
+          await apiDelete('/api/v1/admin/clients/' + encodeURIComponent(userId));
+          closeClientDetail();
+          loadClients();
+        } catch (err) {
+          document.getElementById('statusAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+          removeBtn.disabled = false;
+          removeBtn.textContent = 'Remove Client';
         }
       });
     }

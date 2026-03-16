@@ -7,6 +7,7 @@ import {
   type ScoringInput,
 } from "../utils/scoring.js";
 import { fallbackTemplates } from "../data/message-templates.js";
+import { interpolateTemplate } from "./messaging.service.js";
 
 // ============================================================
 // Types
@@ -338,20 +339,6 @@ function getTemplateFallback(
     content: interpolateTemplate(selected.content, context),
     templateId: selected.id,
   };
-}
-
-function interpolateTemplate(
-  template: string,
-  context: MessageContext
-): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => {
-    const value = context[key];
-    if (value == null) return "";
-    if (typeof value === "number" && key === "adherenceRate") {
-      return `${Math.round(value * 100)}%`;
-    }
-    return String(value);
-  });
 }
 
 // ============================================================

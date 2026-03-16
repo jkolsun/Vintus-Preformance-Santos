@@ -4,6 +4,7 @@ import { stripe } from "../config/stripe.js";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
+import { sendWelcomeSequence } from "./messaging.service.js";
 
 // ============================================================
 // Product → Stripe Price ID mapping
@@ -191,6 +192,13 @@ async function handleCheckoutCompleted(
     { userId, tier, stripeSubscriptionId, isRecurring },
     "Purchase record created from checkout"
   );
+
+  // Fire welcome sequence (immediate SMS, cron handles follow-ups)
+  try {
+    await sendWelcomeSequence(userId);
+  } catch (err) {
+    logger.error({ err, userId }, "Welcome sequence failed after checkout");
+  }
 }
 
 // Subscription lifecycle events — only apply to PRIVATE_COACHING (recurring)

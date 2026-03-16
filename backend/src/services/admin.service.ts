@@ -380,6 +380,75 @@ export async function sendCustomMessage(
   return { messageId: log.id };
 }
 
+/**
+ * Pause or reactivate a client's subscription.
+ */
+export async function setClientStatus(
+  userId: string,
+  action: "pause" | "activate"
+): Promise<{ success: boolean; status: string }> {
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId },
+  });
+
+  if (!subscription) {
+    const err = new Error("No subscription found for this user") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const newStatus = action === "pause" ? "PAUSED" : "ACTIVE";
+
+  if (subscription.status === newStatus) {
+    return { success: true, status: newStatus };
+  }
+
+  await prisma.subscription.update({
+    where: { userId },
+    data: { status: newStatus as SubscriptionStatus },
+  });
+
+  // Also toggle messaging when pausing
+  const profile = await prisma.athleteProfile.findUnique({ where: { userId } });
+  if (profile) {
+    await prisma.athleteProfile.update({
+      where: { userId },
+      data: { messagingDisabled: action === "pause" },
+    });
+  }
+
+  logger.info({ userId, action, newStatus }, "Admin changed client status");
+  return { success: true, status: newStatus };
+}
+
+/**
+ * Permanently delete a client and all associated data.
+ * Prisma cascade deletes handle related records (profile, subscription, messages, etc.).
+ */
+export async function deleteClient(userId: string): Promise<{ success: boolean }> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, email: true },
+  });
+
+  if (!user) {
+    const err = new Error("User not found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (user.role === "ADMIN") {
+    const err = new Error("Cannot delete admin users") as Error & { statusCode?: number };
+    err.statusCode = 403;
+    throw err;
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
+
+  logger.info({ userId, email: user.email }, "Admin permanently deleted client");
+  return { success: true };
+}
+
 // ============================================================
 // ANALYTICS
 // ============================================================
