@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { env } from "../config/env.js";
 import { logger } from "./logger.js";
+import { isMessagingEnabled } from "./feature-flags.js";
 
 const resendClient = new Resend(env.RESEND_API_KEY);
 
@@ -71,8 +72,8 @@ export async function sendEmail(
   subject: string,
   textContent: string
 ): Promise<string | null> {
-  if (!env.MESSAGING_ENABLED) {
-    logger.info({ to, subject }, "Email skipped (MESSAGING_ENABLED=false)");
+  if (!isMessagingEnabled()) {
+    logger.info({ to, subject }, "Email skipped (messaging disabled)");
     return "dry-run-email";
   }
 

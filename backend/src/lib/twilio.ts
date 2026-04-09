@@ -1,6 +1,7 @@
 import Twilio from "twilio";
 import { env } from "../config/env.js";
 import { logger } from "./logger.js";
+import { isMessagingEnabled } from "./feature-flags.js";
 
 const twilioClient = Twilio(
   env.TWILIO_ACCOUNT_SID,
@@ -17,8 +18,8 @@ export async function sendSMS(
   to: string,
   body: string
 ): Promise<string | null> {
-  if (!env.MESSAGING_ENABLED) {
-    logger.info({ to, bodyLength: body.length }, "SMS skipped (MESSAGING_ENABLED=false)");
+  if (!isMessagingEnabled()) {
+    logger.info({ to, bodyLength: body.length }, "SMS skipped (messaging disabled)");
     return "dry-run-sms";
   }
 

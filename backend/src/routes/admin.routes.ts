@@ -14,6 +14,7 @@ import {
   resolveEscalationSchema,
 } from "./schemas/admin.schemas.js";
 import { dailyReviewForClient } from "../services/cron.service.js";
+import { getFlags, setFlag } from "../lib/feature-flags.js";
 import * as adminService from "../services/admin.service.js";
 
 const router = Router();
@@ -101,6 +102,33 @@ router.put(
         success: true,
         data: result,
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /admin/feature-flags — current runtime feature flag states
+router.get(
+  "/feature-flags",
+  async (_req: Request, res: Response) => {
+    res.status(200).json({ success: true, data: getFlags() });
+  }
+);
+
+// PUT /admin/feature-flags — toggle a feature flag
+router.put(
+  "/feature-flags",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { flag, value } = req.body;
+      const validFlags = ["messagingEnabled", "cronEnabled", "autoMessagingEnabled"];
+      if (!validFlags.includes(flag) || typeof value !== "boolean") {
+        res.status(400).json({ success: false, error: "Invalid flag or value" });
+        return;
+      }
+      setFlag(flag as "messagingEnabled" | "cronEnabled" | "autoMessagingEnabled", value);
+      res.status(200).json({ success: true, data: getFlags() });
     } catch (err) {
       next(err);
     }

@@ -10,13 +10,13 @@ import * as adherenceService from "./adherence.service.js";
 import * as workoutService from "./workout.service.js";
 import * as readinessService from "./readiness.service.js";
 
+import { isAutoMessagingEnabled, isCronEnabled } from "../lib/feature-flags.js";
+
 // ============================================================
 // Auto-messaging toggle — when false, messages are queued as
 // pending triggers instead of sent automatically.
-// Set AUTO_MESSAGING_ENABLED=true in .env to enable auto-send.
+// Admin can toggle this live from the admin dashboard.
 // ============================================================
-
-const AUTO_MESSAGING_ENABLED = process.env.AUTO_MESSAGING_ENABLED === "true";
 
 // Exclude pending triggers from dedup queries — pending triggers have sentAt set
 // by Prisma's @default(now()) but haven't actually been sent yet
@@ -34,7 +34,7 @@ async function triggerOrQueue(
   context: Record<string, unknown>,
   description?: string
 ): Promise<void> {
-  if (AUTO_MESSAGING_ENABLED) {
+  if (isAutoMessagingEnabled()) {
     await messagingService.sendMessage(userId, category, channel, context);
     return;
   }
@@ -164,6 +164,9 @@ export function startCrons(): void {
 
   // Hourly — daily reviews, weekly digest, and welcome sequence checks
   cron.schedule("0 * * * *", async () => {
+    if (!isCronEnabled()) {
+      return; // Admin has paused cron via dashboard
+    }
     logger.info("Hourly cron tick...");
     try {
       await dailyReviewCron();
@@ -819,7 +822,7 @@ export async function dailyReviewForClient(
   // ── Step 10: AUTO-DEACTIVATION (4 days after plan end, no response) ──
   // Only runs when AUTO_MESSAGING_ENABLED — otherwise admin handles deactivation manually
 
-  if (AUTO_MESSAGING_ENABLED && sub && sub.scheduledDeleteAt && !sub.renewalResponseAt) {
+  if (isAutoMessagingEnabled() && sub && sub.scheduledDeleteAt && !sub.renewalResponseAt) {
     const deleteAt = new Date(sub.scheduledDeleteAt);
     deleteAt.setUTCHours(0, 0, 0, 0);
 

@@ -138,12 +138,63 @@
      OVERVIEW TAB
      ============================================================ */
 
+  function renderFeatureFlags(flags) {
+    var el = document.getElementById('featureFlags');
+    if (!el) return;
+
+    var items = [
+      { key: 'messagingEnabled', label: 'SMS & Email Delivery', desc: 'When OFF, all messages are logged but not actually sent' },
+      { key: 'cronEnabled', label: 'Automated Cron Jobs', desc: 'Daily reviews, workout alerts, weekly digests' },
+      { key: 'autoMessagingEnabled', label: 'Auto-Send Messages', desc: 'When OFF, cron queues triggers for manual review' },
+    ];
+
+    var html = '';
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var isOn = flags[item.key] === true;
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(192,192,192,0.08);">' +
+        '<div>' +
+          '<div style="color:#c0c0c0;font-size:0.85rem;font-weight:500;">' + esc(item.label) + '</div>' +
+          '<div style="color:rgba(192,192,192,0.35);font-size:0.7rem;">' + esc(item.desc) + '</div>' +
+        '</div>' +
+        '<button class="flag-toggle" data-flag="' + item.key + '" data-value="' + (isOn ? 'true' : 'false') + '" ' +
+          'style="min-width:56px;padding:0.35rem 0.7rem;font-size:0.75rem;font-weight:600;border:1px solid;cursor:pointer;' +
+          (isOn ? 'background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.4);color:#4ade80;' : 'background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);color:#f87171;') +
+          '">' + (isOn ? 'ON' : 'OFF') + '</button>' +
+      '</div>';
+    }
+    el.innerHTML = html;
+
+    // Bind toggle clicks
+    el.querySelectorAll('.flag-toggle').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var flag = btn.getAttribute('data-flag');
+        var currentlyOn = btn.getAttribute('data-value') === 'true';
+        var newValue = !currentlyOn;
+        var label = btn.closest('div').querySelector('div').textContent;
+        if (!confirm((newValue ? 'Enable' : 'Disable') + ' ' + label + '?')) return;
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+          var res = await apiPut('/api/v1/admin/feature-flags', { flag: flag, value: newValue });
+          if (res.success) {
+            renderFeatureFlags(res.data);
+          }
+        } catch (err) {
+          alert('Failed: ' + err.message);
+        }
+        btn.disabled = false;
+      });
+    });
+  }
+
   async function loadOverview() {
     try {
       var results = await Promise.all([
         apiGet('/api/v1/admin/analytics/overview'),
         apiGet('/api/v1/admin/system/health'),
-        apiGet('/api/v1/admin/system/cron-status')
+        apiGet('/api/v1/admin/system/cron-status'),
+        apiGet('/api/v1/admin/feature-flags')
       ]);
 
       var overview = results[0].data;
@@ -198,6 +249,10 @@
         '<div class="admin-cron-item"><span class="admin-cron-label">Last Weekly Digest</span><span class="admin-cron-value">' + esc(timeAgo(cron.lastWeeklyDigest)) + '</span></div>' +
         '<div class="admin-cron-item"><span class="admin-cron-label">Active Clients</span><span class="admin-cron-value">' + cron.activeClientCount + '</span></div>' +
         '<div class="admin-cron-item"><span class="admin-cron-label">Recent Errors (7d)</span><span class="admin-cron-value">' + (cron.recentErrors ? cron.recentErrors.length : 0) + '</span></div>';
+
+      // Feature flags
+      var flags = results[3].data || {};
+      renderFeatureFlags(flags);
 
     } catch (err) {
       document.getElementById('kpiGrid').innerHTML = '<div class="admin-alert admin-alert--error">Failed to load overview: ' + esc(err.message) + '</div>';
