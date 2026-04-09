@@ -145,6 +145,57 @@ router.get(
   }
 );
 
+// GET /admin/triggers — pending message triggers awaiting manual send
+router.get(
+  "/triggers",
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const triggers = await adminService.getPendingTriggers();
+
+      res.status(200).json({
+        success: true,
+        data: { triggers },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /admin/triggers/:id/fire — send a pending message trigger
+router.post(
+  "/triggers/:id/fire",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await adminService.fireTrigger(req.params.id);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /admin/triggers/:id/dismiss — dismiss a pending trigger without sending
+router.post(
+  "/triggers/:id/dismiss",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await adminService.dismissTrigger(req.params.id);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // GET /admin/pending-count — number of subscriptions awaiting admin approval
 router.get(
   "/pending-count",

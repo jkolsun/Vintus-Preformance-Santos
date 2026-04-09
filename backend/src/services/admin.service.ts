@@ -462,6 +462,105 @@ export async function getPendingApprovalCount(): Promise<number> {
 }
 
 /**
+ * Get pending message triggers (messages queued by cron but not yet sent).
+ */
+export async function getPendingTriggers(): Promise<unknown[]> {
+  const triggers = await prisma.messageLog.findMany({
+    where: {
+      failureReason: { startsWith: "PENDING_TRIGGER:" },
+      failedAt: null,
+    },
+    orderBy: { sentAt: "desc" },
+    take: 100,
+    select: {
+      id: true,
+      userId: true,
+      channel: true,
+      category: true,
+      content: true,
+      sentAt: true,
+      failureReason: true,
+      user: {
+        select: {
+          email: true,
+          athleteProfile: { select: { firstName: true, lastName: true, phone: true } },
+        },
+      },
+    },
+  });
+
+  return triggers.map((t) => ({
+    ...t,
+    triggerDescription: t.failureReason?.replace("PENDING_TRIGGER:", "") || t.category,
+  }));
+}
+
+/**
+ * Fire a pending message trigger — actually send the SMS/email.
+ */
+export async function fireTrigger(messageLogId: string): Promise<{ success: boolean }> {
+  const log = await prisma.messageLog.findUnique({
+    where: { id: messageLogId },
+    include: { user: { include: { athleteProfile: true } } },
+  });
+
+  if (!log) {
+    const err = new Error("Message trigger not found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!log.failureReason?.startsWith("PENDING_TRIGGER:")) {
+    const err = new Error("This message is not a pending trigger") as Error & { statusCode?: number };
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const phone = log.user.athleteProfile?.phone;
+  const email = log.user.email;
+
+  try {
+    if (log.channel === "SMS" && phone) {
+      const sid = await sendSMS(phone, log.content);
+      await prisma.messageLog.update({
+        where: { id: messageLogId },
+        data: { failureReason: null, externalId: sid, sentAt: new Date() },
+      });
+    } else if (log.channel === "EMAIL" && email) {
+      const result = await sendEmail(email, log.category, log.content);
+      await prisma.messageLog.update({
+        where: { id: messageLogId },
+        data: { failureReason: null, externalId: result?.id ?? null, sentAt: new Date() },
+      });
+    } else {
+      const err = new Error("No phone/email available for this client") as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    }
+
+    logger.info({ messageLogId, userId: log.userId, category: log.category }, "Pending trigger fired");
+    return { success: true };
+  } catch (sendErr) {
+    await prisma.messageLog.update({
+      where: { id: messageLogId },
+      data: { failedAt: new Date(), failureReason: String(sendErr) },
+    });
+    throw sendErr;
+  }
+}
+
+/**
+ * Dismiss a pending trigger without sending.
+ */
+export async function dismissTrigger(messageLogId: string): Promise<{ success: boolean }> {
+  await prisma.messageLog.update({
+    where: { id: messageLogId },
+    data: { failureReason: "DISMISSED", failedAt: new Date() },
+  });
+  return { success: true };
+}
+
+/**
  * Get all items needing admin attention (action queue).
  */
 export async function getActionQueue(): Promise<{

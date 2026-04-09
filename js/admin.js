@@ -1206,12 +1206,71 @@
 
   async function loadActionQueue() {
     try {
-      var res = await apiGet('/api/v1/admin/action-queue');
-      var d = res.data || {};
+      // Load triggers and action queue in parallel
+      var results = await Promise.all([
+        apiGet('/api/v1/admin/triggers'),
+        apiGet('/api/v1/admin/action-queue')
+      ]);
+      var triggers = (results[0].data && results[0].data.triggers) || [];
+      var d = results[1].data || {};
       d.pendingApprovals = d.pendingApprovals || [];
       d.endingSoon = d.endingSoon || [];
       d.completedPlans = d.completedPlans || [];
       d.unresolvedEscalations = d.unresolvedEscalations || [];
+
+      // Message Triggers
+      var tEl = document.getElementById('aqTriggers');
+      var triggerCountEl = document.getElementById('triggerCount');
+      if (triggers.length === 0) {
+        tEl.innerHTML = '<div class="admin-empty">No pending message triggers</div>';
+        triggerCountEl.textContent = '';
+      } else {
+        triggerCountEl.textContent = '(' + triggers.length + ')';
+        var tHtml = '';
+        for (var t = 0; t < triggers.length; t++) {
+          var tr = triggers[t];
+          var tName = tr.user && tr.user.athleteProfile ? esc(tr.user.athleteProfile.firstName || '') + ' ' + esc(tr.user.athleteProfile.lastName || '') : (tr.user ? esc(tr.user.email) : '—');
+          tHtml += '<div class="admin-action-card">' +
+            '<div class="admin-action-info">' +
+              '<strong>' + tName.trim() + '</strong>' +
+              '<div class="admin-action-meta">' +
+                '<span class="admin-badge">' + esc(tr.category) + '</span> ' +
+                '<span class="admin-badge">' + esc(tr.channel) + '</span> &middot; ' +
+                fmtDateTime(tr.sentAt) +
+              '</div>' +
+              '<div style="color:rgba(192,192,192,0.6);font-size:0.8rem;margin-top:0.3rem;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(tr.content) + '</div>' +
+            '</div>' +
+            '<div class="admin-action-btns">' +
+              '<button class="admin-btn-primary admin-btn-small trigger-fire" data-tid="' + esc(tr.id) + '" style="background:#22c55e;border-color:#22c55e;">Send</button>' +
+              '<button class="admin-btn-secondary admin-btn-small trigger-dismiss" data-tid="' + esc(tr.id) + '" style="border-color:rgba(192,192,192,0.3);color:rgba(192,192,192,0.5);">Dismiss</button>' +
+            '</div>' +
+          '</div>';
+        }
+        tEl.innerHTML = tHtml;
+        // Bind fire buttons
+        tEl.querySelectorAll('.trigger-fire').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
+            var tid = btn.getAttribute('data-tid');
+            if (!confirm('Send this message now?')) return;
+            btn.disabled = true; btn.textContent = 'Sending...';
+            try {
+              await apiPost('/api/v1/admin/triggers/' + encodeURIComponent(tid) + '/fire');
+              loadActionQueue();
+            } catch (e) { alert('Failed: ' + e.message); btn.disabled = false; btn.textContent = 'Send'; }
+          });
+        });
+        // Bind dismiss buttons
+        tEl.querySelectorAll('.trigger-dismiss').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
+            var tid = btn.getAttribute('data-tid');
+            btn.disabled = true; btn.textContent = '...';
+            try {
+              await apiPost('/api/v1/admin/triggers/' + encodeURIComponent(tid) + '/dismiss');
+              loadActionQueue();
+            } catch (e) { alert('Failed: ' + e.message); btn.disabled = false; btn.textContent = 'Dismiss'; }
+          });
+        });
+      }
 
       // Pending Approvals
       var paEl = document.getElementById('aqPendingApprovals');
@@ -1261,7 +1320,7 @@
       }
 
       // Update action badge
-      var totalActions = d.pendingApprovals.length + d.completedPlans.length + d.unresolvedEscalations.length;
+      var totalActions = triggers.length + d.pendingApprovals.length + d.completedPlans.length + d.unresolvedEscalations.length;
       var actionBadge = document.getElementById('actionBadge');
       if (totalActions > 0) { actionBadge.textContent = totalActions; actionBadge.style.display = 'inline-flex'; }
       else { actionBadge.style.display = 'none'; }

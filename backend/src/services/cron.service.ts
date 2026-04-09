@@ -10,6 +10,67 @@ import * as adherenceService from "./adherence.service.js";
 import * as workoutService from "./workout.service.js";
 import * as readinessService from "./readiness.service.js";
 
+// ============================================================
+// Auto-messaging toggle — when false, messages are queued as
+// pending triggers instead of sent automatically.
+// Set AUTO_MESSAGING_ENABLED=true in .env to enable auto-send.
+// ============================================================
+
+const AUTO_MESSAGING_ENABLED = process.env.AUTO_MESSAGING_ENABLED === "true";
+
+/**
+ * Queue a message as a pending trigger instead of sending immediately.
+ * Admin can review and fire these from the admin dashboard.
+ * If AUTO_MESSAGING_ENABLED is true, sends immediately (production mode).
+ */
+async function triggerOrQueue(
+  userId: string,
+  category: string,
+  channel: "SMS" | "EMAIL",
+  context: Record<string, unknown>,
+  description?: string
+): Promise<void> {
+  if (AUTO_MESSAGING_ENABLED) {
+    await messagingService.sendMessage(userId, category, channel, context);
+    return;
+  }
+
+  // Queue as pending trigger — store in MessageLog with a special "PENDING" state
+  // (sentAt = null, failedAt = null signals pending)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { athleteProfile: { select: { firstName: true, phone: true } } },
+  });
+
+  // Resolve template content for preview
+  const templates = (await import("../data/message-templates.js")).messageTemplates;
+  const pool = templates[category] || [];
+  const template = pool[Math.floor(Math.random() * pool.length)];
+  let content = template ? template.content : `[${category}] message for ${user?.athleteProfile?.firstName || userId}`;
+
+  // Interpolate context into template
+  if (template && context) {
+    for (const [key, val] of Object.entries(context)) {
+      content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), String(val ?? ""));
+    }
+  }
+
+  await prisma.messageLog.create({
+    data: {
+      userId,
+      channel,
+      category: category as MessageCategory,
+      content,
+      templateId: template?.id ?? null,
+      // sentAt defaults to now() in schema — we'll use a flag field instead
+      // Store "PENDING_TRIGGER" in the notes-like field to mark as unsent
+      failureReason: "PENDING_TRIGGER:" + (description || category),
+    },
+  });
+
+  logger.info({ userId, category, description }, "Message queued as pending trigger (auto-messaging disabled)");
+}
+
 /**
  * Cron Service — daily data review loop for all active clients.
  * Runs hourly, checks which clients need their daily review based on timezone.
@@ -286,7 +347,7 @@ export async function dailyReviewForClient(
     });
     if (!existingMissedMsg) {
       try {
-        await messagingService.sendMessage(userId, "WORKOUT_MISSED", "SMS", {
+        await triggerOrQueue(userId, "WORKOUT_MISSED", "SMS", {
           firstName: profile.firstName,
         });
       } catch (err) {
@@ -302,7 +363,7 @@ export async function dailyReviewForClient(
     });
     if (!existingCompletedMsg) {
       try {
-        await messagingService.sendMessage(userId, "WORKOUT_COMPLETED", "SMS", {
+        await triggerOrQueue(userId, "WORKOUT_COMPLETED", "SMS", {
           firstName: profile.firstName,
           workoutTitle: completedSessions[0].title,
         });
@@ -374,7 +435,7 @@ export async function dailyReviewForClient(
       });
       if (!existingRecoveryMsg) {
         try {
-          await messagingService.sendMessage(userId, "RECOVERY_TIP", "SMS", {
+          await triggerOrQueue(userId, "RECOVERY_TIP", "SMS", {
             firstName: profile.firstName,
           });
         } catch (err) {
@@ -406,7 +467,7 @@ export async function dailyReviewForClient(
         if (energy < 4 && soreness > 7) cronFlags.push("high_fatigue");
         if (sleep < 4) cronFlags.push("low_sleep");
 
-        await messagingService.sendMessage(userId, "CHECKIN_RESPONSE", "SMS", {
+        await triggerOrQueue(userId, "CHECKIN_RESPONSE", "SMS", {
           firstName: profile.firstName,
           perceivedEnergy: todayReadiness.perceivedEnergy ?? undefined,
           perceivedSoreness: todayReadiness.perceivedSoreness ?? undefined,
@@ -427,7 +488,7 @@ export async function dailyReviewForClient(
     });
     if (!existingCheckInMsg) {
       try {
-        await messagingService.sendMessage(userId, "CHECK_IN", "SMS", {
+        await triggerOrQueue(userId, "CHECK_IN", "SMS", {
           firstName: profile.firstName,
           checkInLink: `${env.FRONTEND_URL}/dashboard.html`,
         });
@@ -485,7 +546,7 @@ export async function dailyReviewForClient(
       // Send ESCALATION message — email for level 3, SMS for levels 1-2
       try {
         const channel: "SMS" | "EMAIL" = level >= 3 ? "EMAIL" : "SMS";
-        const result = await messagingService.sendMessage(userId, "ESCALATION", channel, {
+        await triggerOrQueue(userId, "ESCALATION", channel, {
           firstName: profile.firstName,
           bookingLink: `${env.FRONTEND_URL}/book-consultation`,
         });
@@ -505,7 +566,7 @@ export async function dailyReviewForClient(
     });
     if (!existingConcernMsg) {
       try {
-        await messagingService.sendMessage(userId, "WORKOUT_MISSED", "SMS", {
+        await triggerOrQueue(userId, "WORKOUT_MISSED", "SMS", {
           firstName: profile.firstName,
         });
       } catch (err) {
@@ -546,7 +607,7 @@ export async function dailyReviewForClient(
           where: { userId, category: "SYSTEM", sentAt: { gte: today } },
         });
         if (!existingPlanMsg) {
-          await messagingService.sendMessage(userId, "SYSTEM", "SMS", {
+          await triggerOrQueue(userId, "SYSTEM", "SMS", {
             firstName: profile.firstName,
           });
         }
@@ -573,7 +634,7 @@ export async function dailyReviewForClient(
         });
         if (!existingMotivation) {
           try {
-            await messagingService.sendMessage(userId, "MOTIVATION", "SMS", {
+            await triggerOrQueue(userId, "MOTIVATION", "SMS", {
               firstName: profile.firstName,
               adherenceRate: weekAdherence.adherenceRate,
             });
@@ -616,7 +677,7 @@ export async function dailyReviewForClient(
 
       if (isMilestone) {
         try {
-          await messagingService.sendMessage(userId, "PLAN_MILESTONE", "SMS", {
+          await triggerOrQueue(userId, "PLAN_MILESTONE", "SMS", {
             firstName: profile.firstName,
             dayNumber,
             totalDays,
@@ -638,7 +699,7 @@ export async function dailyReviewForClient(
         const duration = isTrainingDay ? todaySessions[0].prescribedDuration : undefined;
 
         try {
-          await messagingService.sendMessage(userId, "DAILY_WORKOUT_ALERT", "SMS", {
+          await triggerOrQueue(userId, "DAILY_WORKOUT_ALERT", "SMS", {
             firstName: profile.firstName,
             dayNumber,
             totalDays,
@@ -670,7 +731,7 @@ export async function dailyReviewForClient(
       if (!existingNotLogged) {
         const dayNumber = Math.max(1, Math.ceil((today.getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000)) + 1);
         try {
-          await messagingService.sendMessage(userId, "WORKOUT_NOT_LOGGED", "SMS", {
+          await triggerOrQueue(userId, "WORKOUT_NOT_LOGGED", "SMS", {
             firstName: profile.firstName,
             dayNumber,
           });
@@ -700,7 +761,7 @@ export async function dailyReviewForClient(
       });
       if (!existingEnding) {
         try {
-          await messagingService.sendMessage(userId, "PLAN_ENDING", "SMS", {
+          await triggerOrQueue(userId, "PLAN_ENDING", "SMS", {
             firstName: profile.firstName,
             planTierDisplay: TIER_DISPLAY[sub.planTier] || sub.planTier,
           });
@@ -731,7 +792,7 @@ export async function dailyReviewForClient(
       });
       if (!existingCompleted) {
         try {
-          await messagingService.sendMessage(userId, "PLAN_COMPLETED", "SMS", {
+          await triggerOrQueue(userId, "PLAN_COMPLETED", "SMS", {
             firstName: profile.firstName,
             planTierDisplay: TIER_DISPLAY[sub.planTier] || sub.planTier,
           });
@@ -752,8 +813,9 @@ export async function dailyReviewForClient(
   }
 
   // ── Step 10: AUTO-DEACTIVATION (4 days after plan end, no response) ──
+  // Only runs when AUTO_MESSAGING_ENABLED — otherwise admin handles deactivation manually
 
-  if (sub && sub.scheduledDeleteAt && !sub.renewalResponseAt) {
+  if (AUTO_MESSAGING_ENABLED && sub && sub.scheduledDeleteAt && !sub.renewalResponseAt) {
     const deleteAt = new Date(sub.scheduledDeleteAt);
     deleteAt.setUTCHours(0, 0, 0, 0);
 
