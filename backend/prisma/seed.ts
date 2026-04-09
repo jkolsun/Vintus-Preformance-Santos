@@ -4,7 +4,16 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  // Skip seed if admin already exists (prevents re-seeding on every deploy)
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: "admin@vintusperformance.org" },
+  });
+  if (existingAdmin) {
+    console.log("🌱 Seed skipped — admin user already exists");
+    return;
+  }
+
+  console.log("🌱 Seeding database (first run)...");
 
   // ============================================================
   // 1. Admin user
