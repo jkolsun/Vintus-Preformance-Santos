@@ -150,3 +150,53 @@ export async function notifyNewClient(data: {
 
   await notifyAdmin(subject, body);
 }
+
+/**
+ * Notify admin when a new lead completes the assessment form.
+ * Fires BEFORE checkout — captures lead info even if they don't pay.
+ */
+export async function notifyNewLead(data: {
+  name: string;
+  email: string;
+  phone: string | null;
+  primaryGoal: string;
+  experienceLevel: string;
+  persona: string | null;
+}): Promise<void> {
+  const goalDisplay: Record<string, string> = {
+    "build-muscle": "Build Muscle",
+    "lose-fat": "Lose Fat",
+    "endurance": "Endurance",
+    "recomposition": "Recomposition",
+    "well-rounded": "Well-Rounded Fitness",
+  };
+
+  const expDisplay: Record<string, string> = {
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "elite": "Elite",
+  };
+
+  const subject = `New Lead: ${data.name} — ${goalDisplay[data.primaryGoal] || data.primaryGoal}`;
+
+  const body = `
+    <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+      <h2 style="color:#333;margin-bottom:20px;">New Assessment Completed</h2>
+      <p style="color:#666;margin-bottom:16px;">A potential client just completed the assessment form. They have NOT paid yet — follow up if they don't convert.</p>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:8px 0;color:#666;width:120px;">Name</td><td style="padding:8px 0;font-weight:600;">${data.name}</td></tr>
+        <tr><td style="padding:8px 0;color:#666;">Email</td><td style="padding:8px 0;"><a href="mailto:${data.email}" style="color:#2563eb;">${data.email}</a></td></tr>
+        ${data.phone ? `<tr><td style="padding:8px 0;color:#666;">Phone</td><td style="padding:8px 0;"><a href="tel:${data.phone}" style="color:#2563eb;">${data.phone}</a></td></tr>` : ""}
+        <tr><td style="padding:8px 0;color:#666;">Goal</td><td style="padding:8px 0;">${goalDisplay[data.primaryGoal] || data.primaryGoal}</td></tr>
+        <tr><td style="padding:8px 0;color:#666;">Experience</td><td style="padding:8px 0;">${expDisplay[data.experienceLevel] || data.experienceLevel}</td></tr>
+        ${data.persona ? `<tr><td style="padding:8px 0;color:#666;">AI Persona</td><td style="padding:8px 0;font-style:italic;">${data.persona}</td></tr>` : ""}
+      </table>
+      <p style="margin-top:20px;padding:12px;background:#fef3c7;border-radius:6px;color:#92400e;font-size:14px;">
+        This lead has NOT purchased yet. If they don't check out within 24 hours, consider reaching out directly.
+      </p>
+    </div>
+  `;
+
+  await notifyAdmin(subject, body);
+}

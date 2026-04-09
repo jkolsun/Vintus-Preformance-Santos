@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
 import { processIntake } from "./ai.service.js";
 import { getPlanRecommendations, type PlanRecommendation } from "./plan.service.js";
+import { notifyNewLead } from "../lib/gmail-notify.js";
 import type { SimpleIntake, ExpandedIntake } from "../routes/schemas/intake.schemas.js";
 
 /** Normalize a phone number to E.164 format for consistent storage/matching. */
@@ -240,6 +241,16 @@ export async function submitExpandedIntake(data: ExpandedIntake): Promise<Intake
     { userId, profileId: profile.id, persona: aiResult.persona },
     "Expanded intake processed"
   );
+
+  // Notify admin of new lead — even if they never pay, we have their info
+  notifyNewLead({
+    name: `${data.firstName} ${data.lastName}`.trim(),
+    email: data.email,
+    phone: data.phone ?? null,
+    primaryGoal: data.primaryGoal,
+    experienceLevel: data.experienceLevel,
+    persona: aiResult.persona,
+  }).catch((err) => logger.error({ err }, "Lead notification failed"));
 
   return {
     userId,
