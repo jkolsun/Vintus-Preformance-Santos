@@ -11,7 +11,7 @@
   }
 
   /* ── State ── */
-  var loadedTabs = { overview: false, clients: false, adherence: false, escalations: false };
+  var loadedTabs = { overview: false, actions: false, clients: false, messaging: false, adherence: false, escalations: false };
   var clientsPage = 1;
   var clientsTotalPages = 1;
   var escalationsPage = 1;
@@ -80,6 +80,7 @@
     else if (s === 'canceled' || s === 'missed') cls += ' admin-badge--canceled';
     else if (s === 'past-due' || s === 'skipped') cls += ' admin-badge--past-due';
     else if (s === 'scheduled') cls += ' admin-badge--scheduled';
+    else if (s === 'pending-approval') cls += ' admin-badge--pending-approval';
     return '<span class="' + cls + '">' + esc(status) + '</span>';
   }
 
@@ -112,7 +113,9 @@
     if (loadedTabs[name] && !force) return;
     loadedTabs[name] = true;
     if (name === 'overview') loadOverview();
+    else if (name === 'actions') loadActionQueue();
     else if (name === 'clients') loadClients();
+    else if (name === 'messaging') loadMessaging();
     else if (name === 'adherence') loadAdherence();
     else if (name === 'escalations') loadEscalations();
   }
@@ -245,6 +248,7 @@
           var st = c.subscription ? statusBadge(c.subscription.status) : '—';
           var adh = c.adherence ? fmtPct(c.adherence.rate) : '—';
           var cIsPaused = c.subscription && c.subscription.status === 'PAUSED';
+          var cIsPending = c.subscription && c.subscription.status === 'PENDING_APPROVAL';
           html += '<tr class="admin-table-clickable" data-userid="' + esc(c.id) + '">' +
             '<td>' + name.trim() + '</td>' +
             '<td>' + esc(c.email) + '</td>' +
@@ -252,11 +256,15 @@
             '<td>' + st + '</td>' +
             '<td>' + adh + '</td>' +
             '<td>' + fmtDate(c.createdAt) + '</td>' +
-            '<td class="admin-row-actions" style="white-space:nowrap;">' +
-              '<button class="admin-btn-small admin-row-pause" data-pause-id="' + esc(c.id) + '" style="border:1px solid ' + (cIsPaused ? '#22c55e' : '#f59e0b') + ';color:' + (cIsPaused ? '#22c55e' : '#f59e0b') + ';background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-right:0.25rem;">' + (cIsPaused ? 'Activate' : 'Pause') + '</button>' +
-              '<button class="admin-btn-small admin-row-remove" data-remove-id="' + esc(c.id) + '" style="border:1px solid #ef4444;color:#ef4444;background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;">Remove</button>' +
-            '</td>' +
-            '</tr>';
+            '<td class="admin-row-actions" style="white-space:nowrap;">';
+          if (cIsPending) {
+            html += '<button class="admin-btn-small admin-row-approve" data-approve-id="' + esc(c.id) + '" style="border:1px solid #22c55e;color:#22c55e;background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-right:0.25rem;">Approve</button>' +
+              '<button class="admin-btn-small admin-row-reject" data-reject-id="' + esc(c.id) + '" style="border:1px solid #ef4444;color:#ef4444;background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;">Reject</button>';
+          } else {
+            html += '<button class="admin-btn-small admin-row-pause" data-pause-id="' + esc(c.id) + '" style="border:1px solid ' + (cIsPaused ? '#22c55e' : '#f59e0b') + ';color:' + (cIsPaused ? '#22c55e' : '#f59e0b') + ';background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;margin-right:0.25rem;">' + (cIsPaused ? 'Activate' : 'Pause') + '</button>' +
+              '<button class="admin-btn-small admin-row-remove" data-remove-id="' + esc(c.id) + '" style="border:1px solid #ef4444;color:#ef4444;background:transparent;padding:0.2rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.75rem;">Remove</button>';
+          }
+          html += '</td></tr>';
         }
         body.innerHTML = html;
 
@@ -304,10 +312,51 @@
             try {
               await apiDelete('/api/v1/admin/clients/' + encodeURIComponent(uid));
               loadClients();
+              loadPendingCount();
             } catch (err) {
               alert('Failed: ' + err.message);
               btn.disabled = false;
               btn.textContent = 'Remove';
+            }
+          });
+        });
+
+        // Approve buttons on table rows (for PENDING_APPROVAL clients)
+        body.querySelectorAll('.admin-row-approve').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var uid = btn.getAttribute('data-approve-id');
+            if (!confirm('Approve this client? Their subscription will activate and welcome messages will be sent.')) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+              await apiPut('/api/v1/admin/clients/' + encodeURIComponent(uid) + '/status', { action: 'approve' });
+              loadClients();
+              loadPendingCount();
+            } catch (err) {
+              alert('Failed: ' + err.message);
+              btn.disabled = false;
+              btn.textContent = 'Approve';
+            }
+          });
+        });
+
+        // Reject buttons on table rows (for PENDING_APPROVAL clients)
+        body.querySelectorAll('.admin-row-reject').forEach(function (btn) {
+          btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            var uid = btn.getAttribute('data-reject-id');
+            if (!confirm('Reject this client? Their subscription will be canceled.')) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+              await apiPut('/api/v1/admin/clients/' + encodeURIComponent(uid) + '/status', { action: 'reject' });
+              loadClients();
+              loadPendingCount();
+            } catch (err) {
+              alert('Failed: ' + err.message);
+              btn.disabled = false;
+              btn.textContent = 'Reject';
             }
           });
         });
@@ -473,8 +522,15 @@
         '<div class="admin-detail-section-title">Subscription</div>';
       if (sub) {
         html += detailRow('Plan', fmtTier(sub.planTier)) +
-          detailRow('Status', sub.status) +
+          detailRow('Status', statusBadge(sub.status), true) +
           detailRow('Period End', fmtDate(sub.currentPeriodEnd));
+        if (sub.status === 'PENDING_APPROVAL') {
+          html += '<div style="display:flex;gap:0.5rem;margin-top:0.75rem;">' +
+            '<button class="admin-btn-primary admin-btn-small" id="approveClientBtn" style="background:#22c55e;border-color:#22c55e;">Approve</button>' +
+            '<button class="admin-btn-secondary admin-btn-small" id="rejectClientBtn" style="border-color:#ef4444;color:#ef4444;">Reject</button>' +
+            '</div>' +
+            '<div id="approvalAlert" style="margin-top:0.5rem;"></div>';
+        }
       } else {
         html += '<div class="admin-detail-row"><span class="admin-detail-label">No subscription</span></div>';
       }
@@ -613,12 +669,57 @@
     }
   }
 
-  function detailRow(label, value) {
+  function detailRow(label, value, rawHtml) {
+    if (rawHtml) {
+      return '<div class="admin-detail-row"><span class="admin-detail-label">' + esc(label) + '</span><span class="admin-detail-value">' + value + '</span></div>';
+    }
     var display = (value != null && value !== '') ? value : '—';
     return '<div class="admin-detail-row"><span class="admin-detail-label">' + esc(label) + '</span><span class="admin-detail-value">' + esc(display) + '</span></div>';
   }
 
   function bindDetailEvents(userId, sessions) {
+    // Approve client (in detail panel)
+    var approveBtn = document.getElementById('approveClientBtn');
+    if (approveBtn) {
+      approveBtn.addEventListener('click', async function () {
+        if (!confirm('Approve this client? Their subscription will activate and welcome messages will be sent.')) return;
+        approveBtn.disabled = true;
+        approveBtn.textContent = 'Approving...';
+        try {
+          await apiPut('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/status', { action: 'approve' });
+          document.getElementById('approvalAlert').innerHTML = '<div class="admin-alert admin-alert--success">Client approved and activated</div>';
+          loadClientDetail(userId);
+          loadClients();
+          loadPendingCount();
+        } catch (err) {
+          document.getElementById('approvalAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+          approveBtn.disabled = false;
+          approveBtn.textContent = 'Approve';
+        }
+      });
+    }
+
+    // Reject client (in detail panel)
+    var rejectBtn = document.getElementById('rejectClientBtn');
+    if (rejectBtn) {
+      rejectBtn.addEventListener('click', async function () {
+        if (!confirm('Reject this client? Their subscription will be canceled.')) return;
+        rejectBtn.disabled = true;
+        rejectBtn.textContent = 'Rejecting...';
+        try {
+          await apiPut('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/status', { action: 'reject' });
+          document.getElementById('approvalAlert').innerHTML = '<div class="admin-alert admin-alert--success">Client rejected — subscription canceled</div>';
+          loadClientDetail(userId);
+          loadClients();
+          loadPendingCount();
+        } catch (err) {
+          document.getElementById('approvalAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+          rejectBtn.disabled = false;
+          rejectBtn.textContent = 'Reject';
+        }
+      });
+    }
+
     // Save profile
     var saveProfileBtn = document.getElementById('saveProfileBtn');
     if (saveProfileBtn) {
@@ -1099,7 +1200,245 @@
     }
   }
 
-  /* ── Init: load overview on page load ── */
+  /* ============================================================
+     ACTION QUEUE TAB
+     ============================================================ */
+
+  async function loadActionQueue() {
+    try {
+      var res = await apiGet('/api/v1/admin/action-queue');
+      var d = res.data;
+
+      // Pending Approvals
+      var paEl = document.getElementById('aqPendingApprovals');
+      if (d.pendingApprovals.length === 0) {
+        paEl.innerHTML = '<div class="admin-empty">No pending approvals</div>';
+      } else {
+        var html = '';
+        for (var i = 0; i < d.pendingApprovals.length; i++) {
+          var pa = d.pendingApprovals[i];
+          var name = pa.athleteProfile ? esc(pa.athleteProfile.firstName || '') + ' ' + esc(pa.athleteProfile.lastName || '') : esc(pa.email);
+          var tier = pa.subscription ? esc(fmtTier(pa.subscription.planTier)) : '—';
+          html += '<div class="admin-action-card">' +
+            '<div class="admin-action-info">' +
+              '<strong>' + name.trim() + '</strong> — ' + tier +
+              '<div class="admin-action-meta">' + esc(pa.email) + ' &middot; Signed up ' + fmtDate(pa.createdAt) + '</div>' +
+            '</div>' +
+            '<div class="admin-action-btns">' +
+              '<button class="admin-btn-primary admin-btn-small aq-approve" data-uid="' + esc(pa.id) + '" style="background:#22c55e;border-color:#22c55e;">Approve</button>' +
+              '<button class="admin-btn-secondary admin-btn-small aq-reject" data-uid="' + esc(pa.id) + '" style="border-color:#ef4444;color:#ef4444;">Reject</button>' +
+            '</div>' +
+          '</div>';
+        }
+        paEl.innerHTML = html;
+        // Bind approve/reject
+        paEl.querySelectorAll('.aq-approve').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
+            var uid = btn.getAttribute('data-uid');
+            if (!confirm('Approve this client?')) return;
+            btn.disabled = true; btn.textContent = '...';
+            try {
+              await apiPut('/api/v1/admin/clients/' + encodeURIComponent(uid) + '/status', { action: 'approve' });
+              loadActionQueue(); loadPendingCount();
+            } catch (e) { alert('Failed: ' + e.message); btn.disabled = false; btn.textContent = 'Approve'; }
+          });
+        });
+        paEl.querySelectorAll('.aq-reject').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
+            var uid = btn.getAttribute('data-uid');
+            if (!confirm('Reject this client?')) return;
+            btn.disabled = true; btn.textContent = '...';
+            try {
+              await apiPut('/api/v1/admin/clients/' + encodeURIComponent(uid) + '/status', { action: 'reject' });
+              loadActionQueue(); loadPendingCount();
+            } catch (e) { alert('Failed: ' + e.message); btn.disabled = false; btn.textContent = 'Reject'; }
+          });
+        });
+      }
+
+      // Update action badge
+      var totalActions = d.pendingApprovals.length + d.completedPlans.length + d.unresolvedEscalations.length;
+      var actionBadge = document.getElementById('actionBadge');
+      if (totalActions > 0) { actionBadge.textContent = totalActions; actionBadge.style.display = 'inline-flex'; }
+      else { actionBadge.style.display = 'none'; }
+
+      // Ending Soon
+      var esEl = document.getElementById('aqEndingSoon');
+      if (d.endingSoon.length === 0) {
+        esEl.innerHTML = '<div class="admin-empty">No plans ending this week</div>';
+      } else {
+        var html2 = '';
+        for (var j = 0; j < d.endingSoon.length; j++) {
+          var es = d.endingSoon[j];
+          var esName = es.athleteProfile ? esc(es.athleteProfile.firstName || '') + ' ' + esc(es.athleteProfile.lastName || '') : esc(es.email);
+          var esTier = es.subscription ? esc(fmtTier(es.subscription.planTier)) : '—';
+          html2 += '<div class="admin-action-card">' +
+            '<div class="admin-action-info">' +
+              '<strong>' + esName.trim() + '</strong> — ' + esTier +
+              '<div class="admin-action-meta">' + es.daysRemaining + ' day' + (es.daysRemaining !== 1 ? 's' : '') + ' remaining</div>' +
+            '</div>' +
+            '<div class="admin-action-btns">' +
+              '<button class="admin-btn-secondary admin-btn-small aq-view-client" data-uid="' + esc(es.id) + '">View</button>' +
+            '</div>' +
+          '</div>';
+        }
+        esEl.innerHTML = html2;
+      }
+
+      // Completed Plans
+      var cpEl = document.getElementById('aqCompletedPlans');
+      if (d.completedPlans.length === 0) {
+        cpEl.innerHTML = '<div class="admin-empty">No completed plans awaiting response</div>';
+      } else {
+        var html3 = '';
+        for (var k = 0; k < d.completedPlans.length; k++) {
+          var cp = d.completedPlans[k];
+          var cpName = cp.athleteProfile ? esc(cp.athleteProfile.firstName || '') + ' ' + esc(cp.athleteProfile.lastName || '') : esc(cp.email);
+          var cpTier = cp.subscription ? esc(fmtTier(cp.subscription.planTier)) : '—';
+          var deleteIn = cp.daysUntilDelete != null ? cp.daysUntilDelete + 'd until auto-deactivate' : '—';
+          html3 += '<div class="admin-action-card">' +
+            '<div class="admin-action-info">' +
+              '<strong>' + cpName.trim() + '</strong> — ' + cpTier +
+              '<div class="admin-action-meta">Ended ' + fmtDate(cp.subscription ? cp.subscription.currentPeriodEnd : null) + ' &middot; ' + deleteIn + '</div>' +
+            '</div>' +
+            '<div class="admin-action-btns">' +
+              '<button class="admin-btn-secondary admin-btn-small aq-view-client" data-uid="' + esc(cp.id) + '">Contact</button>' +
+            '</div>' +
+          '</div>';
+        }
+        cpEl.innerHTML = html3;
+      }
+
+      // Unresolved Escalations
+      var ueEl = document.getElementById('aqEscalations');
+      if (d.unresolvedEscalations.length === 0) {
+        ueEl.innerHTML = '<div class="admin-empty">No unresolved escalations</div>';
+      } else {
+        var html4 = '';
+        for (var m = 0; m < d.unresolvedEscalations.length; m++) {
+          var ue = d.unresolvedEscalations[m];
+          var ueName = ue.user && ue.user.athleteProfile ? esc(ue.user.athleteProfile.firstName || '') + ' ' + esc(ue.user.athleteProfile.lastName || '') : (ue.user ? esc(ue.user.email) : '—');
+          html4 += '<div class="admin-action-card">' +
+            '<div class="admin-action-info">' +
+              '<strong>' + ueName.trim() + '</strong> — Level ' + ue.escalationLevel +
+              '<div class="admin-action-meta">' + esc(ue.triggerReason) + ' &middot; ' + fmtDate(ue.createdAt) + '</div>' +
+            '</div>' +
+          '</div>';
+        }
+        ueEl.innerHTML = html4;
+      }
+
+      // Bind view/contact buttons across all action queue sections
+      document.querySelectorAll('.aq-view-client').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          openClientDetail(btn.getAttribute('data-uid'));
+        });
+      });
+
+    } catch (err) {
+      document.getElementById('aqPendingApprovals').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+    }
+  }
+
+  /* ============================================================
+     MESSAGING TAB
+     ============================================================ */
+
+  var msgPage = 1;
+  var msgTotalPages = 1;
+
+  // Bind messaging filters
+  var msgSearchEl = document.getElementById('msgSearch');
+  var msgCatFilter = document.getElementById('msgCategoryFilter');
+  var msgStatusFilter = document.getElementById('msgStatusFilter');
+  if (msgSearchEl) {
+    msgSearchEl.addEventListener('input', debounce(function () { msgPage = 1; loadMessaging(); }, 300));
+    msgCatFilter.addEventListener('change', function () { msgPage = 1; loadMessaging(); });
+    msgStatusFilter.addEventListener('change', function () { msgPage = 1; loadMessaging(); });
+  }
+
+  async function loadMessaging() {
+    try {
+      var params = '?page=' + msgPage + '&limit=50';
+      var search = msgSearchEl ? msgSearchEl.value.trim() : '';
+      if (search) params += '&search=' + encodeURIComponent(search);
+      var cat = msgCatFilter ? msgCatFilter.value : '';
+      if (cat) params += '&category=' + encodeURIComponent(cat);
+      var st = msgStatusFilter ? msgStatusFilter.value : '';
+      if (st) params += '&status=' + encodeURIComponent(st);
+
+      var res = await apiGet('/api/v1/admin/messages' + params);
+      var d = res.data;
+      msgTotalPages = d.totalPages;
+
+      // Stats bar
+      var statsEl = document.getElementById('msgStats');
+      statsEl.innerHTML =
+        '<div class="admin-kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1rem;">' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Sent Today</span><span class="admin-kpi-value">' + d.stats.totalToday + '</span></div>' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Delivered</span><span class="admin-kpi-value" style="color:#4ade80;">' + d.stats.deliveredToday + '</span></div>' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Failed</span><span class="admin-kpi-value" style="color:' + (d.stats.failedToday > 0 ? '#f87171' : '#4ade80') + ';">' + d.stats.failedToday + '</span></div>' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Delivery Rate</span><span class="admin-kpi-value">' + d.stats.deliveryRate + '%</span></div>' +
+        '</div>';
+
+      // Messages table
+      var body = document.getElementById('msgBody');
+      if (!d.messages.length) {
+        body.innerHTML = '<tr><td colspan="6" class="admin-empty">No messages today</td></tr>';
+      } else {
+        var html = '';
+        for (var i = 0; i < d.messages.length; i++) {
+          var m = d.messages[i];
+          var mName = m.user && m.user.athleteProfile ? esc(m.user.athleteProfile.firstName || '') + ' ' + esc(m.user.athleteProfile.lastName || '') : (m.user ? esc(m.user.email) : '—');
+          var failed = m.failedAt ? true : false;
+          var statusCls = failed ? 'admin-badge--canceled' : 'admin-badge--active';
+          var statusTxt = failed ? 'Failed' : 'Sent';
+          var contentPreview = esc((m.content || '').substring(0, 80)) + ((m.content || '').length > 80 ? '...' : '');
+          html += '<tr class="admin-table-clickable" data-userid="' + esc(m.userId) + '">' +
+            '<td>' + mName.trim() + '</td>' +
+            '<td><span class="admin-badge">' + esc(m.channel) + '</span></td>' +
+            '<td>' + esc(m.category) + '</td>' +
+            '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + contentPreview + '</td>' +
+            '<td>' + fmtDateTime(m.sentAt) + '</td>' +
+            '<td><span class="admin-badge ' + statusCls + '">' + statusTxt + '</span></td>' +
+          '</tr>';
+        }
+        body.innerHTML = html;
+        // Click to open client detail
+        body.querySelectorAll('.admin-table-clickable').forEach(function (row) {
+          row.addEventListener('click', function () {
+            openClientDetail(row.getAttribute('data-userid'));
+          });
+        });
+      }
+
+      // Pagination
+      renderPagination('msgPagination', msgPage, msgTotalPages, function (pg) {
+        msgPage = pg;
+        loadMessaging();
+      });
+    } catch (err) {
+      document.getElementById('msgBody').innerHTML = '<tr><td colspan="6" class="admin-alert admin-alert--error">' + esc(err.message) + '</td></tr>';
+    }
+  }
+
+  /* ── Pending Approval Badge ── */
+  async function loadPendingCount() {
+    try {
+      var res = await apiGet('/api/v1/admin/pending-count');
+      var count = res.data.count;
+      var badge = document.getElementById('pendingBadge');
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  /* ── Init: load overview + pending count on page load ── */
   loadTab('overview');
+  loadPendingCount();
 
 })();

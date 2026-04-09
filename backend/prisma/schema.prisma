@@ -92,6 +92,40 @@ model AthleteProfile {
   supplementsUsed String?
   recoveryPractices String[]    // foam-roll | stretch | sauna | cold-plunge | massage | none
 
+  // Physical Profile (expanded onboarding)
+  heightInches      Int?
+  weightLbs         Float?
+  bodyFatEstimate   String?       // under-15 | 15-20 | 20-25 | 25-30 | 30-plus | unsure
+
+  // Training Background
+  yearsTraining     Int?
+  currentProgram    String?
+  benchPressMax     String?       // never-tested | under-135 | 135-185 | 185-225 | 225-275 | 275-315 | 315-plus
+  squatMax          String?
+  deadliftMax       String?
+  cardioBase        String?       // none | light-walks | can-run-1mi | can-run-3mi | can-run-5mi-plus
+  exercisesLoved    String?
+  exercisesHated    String?
+
+  // Lifestyle
+  workType          String?       // desk | on-feet | physical-labor | mixed | remote
+  sessionLength     Int?          // preferred minutes: 30 | 45 | 60 | 75 | 90
+  specificInjuries  Json?         // [{ area, severity, notes }]
+  dietaryApproach   String?       // no-restriction | high-protein | keto | vegan | vegetarian | paleo | iifym
+  alcoholFrequency  String?       // never | rare | 1-2-per-week | 3-5-per-week | daily
+  caffeineDaily     String?       // none | 1-cup | 2-3-cups | 4-plus-cups
+
+  // Goal Specifics
+  targetWeight      Float?
+  goalTimeline      String?       // no-rush | 3-months | 6-months | 12-months | event-date
+  eventDate         DateTime?
+  eventDescription  String?
+
+  // Health
+  chronicConditions String?
+  medications       String?
+  previousPT        Boolean?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -318,6 +352,12 @@ enum MessageCategory {
   CHECK_IN
   CHECKIN_RESPONSE
   SYSTEM
+  DAILY_WORKOUT_ALERT
+  WORKOUT_NOT_LOGGED
+  PLAN_MILESTONE
+  PLAN_ENDING
+  PLAN_COMPLETED
+  RENEWAL_FOLLOWUP
 }
 
 // ============================================================
@@ -359,6 +399,11 @@ model Subscription {
   currentPeriodEnd   DateTime
   cancelAtPeriodEnd  Boolean @default(false)
 
+  // Plan lifecycle tracking
+  renewalPromptedAt  DateTime?
+  renewalResponseAt  DateTime?
+  scheduledDeleteAt  DateTime?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -374,6 +419,7 @@ enum PlanTier {
 
 enum SubscriptionStatus {
   ACTIVE
+  PENDING_APPROVAL
   PAST_DUE
   CANCELED
   PAUSED

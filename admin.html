@@ -55,7 +55,9 @@
         <!-- Tabs -->
         <div class="admin-tabs">
             <button class="admin-tab admin-tab--active" data-tab="overview">Overview</button>
-            <button class="admin-tab" data-tab="clients">Clients</button>
+            <button class="admin-tab" data-tab="actions">Actions <span id="actionBadge" class="admin-pending-badge" style="display:none;"></span></button>
+            <button class="admin-tab" data-tab="clients">Clients <span id="pendingBadge" class="admin-pending-badge" style="display:none;"></span></button>
+            <button class="admin-tab" data-tab="messaging">Messaging</button>
             <button class="admin-tab" data-tab="adherence">Adherence</button>
             <button class="admin-tab" data-tab="escalations">Escalations</button>
         </div>
@@ -91,6 +93,26 @@
                 </div>
             </div>
 
+            <!-- Action Queue Tab -->
+            <div class="admin-tab-content" id="tabActions">
+                <div class="admin-action-section">
+                    <h3 class="admin-card-title">Pending Approvals</h3>
+                    <div id="aqPendingApprovals"><div class="admin-empty">Loading...</div></div>
+                </div>
+                <div class="admin-action-section">
+                    <h3 class="admin-card-title">Plans Ending Soon (7 days)</h3>
+                    <div id="aqEndingSoon"><div class="admin-empty">Loading...</div></div>
+                </div>
+                <div class="admin-action-section">
+                    <h3 class="admin-card-title">Completed Plans — Awaiting Response</h3>
+                    <div id="aqCompletedPlans"><div class="admin-empty">Loading...</div></div>
+                </div>
+                <div class="admin-action-section">
+                    <h3 class="admin-card-title">Unresolved Escalations</h3>
+                    <div id="aqEscalations"><div class="admin-empty">Loading...</div></div>
+                </div>
+            </div>
+
             <!-- Clients Tab -->
             <div class="admin-tab-content" id="tabClients">
                 <div class="admin-clients-toolbar">
@@ -110,6 +132,7 @@
                         <option value="CANCELED">Canceled</option>
                         <option value="PAST_DUE">Past Due</option>
                         <option value="PAUSED">Paused</option>
+                        <option value="PENDING_APPROVAL">Pending Approval</option>
                         <option value="TRIALING">Trialing</option>
                     </select>
                 </div>
@@ -130,6 +153,48 @@
                     </table>
                 </div>
                 <div class="admin-pagination" id="clientsPagination"></div>
+            </div>
+
+            <!-- Messaging Tab -->
+            <div class="admin-tab-content" id="tabMessaging">
+                <div class="admin-msg-stats" id="msgStats"></div>
+                <div class="admin-clients-toolbar">
+                    <input type="text" class="admin-search" id="msgSearch" placeholder="Search by client name..." autocomplete="off" aria-label="Search messages">
+                    <select class="admin-select" id="msgCategoryFilter" aria-label="Filter by category">
+                        <option value="">All Categories</option>
+                        <option value="DAILY_WORKOUT_ALERT">Daily Alert</option>
+                        <option value="WORKOUT_NOT_LOGGED">Not Logged</option>
+                        <option value="PLAN_MILESTONE">Milestone</option>
+                        <option value="PLAN_ENDING">Plan Ending</option>
+                        <option value="PLAN_COMPLETED">Plan Completed</option>
+                        <option value="MOTIVATION">Motivation</option>
+                        <option value="WELCOME">Welcome</option>
+                        <option value="WORKOUT_MISSED">Workout Missed</option>
+                        <option value="ESCALATION">Escalation</option>
+                        <option value="SYSTEM">System</option>
+                    </select>
+                    <select class="admin-select" id="msgStatusFilter" aria-label="Filter by status">
+                        <option value="">All Status</option>
+                        <option value="sent">Sent</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="msgTable">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Channel</th>
+                                <th>Category</th>
+                                <th>Content</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="msgBody"></tbody>
+                    </table>
+                </div>
+                <div class="admin-pagination" id="msgPagination"></div>
             </div>
 
             <!-- Adherence Tab -->

@@ -1,6 +1,6 @@
 import jwt, { type SignOptions, type Secret } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import type { DataSource } from "@prisma/client";
+import type { DataSource, Prisma } from "@prisma/client";
 import { stripe } from "../config/stripe.js";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
@@ -144,16 +144,51 @@ export async function submitRoutineQuestionnaire(
     throw err;
   }
 
-  // Update AthleteProfile with routine fields
+  // Update AthleteProfile with routine + expanded fields
   await prisma.athleteProfile.update({
     where: { id: profile.id },
     data: {
+      // Existing routine fields
       wakeTime: data.wakeTime,
       bedTime: data.bedTime,
       mealsPerDay: data.mealsPerDay,
       hydrationLevel: data.hydrationLevel,
       supplementsUsed: data.supplementsUsed ?? null,
       recoveryPractices: data.recoveryPractices,
+
+      // Physical Profile
+      ...(data.heightInches != null ? { heightInches: data.heightInches } : {}),
+      ...(data.weightLbs != null ? { weightLbs: data.weightLbs } : {}),
+      ...(data.bodyFatEstimate ? { bodyFatEstimate: data.bodyFatEstimate } : {}),
+
+      // Training Background
+      ...(data.yearsTraining != null ? { yearsTraining: data.yearsTraining } : {}),
+      ...(data.currentProgram ? { currentProgram: data.currentProgram } : {}),
+      ...(data.benchPressMax ? { benchPressMax: data.benchPressMax } : {}),
+      ...(data.squatMax ? { squatMax: data.squatMax } : {}),
+      ...(data.deadliftMax ? { deadliftMax: data.deadliftMax } : {}),
+      ...(data.cardioBase ? { cardioBase: data.cardioBase } : {}),
+      ...(data.exercisesLoved ? { exercisesLoved: data.exercisesLoved } : {}),
+      ...(data.exercisesHated ? { exercisesHated: data.exercisesHated } : {}),
+
+      // Lifestyle
+      ...(data.workType ? { workType: data.workType } : {}),
+      ...(data.sessionLength != null ? { sessionLength: data.sessionLength } : {}),
+      ...(data.dietaryApproach ? { dietaryApproach: data.dietaryApproach } : {}),
+      ...(data.alcoholFrequency ? { alcoholFrequency: data.alcoholFrequency } : {}),
+      ...(data.caffeineDaily ? { caffeineDaily: data.caffeineDaily } : {}),
+
+      // Injuries & Health
+      ...(data.specificInjuries ? { specificInjuries: data.specificInjuries as unknown as Prisma.InputJsonValue } : {}),
+      ...(data.chronicConditions ? { chronicConditions: data.chronicConditions } : {}),
+      ...(data.medications ? { medications: data.medications } : {}),
+      ...(data.previousPT != null ? { previousPT: data.previousPT } : {}),
+
+      // Goal Specifics
+      ...(data.targetWeight != null ? { targetWeight: data.targetWeight } : {}),
+      ...(data.goalTimeline ? { goalTimeline: data.goalTimeline } : {}),
+      ...(data.eventDate ? { eventDate: new Date(data.eventDate) } : {}),
+      ...(data.eventDescription ? { eventDescription: data.eventDescription } : {}),
     },
   });
 

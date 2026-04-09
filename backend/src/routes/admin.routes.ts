@@ -104,7 +104,65 @@ router.put(
   }
 );
 
-// PUT /admin/clients/:userId/status — pause or reactivate client
+// GET /admin/action-queue — all items needing admin attention
+router.get(
+  "/action-queue",
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const queue = await adminService.getActionQueue();
+
+      res.status(200).json({
+        success: true,
+        data: queue,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /admin/messages — paginated message feed
+router.get(
+  "/messages",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 50));
+      const category = (req.query.category as string) || undefined;
+      const status = (req.query.status as string) || undefined;
+      const search = (req.query.search as string) || undefined;
+      const date = (req.query.date as string) || undefined;
+
+      const result = await adminService.getMessageFeed({ page, limit, category, status, search, date });
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /admin/pending-count — number of subscriptions awaiting admin approval
+router.get(
+  "/pending-count",
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const count = await adminService.getPendingApprovalCount();
+
+      res.status(200).json({
+        success: true,
+        data: { count },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PUT /admin/clients/:userId/status — pause, reactivate, approve, or reject client
 router.put(
   "/clients/:userId/status",
   validate(clientStatusSchema),

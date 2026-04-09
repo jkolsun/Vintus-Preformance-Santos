@@ -207,7 +207,7 @@ export async function dailyReviewForClient(
     where: { id: userId },
     include: {
       athleteProfile: true,
-      subscription: { select: { planTier: true, status: true } },
+      subscription: { select: { planTier: true, status: true, currentPeriodStart: true, currentPeriodEnd: true, renewalPromptedAt: true, renewalResponseAt: true, scheduledDeleteAt: true } },
     },
   });
 
@@ -582,7 +582,192 @@ export async function dailyReviewForClient(
     }
   }
 
-  // ── Step 6: LOG ─────────────────────────────────────────────
+  // ── Step 7: DAILY WORKOUT ALERT (every morning) ─────────────
+
+  const sub = user.subscription;
+  if (sub && sub.currentPeriodStart && sub.currentPeriodEnd && isMorningReview) {
+    const dayNumber = Math.max(1, Math.ceil((today.getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000)) + 1);
+    const totalDays = Math.ceil((new Date(sub.currentPeriodEnd).getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000));
+
+    // Check if we already sent a daily alert today
+    const existingDailyAlert = await prisma.messageLog.findFirst({
+      where: { userId, category: "DAILY_WORKOUT_ALERT", sentAt: { gte: today } },
+    });
+
+    if (!existingDailyAlert && dayNumber <= totalDays) {
+      const TIER_DISPLAY: Record<string, string> = {
+        PRIVATE_COACHING: "Private Coaching",
+        TRAINING_30DAY: "30-Day Training",
+        TRAINING_60DAY: "60-Day Training",
+        TRAINING_90DAY: "90-Day Training",
+        NUTRITION_4WEEK: "4-Week Nutrition",
+        NUTRITION_8WEEK: "8-Week Nutrition",
+      };
+      const planTierDisplay = TIER_DISPLAY[sub.planTier] || sub.planTier;
+
+      // Check for milestone day (overrides normal daily)
+      const quarter = Math.round(totalDays * 0.25);
+      const half = Math.round(totalDays * 0.5);
+      const threeQuarter = Math.round(totalDays * 0.75);
+      const isMilestone = dayNumber === 1 || dayNumber === quarter || dayNumber === half || dayNumber === threeQuarter || dayNumber === totalDays - 1 || dayNumber === totalDays;
+
+      if (isMilestone) {
+        try {
+          await messagingService.sendMessage(userId, "PLAN_MILESTONE", "SMS", {
+            firstName: profile.firstName,
+            dayNumber,
+            totalDays,
+            planTierDisplay,
+          });
+        } catch (err) {
+          logger.error({ err, userId }, "Failed to send PLAN_MILESTONE message");
+        }
+      } else {
+        // Regular daily alert — training day or rest day
+        const todaySessions = activePlan?.sessions.filter((s) => {
+          const sd = new Date(s.scheduledDate);
+          sd.setUTCHours(0, 0, 0, 0);
+          return sd.getTime() === today.getTime();
+        }) ?? [];
+
+        const isTrainingDay = todaySessions.length > 0;
+        const sessionTitle = isTrainingDay ? todaySessions[0].title : undefined;
+        const duration = isTrainingDay ? todaySessions[0].prescribedDuration : undefined;
+
+        try {
+          await messagingService.sendMessage(userId, "DAILY_WORKOUT_ALERT", "SMS", {
+            firstName: profile.firstName,
+            dayNumber,
+            totalDays,
+            sessionTitle: sessionTitle || "Rest",
+            duration: duration || 0,
+            planTierDisplay,
+          });
+        } catch (err) {
+          logger.error({ err, userId }, "Failed to send DAILY_WORKOUT_ALERT message");
+        }
+      }
+    }
+  }
+
+  // ── Step 7b: WORKOUT NOT LOGGED follow-up (evening ~8pm) ───
+
+  if (sub && !isMorningReview && localTime.hour >= 19 && localTime.hour <= 21) {
+    const todaySessions = activePlan?.sessions.filter((s) => {
+      const sd = new Date(s.scheduledDate);
+      sd.setUTCHours(0, 0, 0, 0);
+      return sd.getTime() === today.getTime() && s.status === "SCHEDULED";
+    }) ?? [];
+
+    if (todaySessions.length > 0) {
+      const existingNotLogged = await prisma.messageLog.findFirst({
+        where: { userId, category: "WORKOUT_NOT_LOGGED", sentAt: { gte: today } },
+      });
+
+      if (!existingNotLogged) {
+        const dayNumber = Math.max(1, Math.ceil((today.getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000)) + 1);
+        try {
+          await messagingService.sendMessage(userId, "WORKOUT_NOT_LOGGED", "SMS", {
+            firstName: profile.firstName,
+            dayNumber,
+          });
+        } catch (err) {
+          logger.error({ err, userId }, "Failed to send WORKOUT_NOT_LOGGED message");
+        }
+      }
+    }
+  }
+
+  // ── Step 8: PLAN ENDING WARNING ────────────────────────────
+
+  if (sub && sub.currentPeriodEnd) {
+    const daysUntilEnd = Math.ceil((new Date(sub.currentPeriodEnd).getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+
+    if (daysUntilEnd === 3 || daysUntilEnd === 1) {
+      const TIER_DISPLAY: Record<string, string> = {
+        PRIVATE_COACHING: "Private Coaching",
+        TRAINING_30DAY: "30-Day Training",
+        TRAINING_60DAY: "60-Day Training",
+        TRAINING_90DAY: "90-Day Training",
+        NUTRITION_4WEEK: "4-Week Nutrition",
+        NUTRITION_8WEEK: "8-Week Nutrition",
+      };
+      const existingEnding = await prisma.messageLog.findFirst({
+        where: { userId, category: "PLAN_ENDING", sentAt: { gte: today } },
+      });
+      if (!existingEnding) {
+        try {
+          await messagingService.sendMessage(userId, "PLAN_ENDING", "SMS", {
+            firstName: profile.firstName,
+            planTierDisplay: TIER_DISPLAY[sub.planTier] || sub.planTier,
+          });
+        } catch (err) {
+          logger.error({ err, userId }, "Failed to send PLAN_ENDING message");
+        }
+      }
+    }
+  }
+
+  // ── Step 9: PLAN COMPLETED — renewal prompt ────────────────
+
+  if (sub && sub.currentPeriodEnd) {
+    const periodEnd = new Date(sub.currentPeriodEnd);
+    periodEnd.setUTCHours(0, 0, 0, 0);
+
+    if (today.getTime() >= periodEnd.getTime() && !sub.renewalPromptedAt) {
+      const TIER_DISPLAY: Record<string, string> = {
+        PRIVATE_COACHING: "Private Coaching",
+        TRAINING_30DAY: "30-Day Training",
+        TRAINING_60DAY: "60-Day Training",
+        TRAINING_90DAY: "90-Day Training",
+        NUTRITION_4WEEK: "4-Week Nutrition",
+        NUTRITION_8WEEK: "8-Week Nutrition",
+      };
+      const existingCompleted = await prisma.messageLog.findFirst({
+        where: { userId, category: "PLAN_COMPLETED", sentAt: { gte: today } },
+      });
+      if (!existingCompleted) {
+        try {
+          await messagingService.sendMessage(userId, "PLAN_COMPLETED", "SMS", {
+            firstName: profile.firstName,
+            planTierDisplay: TIER_DISPLAY[sub.planTier] || sub.planTier,
+          });
+          // Set renewal tracking fields
+          await prisma.subscription.update({
+            where: { userId },
+            data: {
+              renewalPromptedAt: new Date(),
+              scheduledDeleteAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+            },
+          });
+          logger.info({ userId }, "Plan completed — renewal prompt sent, 4-day deactivation scheduled");
+        } catch (err) {
+          logger.error({ err, userId }, "Failed to send PLAN_COMPLETED message");
+        }
+      }
+    }
+  }
+
+  // ── Step 10: AUTO-DEACTIVATION (4 days after plan end, no response) ──
+
+  if (sub && sub.scheduledDeleteAt && !sub.renewalResponseAt) {
+    const deleteAt = new Date(sub.scheduledDeleteAt);
+    deleteAt.setUTCHours(0, 0, 0, 0);
+
+    if (today.getTime() >= deleteAt.getTime()) {
+      await prisma.subscription.update({
+        where: { userId },
+        data: { status: "CANCELED" },
+      });
+      await prisma.athleteProfile.update({
+        where: { userId },
+        data: { messagingDisabled: true },
+      });
+      logger.info({ userId }, "Auto-deactivated — no renewal response after 4 days");
+    }
+  }
+
+  // ── Step 11: LOG ─────────────────────────────────────────────
 
   const durationMs = Date.now() - startTime;
   logger.info(

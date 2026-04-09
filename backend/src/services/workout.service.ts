@@ -1,6 +1,7 @@
 import type { Prisma, SessionType } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
+import { anthropic } from "../lib/anthropic.js";
 import {
   pickTemplate,
   applyExperienceModifiers,
@@ -246,7 +247,55 @@ function shouldDeload(weekNumber: number): boolean {
 }
 
 // ============================================================
-// generateInitialPlan
+// PLAN GENERATION SYSTEM PROMPT
+// ============================================================
+
+const PLAN_GENERATION_SYSTEM_PROMPT = `You are the AI training engine for Vintus Performance, a premium fitness coaching platform.
+You are generating a personalized Week 1 training plan for a new client.
+
+You must return ONLY valid JSON (no markdown, no explanation) with this exact structure:
+{
+  "planName": "Week 1 — [Phase Name]",
+  "blockType": "base",
+  "coachNotes": "2-3 sentence overview of why this plan was designed this way for this specific client",
+  "sessions": [
+    {
+      "dayOffset": 0,
+      "sessionType": "STRENGTH_UPPER",
+      "title": "Session title",
+      "description": "Personalized coach note for this session",
+      "prescribedDuration": 45,
+      "warmup": [{ "exercise": "Name", "duration": "30 sec", "notes": "Why" }],
+      "main": [{ "exercise": "Name", "sets": 3, "reps": "8-10", "rest": "90s", "intensity": "RPE 7", "notes": "Why this exercise" }],
+      "cooldown": [{ "exercise": "Name", "duration": "3 min" }]
+    }
+  ]
+}
+
+Rules:
+- dayOffset: 0=Monday through 6=Sunday. Schedule exactly the number of training days specified.
+- sessionType must be one of: STRENGTH_UPPER, STRENGTH_LOWER, STRENGTH_FULL, STRENGTH_PUSH, STRENGTH_PULL, ENDURANCE_ZONE2, ENDURANCE_TEMPO, ENDURANCE_INTERVALS, HIIT, MOBILITY_RECOVERY, ACTIVE_RECOVERY
+- NEVER prescribe exercises that conflict with their injuries. If they have a knee injury, avoid heavy squats/lunges. If shoulder, avoid overhead pressing. Be specific.
+- Adjust volume/intensity for their experience level and baseline readiness scores.
+- Only prescribe exercises they can do with their equipment.
+- Respect their preferred session length — keep sessions within 5 minutes of it.
+- Consider their work type: desk workers need more mobility and hip openers. Physical laborers need less total volume.
+- If they listed exercises they love, include them when appropriate.
+- If they listed exercises they hate, avoid them unless absolutely critical.
+- Use their strength levels to set appropriate starting intensity.
+- Consider sleep, stress, and recovery practices when setting volume.
+- For their plan tier:
+  - PRIVATE_COACHING: premium periodized program, maximum personalization
+  - TRAINING_30DAY: focused 4-week block targeting primary goal aggressively
+  - TRAINING_60DAY: 8-week progressive program with clear phase transitions
+  - TRAINING_90DAY: 12-week comprehensive transformation with periodization
+  - NUTRITION_4WEEK / NUTRITION_8WEEK: lighter training focus, recovery-oriented
+- Each session should have 3-4 warmup exercises, 4-6 main exercises, and 2-3 cooldown exercises.
+- The tone should be direct, confident, and premium — like a high-end coach.
+- Set RPE based on experience: beginners RPE 5-6, intermediate RPE 7, advanced RPE 8, elite RPE 8-9.`;
+
+// ============================================================
+// generateInitialPlan — Claude-powered with rule-based fallback
 // ============================================================
 
 export async function generateInitialPlan(
@@ -262,15 +311,26 @@ export async function generateInitialPlan(
     throw err;
   }
 
-  const trainingDays = profile.trainingDaysPerWeek;
-  const goal = profile.primaryGoal;
-  const equipment = profile.equipmentAccess;
-  const experience = profile.experienceLevel;
+  // Load subscription for plan tier context
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId: profile.userId },
+    select: { planTier: true, currentPeriodStart: true, currentPeriodEnd: true },
+  });
 
-  // Build session schedule based on goal + training days
-  const sessionSpecs = buildSessionSchedule(trainingDays, goal);
+  // Try AI-powered generation first, fall back to rule-based
+  let sessionData: Array<{
+    scheduledDate: Date;
+    scheduledOrder: number;
+    sessionType: SessionType;
+    title: string;
+    description: string;
+    prescribedDuration: number;
+    prescribedTSS: number;
+    content: Prisma.InputJsonValue;
+    status: "SCHEDULED";
+  }>;
+  let planName = "Week 1 — Foundation Phase";
 
-  // Calculate start/end dates — start from Monday of current week
   const startDate = getWeekStart(new Date());
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 6);
@@ -281,41 +341,46 @@ export async function generateInitialPlan(
     data: { isActive: false },
   });
 
-  // Build content for each session
-  const usedTemplateIds: string[] = [];
-  const sessionData = sessionSpecs.map((spec, index) => {
-    const { content, templateId } = buildSessionContent(
-      spec.type,
-      equipment,
-      experience,
-      usedTemplateIds
-    );
-    usedTemplateIds.push(templateId);
-
-    // Space sessions across the week (skip rest days based on training count)
-    const dayGap = Math.floor(7 / sessionSpecs.length);
-    const sessionDate = new Date(startDate);
-    sessionDate.setDate(sessionDate.getDate() + Math.min(index * dayGap, 6));
-
-    return {
-      scheduledDate: sessionDate,
-      scheduledOrder: index + 1,
-      sessionType: spec.type as SessionType,
-      title: spec.title,
-      description: `Week 1, Session ${index + 1} — ${spec.title}. ${experience === "beginner" ? "Focus on form and controlled tempo." : "Push with intent. Controlled reps."}`,
-      prescribedDuration: content.estimatedDuration,
-      prescribedTSS: content.estimatedTSS,
-      content: { ...content, templateId } as unknown as Prisma.InputJsonValue,
-      status: "SCHEDULED" as const,
-    };
-  });
+  try {
+    const aiResult = await generatePlanWithClaude(profile, subscription);
+    planName = aiResult.planName;
+    sessionData = aiResult.sessions.map((s, index) => {
+      const sessionDate = new Date(startDate);
+      sessionDate.setDate(sessionDate.getDate() + s.dayOffset);
+      const estimatedTSS = Math.round(s.prescribedDuration * 1.2); // rough TSS estimate
+      return {
+        scheduledDate: sessionDate,
+        scheduledOrder: index + 1,
+        sessionType: s.sessionType as SessionType,
+        title: s.title,
+        description: s.description,
+        prescribedDuration: s.prescribedDuration,
+        prescribedTSS: estimatedTSS,
+        content: {
+          warmup: s.warmup,
+          main: s.main,
+          cooldown: s.cooldown,
+          estimatedDuration: s.prescribedDuration,
+          estimatedTSS: estimatedTSS,
+        } as unknown as Prisma.InputJsonValue,
+        status: "SCHEDULED" as const,
+      };
+    });
+    logger.info({ profileId }, "AI-generated workout plan created");
+  } catch (aiErr) {
+    logger.error({ err: aiErr, profileId }, "Claude plan generation failed, using rule-based fallback");
+    // Fallback to rule-based generation
+    const result = generateRuleBasedPlan(profile, startDate);
+    planName = result.planName;
+    sessionData = result.sessionData;
+  }
 
   const plannedTSS = sessionData.reduce((sum, s) => sum + (s.prescribedTSS ?? 0), 0);
 
   const plan = await prisma.workoutPlan.create({
     data: {
       athleteProfileId: profileId,
-      name: "Week 1 — Foundation Phase",
+      name: planName,
       weekNumber: 1,
       blockType: "base",
       startDate,
@@ -329,11 +394,190 @@ export async function generateInitialPlan(
   });
 
   logger.info(
-    { profileId, planId: plan.id, sessionCount: sessionSpecs.length, goal, equipment, experience },
-    "Initial workout plan generated"
+    { profileId, planId: plan.id, sessionCount: sessionData.length },
+    "Initial workout plan saved"
   );
 
-  return { planId: plan.id, sessionCount: sessionSpecs.length };
+  return { planId: plan.id, sessionCount: sessionData.length };
+}
+
+// ============================================================
+// Claude-powered plan generation
+// ============================================================
+
+async function generatePlanWithClaude(
+  profile: Awaited<ReturnType<typeof prisma.athleteProfile.findUnique>>,
+  subscription: { planTier: string; currentPeriodStart: Date; currentPeriodEnd: Date } | null
+): Promise<{
+  planName: string;
+  sessions: Array<{
+    dayOffset: number;
+    sessionType: string;
+    title: string;
+    description: string;
+    prescribedDuration: number;
+    warmup: Array<{ exercise: string; duration: string; notes: string }>;
+    main: Array<{ exercise: string; sets: number; reps: string; rest: string; intensity: string; notes?: string }>;
+    cooldown: Array<{ exercise: string; duration: string }>;
+  }>;
+}> {
+  if (!profile) throw new Error("Profile required for AI plan generation");
+
+  // Calculate age from DOB
+  let age: string | undefined;
+  if (profile.dateOfBirth) {
+    const ageDiff = Date.now() - new Date(profile.dateOfBirth).getTime();
+    age = Math.floor(ageDiff / (365.25 * 24 * 60 * 60 * 1000)) + " years old";
+  }
+
+  // Build the user prompt with ALL available data
+  const lines: string[] = [
+    `Name: ${profile.firstName} ${profile.lastName}`,
+    `Primary Goal: ${profile.primaryGoal}`,
+    `Training Days/Week: ${profile.trainingDaysPerWeek}`,
+    `Experience Level: ${profile.experienceLevel}`,
+    `Equipment Access: ${profile.equipmentAccess}`,
+  ];
+
+  if (subscription?.planTier) lines.push(`Plan Tier: ${subscription.planTier}`);
+  if (age) lines.push(`Age: ${age}`);
+  if (profile.personaType) lines.push(`Persona: ${profile.personaType}`);
+  if (profile.aiSummary) lines.push(`Coach Summary: ${profile.aiSummary}`);
+  if (profile.riskFlags?.length) lines.push(`Risk Flags: ${profile.riskFlags.join(", ")}`);
+
+  // Physical
+  if (profile.heightInches) lines.push(`Height: ${Math.floor(profile.heightInches / 12)}'${profile.heightInches % 12}"`);
+  if (profile.weightLbs) lines.push(`Weight: ${profile.weightLbs} lbs`);
+  if (profile.bodyFatEstimate) lines.push(`Body Fat: ${profile.bodyFatEstimate}`);
+
+  // Training background
+  if (profile.yearsTraining != null) lines.push(`Years Training: ${profile.yearsTraining}`);
+  if (profile.currentProgram) lines.push(`Current Program: ${profile.currentProgram}`);
+  if (profile.benchPressMax) lines.push(`Bench Press Max: ${profile.benchPressMax}`);
+  if (profile.squatMax) lines.push(`Squat Max: ${profile.squatMax}`);
+  if (profile.deadliftMax) lines.push(`Deadlift Max: ${profile.deadliftMax}`);
+  if (profile.cardioBase) lines.push(`Cardio Base: ${profile.cardioBase}`);
+  if (profile.exercisesLoved) lines.push(`Exercises They Love: ${profile.exercisesLoved}`);
+  if (profile.exercisesHated) lines.push(`Exercises They Hate: ${profile.exercisesHated}`);
+
+  // Lifestyle
+  if (profile.workType) lines.push(`Work Type: ${profile.workType}`);
+  if (profile.sessionLength) lines.push(`Preferred Session Length: ${profile.sessionLength} minutes`);
+  if (profile.preferredTrainingTime) lines.push(`Preferred Time: ${profile.preferredTrainingTime}`);
+  if (profile.wakeTime) lines.push(`Wake Time: ${profile.wakeTime}`);
+  if (profile.bedTime) lines.push(`Bed Time: ${profile.bedTime}`);
+  if (profile.stressLevel) lines.push(`Stress Level: ${profile.stressLevel}/10`);
+  if (profile.sleepSchedule) lines.push(`Sleep Schedule: ${profile.sleepSchedule}`);
+  if (profile.dietaryApproach) lines.push(`Diet: ${profile.dietaryApproach}`);
+  if (profile.alcoholFrequency) lines.push(`Alcohol: ${profile.alcoholFrequency}`);
+  if (profile.caffeineDaily) lines.push(`Caffeine: ${profile.caffeineDaily}`);
+  if (profile.mealsPerDay) lines.push(`Meals/Day: ${profile.mealsPerDay}`);
+  if (profile.hydrationLevel) lines.push(`Hydration: ${profile.hydrationLevel}`);
+  if (profile.supplementsUsed) lines.push(`Supplements: ${profile.supplementsUsed}`);
+  if (profile.travelFrequency) lines.push(`Travel: ${profile.travelFrequency}`);
+  if (profile.occupation) lines.push(`Occupation: ${profile.occupation}`);
+
+  // Injuries & health
+  if (profile.injuryHistory) lines.push(`Injury History: ${profile.injuryHistory}`);
+  if (profile.specificInjuries) {
+    const injuries = profile.specificInjuries as Array<{ area: string; severity: string; notes?: string }>;
+    if (injuries.length) {
+      lines.push(`Specific Injuries: ${injuries.map(i => `${i.area} (${i.severity})${i.notes ? " - " + i.notes : ""}`).join("; ")}`);
+    }
+  }
+  if (profile.chronicConditions) lines.push(`Chronic Conditions: ${profile.chronicConditions}`);
+  if (profile.medications) lines.push(`Medications: ${profile.medications}`);
+  if (profile.previousPT) lines.push(`Previous Physical Therapy: Yes`);
+
+  // Recovery
+  if (profile.recoveryPractices?.length) lines.push(`Recovery Practices: ${profile.recoveryPractices.join(", ")}`);
+
+  // Goal specifics
+  if (profile.targetWeight) lines.push(`Target Weight: ${profile.targetWeight} lbs`);
+  if (profile.goalTimeline) lines.push(`Timeline: ${profile.goalTimeline}`);
+  if (profile.eventDate) lines.push(`Event Date: ${profile.eventDate.toISOString().split("T")[0]}`);
+  if (profile.eventDescription) lines.push(`Event: ${profile.eventDescription}`);
+  if (profile.biggestChallenge) lines.push(`Biggest Challenge: ${profile.biggestChallenge}`);
+  if (profile.secondaryGoals?.length) lines.push(`Secondary Goals: ${profile.secondaryGoals.join(", ")}`);
+
+  const userPrompt = lines.join("\n");
+
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 4000,
+    temperature: 0.4,
+    system: PLAN_GENERATION_SYSTEM_PROMPT,
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
+
+  // Parse JSON — strip markdown fences if present
+  const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  const parsed = JSON.parse(cleaned);
+
+  // Validate structure
+  if (!parsed.sessions || !Array.isArray(parsed.sessions) || parsed.sessions.length === 0) {
+    throw new Error("Claude returned plan with no sessions");
+  }
+
+  return {
+    planName: parsed.planName || "Week 1 — Foundation Phase",
+    sessions: parsed.sessions,
+  };
+}
+
+// ============================================================
+// Rule-based fallback (original logic)
+// ============================================================
+
+function generateRuleBasedPlan(
+  profile: { trainingDaysPerWeek: number; primaryGoal: string; equipmentAccess: string; experienceLevel: string },
+  startDate: Date
+): {
+  planName: string;
+  sessionData: Array<{
+    scheduledDate: Date;
+    scheduledOrder: number;
+    sessionType: SessionType;
+    title: string;
+    description: string;
+    prescribedDuration: number;
+    prescribedTSS: number;
+    content: Prisma.InputJsonValue;
+    status: "SCHEDULED";
+  }>;
+} {
+  const sessionSpecs = buildSessionSchedule(profile.trainingDaysPerWeek, profile.primaryGoal);
+  const usedTemplateIds: string[] = [];
+
+  const sessionData = sessionSpecs.map((spec, index) => {
+    const { content, templateId } = buildSessionContent(
+      spec.type,
+      profile.equipmentAccess,
+      profile.experienceLevel,
+      usedTemplateIds
+    );
+    usedTemplateIds.push(templateId);
+
+    const dayGap = Math.floor(7 / sessionSpecs.length);
+    const sessionDate = new Date(startDate);
+    sessionDate.setDate(sessionDate.getDate() + Math.min(index * dayGap, 6));
+
+    return {
+      scheduledDate: sessionDate,
+      scheduledOrder: index + 1,
+      sessionType: spec.type as SessionType,
+      title: spec.title,
+      description: `Week 1, Session ${index + 1} — ${spec.title}. ${profile.experienceLevel === "beginner" ? "Focus on form and controlled tempo." : "Push with intent. Controlled reps."}`,
+      prescribedDuration: content.estimatedDuration,
+      prescribedTSS: content.estimatedTSS,
+      content: { ...content, templateId } as unknown as Prisma.InputJsonValue,
+      status: "SCHEDULED" as const,
+    };
+  });
+
+  return { planName: "Week 1 — Foundation Phase", sessionData };
 }
 
 // ============================================================

@@ -51,7 +51,7 @@ export const profileEditSchema = z.object({
 });
 
 export const clientStatusSchema = z.object({
-  action: z.enum(["pause", "activate"]),
+  action: z.enum(["pause", "activate", "approve", "reject"]),
 });
 
 export type ClientStatus = z.infer<typeof clientStatusSchema>;

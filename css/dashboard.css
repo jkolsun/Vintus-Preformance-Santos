@@ -1513,3 +1513,84 @@
     border-left: none;
   }
 }
+
+/* ====================================================
+   Plan Progress Bar
+   ==================================================== */
+
+.dash-plan-progress {
+  margin-bottom: 1.5rem;
+}
+
+.dash-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-light);
+  margin-bottom: 0.5rem;
+}
+
+.dash-progress-track {
+  height: 6px;
+  background: rgba(192, 192, 192, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dash-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--silver-dark), var(--silver));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+/* ====================================================
+   Pending Approval State
+   ==================================================== */
+
+.dash-pending-approval {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.dash-pending-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.dash-pending-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  color: #f59e0b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+}
+
+.dash-pending-text {
+  font-family: var(--font-body);
+  color: rgba(192, 192, 192, 0.7);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .dash-pending-approval {
+    padding: 1.5rem 1rem;
+  }
+
+  .dash-pending-title {
+    font-size: 1rem;
+  }
+
+  .dash-pending-text {
+    font-size: 0.85rem;
+  }
+}

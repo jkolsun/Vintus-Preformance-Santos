@@ -53,9 +53,12 @@
 
   // ── Load all data ──
   loadUser();
-  loadOverview();
-  loadWeekPreview();
-  loadTrends();
+  loadOverview().then(function (isPending) {
+    if (!isPending) {
+      loadWeekPreview();
+      loadTrends();
+    }
+  });
 
   // ── Load user info ──
   async function loadUser() {
@@ -78,9 +81,15 @@
   async function loadOverview() {
     try {
       var res = await apiGet('/api/v1/dashboard/overview');
-      if (!res.success || !res.data) return;
+      if (!res.success || !res.data) return false;
 
       var d = res.data;
+
+      // Check for pending approval — show message instead of workout data
+      if (d.athlete && d.athlete.subscriptionStatus === 'PENDING_APPROVAL') {
+        showPendingApprovalState(d);
+        return true;
+      }
 
       // Streak
       if (d.streak && d.streak.currentStreak > 0) {
@@ -95,10 +104,57 @@
         document.getElementById('accountTier').textContent = TIER_DISPLAY[currentTier] || currentTier;
       }
 
+      // Plan progress bar
+      if (d.athlete && d.athlete.dayNumber && d.athlete.totalDays) {
+        var progressEl = document.getElementById('planProgress');
+        if (progressEl) {
+          var pct = Math.min(100, Math.round((d.athlete.dayNumber / d.athlete.totalDays) * 100));
+          progressEl.innerHTML =
+            '<div class="dash-progress-label">' +
+              '<span>Day ' + d.athlete.dayNumber + ' of ' + d.athlete.totalDays + '</span>' +
+              '<span>' + pct + '%</span>' +
+            '</div>' +
+            '<div class="dash-progress-track">' +
+              '<div class="dash-progress-fill" style="width:' + pct + '%;"></div>' +
+            '</div>';
+          progressEl.style.display = 'block';
+        }
+      }
+
       // Today's workout
       renderToday(d);
+      return false;
     } catch (err) {
       document.getElementById('todayWorkout').innerHTML = '<span class="dash-rest-day">Unable to load. Please try refreshing.</span>';
+      return false;
+    }
+  }
+
+  function showPendingApprovalState(d) {
+    // Set tier display
+    if (d.athlete && d.athlete.planTier) {
+      currentTier = d.athlete.planTier;
+      document.getElementById('accountTier').textContent = TIER_DISPLAY[currentTier] || currentTier;
+    }
+
+    // Replace today's workout with pending message
+    document.getElementById('todayWorkout').innerHTML =
+      '<div class="dash-pending-approval">' +
+        '<div class="dash-pending-icon">&#9203;</div>' +
+        '<h3 class="dash-pending-title">Your Account is Being Reviewed</h3>' +
+        '<p class="dash-pending-text">Thanks for signing up! Your coach is reviewing your profile and will activate your account shortly. You\'ll receive a welcome message once approved.</p>' +
+      '</div>';
+
+    // Replace week strip with placeholder
+    var weekStrip = document.getElementById('weekStrip');
+    if (weekStrip) {
+      weekStrip.innerHTML = '<div class="dash-rest-day" style="text-align:center;padding:1rem;">Your training week will appear here once approved.</div>';
+    }
+
+    // Replace trends with placeholder
+    var trendsWrap = document.getElementById('trendsChart');
+    if (trendsWrap) {
+      trendsWrap.closest('.dash-card').style.display = 'none';
     }
   }
 

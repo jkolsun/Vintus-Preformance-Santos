@@ -22,6 +22,9 @@ const TIER_PRICE_MAP: Record<PlanTier, string> = {
 // Which tiers are recurring subscriptions vs one-time payments
 const RECURRING_TIERS: Set<PlanTier> = new Set(["PRIVATE_COACHING"]);
 
+// Nutrition tiers skip admin approval and activate immediately
+const NUTRITION_TIERS: Set<PlanTier> = new Set(["NUTRITION_4WEEK", "NUTRITION_8WEEK"]);
+
 // Duration in days for one-time purchases (used to set currentPeriodEnd)
 const TIER_DURATION_DAYS: Partial<Record<PlanTier, number>> = {
   TRAINING_30DAY: 30,
@@ -163,6 +166,11 @@ async function handleCheckoutCompleted(
     stripePriceId = TIER_PRICE_MAP[tier] ?? null;
   }
 
+  // Nutrition plans activate immediately; all others need admin approval
+  const initialStatus: SubscriptionStatus = NUTRITION_TIERS.has(tier)
+    ? "ACTIVE"
+    : "PENDING_APPROVAL";
+
   // Upsert subscription record
   await prisma.subscription.upsert({
     where: { userId },
@@ -172,7 +180,7 @@ async function handleCheckoutCompleted(
       stripeCustomerId,
       stripeSubscriptionId,
       stripePriceId,
-      status: "ACTIVE",
+      status: initialStatus,
       currentPeriodStart,
       currentPeriodEnd,
     },
@@ -181,7 +189,7 @@ async function handleCheckoutCompleted(
       stripeCustomerId,
       stripeSubscriptionId,
       stripePriceId,
-      status: "ACTIVE",
+      status: initialStatus,
       currentPeriodStart,
       currentPeriodEnd,
       cancelAtPeriodEnd: false,
@@ -189,15 +197,18 @@ async function handleCheckoutCompleted(
   });
 
   logger.info(
-    { userId, tier, stripeSubscriptionId, isRecurring },
+    { userId, tier, stripeSubscriptionId, isRecurring, status: initialStatus },
     "Purchase record created from checkout"
   );
 
-  // Fire welcome sequence (immediate SMS, cron handles follow-ups)
-  try {
-    await sendWelcomeSequence(userId);
-  } catch (err) {
-    logger.error({ err, userId }, "Welcome sequence failed after checkout");
+  // Fire welcome sequence only for immediately-active subscriptions (nutrition plans).
+  // Non-nutrition plans get the welcome sequence when admin approves.
+  if (initialStatus === "ACTIVE") {
+    try {
+      await sendWelcomeSequence(userId);
+    } catch (err) {
+      logger.error({ err, userId }, "Welcome sequence failed after checkout");
+    }
   }
 }
 
@@ -218,6 +229,17 @@ async function handleSubscriptionUpdated(
 
   const tier = (subscription.metadata?.tier as PlanTier) ?? undefined;
   const stripePriceId = subscription.items.data[0]?.price?.id ?? null;
+
+  // Guard: do not let Stripe overwrite PENDING_APPROVAL status.
+  // Admin must explicitly approve before the subscription becomes ACTIVE.
+  const existing = await prisma.subscription.findUnique({ where: { userId } });
+  if (existing?.status === "PENDING_APPROVAL") {
+    logger.info(
+      { userId, subscriptionId: subscription.id },
+      "Skipping Stripe status update — subscription is pending admin approval"
+    );
+    return;
+  }
 
   // Map Stripe status to our enum
   const statusMap: Record<string, SubscriptionStatus> = {

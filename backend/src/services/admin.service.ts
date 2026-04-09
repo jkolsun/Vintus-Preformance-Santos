@@ -381,11 +381,11 @@ export async function sendCustomMessage(
 }
 
 /**
- * Pause or reactivate a client's subscription.
+ * Pause, reactivate, approve, or reject a client's subscription.
  */
 export async function setClientStatus(
   userId: string,
-  action: "pause" | "activate"
+  action: "pause" | "activate" | "approve" | "reject"
 ): Promise<{ success: boolean; status: string }> {
   const subscription = await prisma.subscription.findUnique({
     where: { userId },
@@ -397,7 +397,26 @@ export async function setClientStatus(
     throw err;
   }
 
-  const newStatus = action === "pause" ? "PAUSED" : "ACTIVE";
+  // Determine new status based on action
+  let newStatus: SubscriptionStatus;
+
+  if (action === "approve") {
+    if (subscription.status !== "PENDING_APPROVAL") {
+      const err = new Error("Subscription is not pending approval") as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    }
+    newStatus = "ACTIVE";
+  } else if (action === "reject") {
+    if (subscription.status !== "PENDING_APPROVAL") {
+      const err = new Error("Subscription is not pending approval") as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    }
+    newStatus = "CANCELED";
+  } else {
+    newStatus = action === "pause" ? "PAUSED" : "ACTIVE";
+  }
 
   if (subscription.status === newStatus) {
     return { success: true, status: newStatus };
@@ -408,17 +427,229 @@ export async function setClientStatus(
     data: { status: newStatus as SubscriptionStatus },
   });
 
-  // Also toggle messaging when pausing
-  const profile = await prisma.athleteProfile.findUnique({ where: { userId } });
-  if (profile) {
-    await prisma.athleteProfile.update({
-      where: { userId },
-      data: { messagingDisabled: action === "pause" },
-    });
+  // Toggle messaging when pausing/activating
+  if (action === "pause" || action === "activate") {
+    const profile = await prisma.athleteProfile.findUnique({ where: { userId } });
+    if (profile) {
+      await prisma.athleteProfile.update({
+        where: { userId },
+        data: { messagingDisabled: action === "pause" },
+      });
+    }
+  }
+
+  // Fire welcome sequence when admin approves
+  if (action === "approve") {
+    try {
+      const { sendWelcomeSequence } = await import("./messaging.service.js");
+      await sendWelcomeSequence(userId);
+    } catch (err) {
+      logger.error({ err, userId }, "Welcome sequence failed after admin approval");
+    }
   }
 
   logger.info({ userId, action, newStatus }, "Admin changed client status");
   return { success: true, status: newStatus };
+}
+
+/**
+ * Count subscriptions awaiting admin approval.
+ */
+export async function getPendingApprovalCount(): Promise<number> {
+  return prisma.subscription.count({
+    where: { status: "PENDING_APPROVAL" },
+  });
+}
+
+/**
+ * Get all items needing admin attention (action queue).
+ */
+export async function getActionQueue(): Promise<{
+  pendingApprovals: unknown[];
+  endingSoon: unknown[];
+  completedPlans: unknown[];
+  unresolvedEscalations: unknown[];
+}> {
+  const now = new Date();
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const [pendingApprovals, endingSoon, completedPlans, unresolvedEscalations] = await Promise.all([
+    // 1. Pending approvals
+    prisma.user.findMany({
+      where: { role: "CLIENT", subscription: { status: "PENDING_APPROVAL" } },
+      select: {
+        id: true,
+        email: true,
+        createdAt: true,
+        athleteProfile: { select: { firstName: true, lastName: true } },
+        subscription: { select: { planTier: true, status: true, createdAt: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    // 2. Plans ending in next 7 days
+    prisma.user.findMany({
+      where: {
+        role: "CLIENT",
+        subscription: {
+          status: "ACTIVE",
+          currentPeriodEnd: { lte: sevenDaysFromNow, gte: now },
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        athleteProfile: { select: { firstName: true, lastName: true } },
+        subscription: { select: { planTier: true, currentPeriodEnd: true } },
+      },
+      orderBy: { subscription: { currentPeriodEnd: "asc" } },
+    }),
+    // 3. Completed plans awaiting renewal response
+    prisma.user.findMany({
+      where: {
+        role: "CLIENT",
+        subscription: {
+          renewalPromptedAt: { not: null },
+          renewalResponseAt: null,
+          status: { not: "CANCELED" },
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        athleteProfile: { select: { firstName: true, lastName: true } },
+        subscription: { select: { planTier: true, currentPeriodEnd: true, renewalPromptedAt: true, scheduledDeleteAt: true } },
+      },
+      orderBy: { subscription: { renewalPromptedAt: "desc" } },
+    }),
+    // 4. Unresolved escalations
+    prisma.escalationEvent.findMany({
+      where: { resolvedAt: null },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            athleteProfile: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+  ]);
+
+  // Compute daysRemaining for endingSoon
+  const endingSoonWithDays = endingSoon.map((u) => ({
+    ...u,
+    daysRemaining: u.subscription
+      ? Math.ceil((new Date(u.subscription.currentPeriodEnd).getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+      : 0,
+  }));
+
+  // Compute daysUntilDelete for completedPlans
+  const completedWithDays = completedPlans.map((u) => ({
+    ...u,
+    daysUntilDelete: u.subscription?.scheduledDeleteAt
+      ? Math.max(0, Math.ceil((new Date(u.subscription.scheduledDeleteAt).getTime() - now.getTime()) / (24 * 60 * 60 * 1000)))
+      : null,
+  }));
+
+  return {
+    pendingApprovals,
+    endingSoon: endingSoonWithDays,
+    completedPlans: completedWithDays,
+    unresolvedEscalations,
+  };
+}
+
+/**
+ * Get paginated message feed for the admin messaging tab.
+ */
+export async function getMessageFeed(options: {
+  page: number;
+  limit: number;
+  category?: string;
+  status?: string;
+  search?: string;
+  date?: string;
+}): Promise<{
+  messages: unknown[];
+  stats: { totalToday: number; deliveredToday: number; failedToday: number; deliveryRate: number };
+  total: number;
+  page: number;
+  totalPages: number;
+}> {
+  const { page, limit, category, status, search, date } = options;
+
+  // Default to today
+  const filterDate = date ? new Date(date) : new Date();
+  filterDate.setUTCHours(0, 0, 0, 0);
+  const filterDateEnd = new Date(filterDate);
+  filterDateEnd.setDate(filterDateEnd.getDate() + 1);
+
+  const where: Prisma.MessageLogWhereInput = {
+    sentAt: { gte: filterDate, lt: filterDateEnd },
+  };
+
+  if (category) {
+    where.category = category as Prisma.EnumMessageCategoryFilter;
+  }
+
+  if (status === "failed") {
+    where.failedAt = { not: null };
+  } else if (status === "sent") {
+    where.failedAt = null;
+  }
+
+  if (search) {
+    where.user = {
+      OR: [
+        { email: { contains: search, mode: "insensitive" } },
+        { athleteProfile: { firstName: { contains: search, mode: "insensitive" } } },
+        { athleteProfile: { lastName: { contains: search, mode: "insensitive" } } },
+      ],
+    };
+  }
+
+  const [messages, total, todayTotal, todayFailed] = await Promise.all([
+    prisma.messageLog.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { sentAt: "desc" },
+      select: {
+        id: true,
+        userId: true,
+        channel: true,
+        category: true,
+        content: true,
+        sentAt: true,
+        deliveredAt: true,
+        failedAt: true,
+        failureReason: true,
+        user: {
+          select: {
+            email: true,
+            athleteProfile: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
+    }),
+    prisma.messageLog.count({ where }),
+    prisma.messageLog.count({ where: { sentAt: { gte: filterDate, lt: filterDateEnd } } }),
+    prisma.messageLog.count({ where: { sentAt: { gte: filterDate, lt: filterDateEnd }, failedAt: { not: null } } }),
+  ]);
+
+  const deliveredToday = todayTotal - todayFailed;
+  const deliveryRate = todayTotal > 0 ? Math.round((deliveredToday / todayTotal) * 100) : 100;
+
+  return {
+    messages,
+    stats: { totalToday: todayTotal, deliveredToday, failedToday: todayFailed, deliveryRate },
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
 }
 
 /**

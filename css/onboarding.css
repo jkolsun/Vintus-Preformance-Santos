@@ -395,6 +395,149 @@
   color: var(--gray-dark);
 }
 
+/* ── Form Sections (collapsible) ── */
+
+.onboard-form-section {
+  border: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+  background: rgba(17, 17, 17, 0.5);
+}
+
+.onboard-section-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--silver);
+}
+
+.onboard-section-chevron {
+  font-size: 0.6rem;
+  transition: transform 0.3s ease;
+  color: var(--gray);
+}
+
+.onboard-form-section.open .onboard-section-chevron {
+  transform: rotate(180deg);
+}
+
+.onboard-section-body {
+  display: none;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.onboard-form-section.open .onboard-section-body {
+  display: block;
+}
+
+.onboard-section-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-light);
+  margin-bottom: 0.75rem;
+}
+
+/* ── Textarea ── */
+
+.onboard-field textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: var(--black-card);
+  border: 1px solid var(--border-color);
+  color: var(--off-white);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.onboard-field textarea:focus {
+  outline: none;
+  border-color: var(--silver);
+  box-shadow: 0 0 0 3px rgba(192, 192, 192, 0.1);
+}
+
+.onboard-field textarea::placeholder {
+  color: var(--gray-dark);
+}
+
+/* ── Radio Buttons ── */
+
+.onboard-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: var(--off-white);
+  font-size: 0.9rem;
+}
+
+.onboard-radio input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--silver);
+}
+
+/* ── Injury Repeater ── */
+
+.onboard-injury-row {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.onboard-injury-row .onboard-field {
+  margin-bottom: 0.5rem;
+}
+
+.onboard-add-btn {
+  background: transparent;
+  border: 1px dashed var(--gray-dark);
+  color: var(--gray-light);
+  padding: 0.6rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.onboard-add-btn:hover {
+  border-color: var(--silver);
+  color: var(--silver);
+}
+
+.onboard-remove-btn {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.onboard-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Responsive ── */
+
 @media (max-width: 768px) {
   .onboard-fields-row {
     grid-template-columns: 1fr;
@@ -405,14 +548,37 @@
   .onboard-devices {
     grid-template-columns: repeat(2, 1fr);
   }
+  .onboard-section-body {
+    padding: 0 1rem 1rem;
+  }
+  .onboard-field input,
+  .onboard-field select,
+  .onboard-field textarea {
+    min-height: 44px;
+  }
+  .onboard-checkbox {
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 480px) {
   .onboard-field input,
-  .onboard-field select {
+  .onboard-field select,
+  .onboard-field textarea {
     font-size: 16px;
   }
   .onboard-devices {
     grid-template-columns: 1fr;
+  }
+  .onboard-section-header {
+    padding: 0.85rem 1rem;
+  }
+  .onboard-slider::-webkit-slider-thumb {
+    width: 30px;
+    height: 30px;
+  }
+  .onboard-slider::-moz-range-thumb {
+    width: 30px;
+    height: 30px;
   }
 }

@@ -90,73 +90,364 @@
             <button class="onboard-btn" id="step2Btn">Continue</button>
         </div>
 
-        <!-- Step 3: Routine Questionnaire -->
+        <!-- Step 3: Extended Questionnaire -->
         <div class="onboard-step" data-step="3" id="step3">
-            <h2>Your Daily Routine</h2>
-            <p>Help us understand your lifestyle so we can optimize your training schedule.</p>
+            <h2>Tell Us About You</h2>
+            <p>The more we know, the better your plan. Fill out what you can — most fields are optional.</p>
 
-            <div class="onboard-fields-row" style="margin-bottom:1.25rem;">
-                <div class="onboard-field">
-                    <label for="wakeTime">Wake Time</label>
-                    <input type="time" id="wakeTime" value="06:30">
+            <!-- Section 1: Physical Profile -->
+            <div class="onboard-form-section open" data-section="physical">
+                <button class="onboard-section-header" type="button">
+                    <span>Physical Profile</span>
+                    <span class="onboard-section-chevron">&#9660;</span>
+                </button>
+                <div class="onboard-section-body">
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="heightFt">Height</label>
+                            <div style="display:flex;gap:0.5rem;">
+                                <select id="heightFt" style="flex:1;">
+                                    <option value="">ft</option>
+                                    <option value="4">4'</option>
+                                    <option value="5" selected>5'</option>
+                                    <option value="6">6'</option>
+                                    <option value="7">7'</option>
+                                </select>
+                                <select id="heightIn" style="flex:1;">
+                                    <option value="">in</option>
+                                    <option value="0">0"</option>
+                                    <option value="1">1"</option>
+                                    <option value="2">2"</option>
+                                    <option value="3">3"</option>
+                                    <option value="4">4"</option>
+                                    <option value="5">5"</option>
+                                    <option value="6">6"</option>
+                                    <option value="7">7"</option>
+                                    <option value="8">8"</option>
+                                    <option value="9" selected>9"</option>
+                                    <option value="10">10"</option>
+                                    <option value="11">11"</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="weightLbs">Weight (lbs)</label>
+                            <input type="number" id="weightLbs" placeholder="175" min="50" max="600">
+                        </div>
+                    </div>
+                    <div class="onboard-field">
+                        <label for="bodyFatEstimate">Body Fat Estimate</label>
+                        <select id="bodyFatEstimate">
+                            <option value="">— Select —</option>
+                            <option value="under-15">Under 15%</option>
+                            <option value="15-20">15-20%</option>
+                            <option value="20-25">20-25%</option>
+                            <option value="25-30">25-30%</option>
+                            <option value="30-plus">30%+</option>
+                            <option value="unsure">Not sure</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="onboard-field">
-                    <label for="bedTime">Bed Time</label>
-                    <input type="time" id="bedTime" value="22:30">
+            </div>
+
+            <!-- Section 2: Training Background -->
+            <div class="onboard-form-section open" data-section="training">
+                <button class="onboard-section-header" type="button">
+                    <span>Training Background</span>
+                    <span class="onboard-section-chevron">&#9660;</span>
+                </button>
+                <div class="onboard-section-body">
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="yearsTraining">Years Training</label>
+                            <select id="yearsTraining">
+                                <option value="">— Select —</option>
+                                <option value="0">Brand new</option>
+                                <option value="1">Less than 1 year</option>
+                                <option value="2">1-2 years</option>
+                                <option value="4">3-5 years</option>
+                                <option value="7">5-10 years</option>
+                                <option value="10">10+ years</option>
+                            </select>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="cardioBase">Cardio Baseline</label>
+                            <select id="cardioBase">
+                                <option value="">— Select —</option>
+                                <option value="none">No cardio</option>
+                                <option value="light-walks">Light walks</option>
+                                <option value="can-run-1mi">Can run 1 mile</option>
+                                <option value="can-run-3mi">Can run 3 miles</option>
+                                <option value="can-run-5mi-plus">Can run 5+ miles</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="onboard-field">
+                        <label for="currentProgram">What are you doing now? (optional)</label>
+                        <textarea id="currentProgram" rows="2" placeholder="e.g. PPL split 4x/week, running 3x/week"></textarea>
+                    </div>
+                    <div class="onboard-fields-row" style="margin-top:0.75rem;">
+                        <div class="onboard-field">
+                            <label for="benchPressMax">Bench Press</label>
+                            <select id="benchPressMax">
+                                <option value="">— Select —</option>
+                                <option value="never-tested">Never tested</option>
+                                <option value="under-135">Under 135 lbs</option>
+                                <option value="135-185">135-185 lbs</option>
+                                <option value="185-225">185-225 lbs</option>
+                                <option value="225-275">225-275 lbs</option>
+                                <option value="275-315">275-315 lbs</option>
+                                <option value="315-plus">315+ lbs</option>
+                            </select>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="squatMax">Squat</label>
+                            <select id="squatMax">
+                                <option value="">— Select —</option>
+                                <option value="never-tested">Never tested</option>
+                                <option value="under-135">Under 135 lbs</option>
+                                <option value="135-225">135-225 lbs</option>
+                                <option value="225-315">225-315 lbs</option>
+                                <option value="315-405">315-405 lbs</option>
+                                <option value="405-495">405-495 lbs</option>
+                                <option value="495-plus">495+ lbs</option>
+                            </select>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="deadliftMax">Deadlift</label>
+                            <select id="deadliftMax">
+                                <option value="">— Select —</option>
+                                <option value="never-tested">Never tested</option>
+                                <option value="under-135">Under 135 lbs</option>
+                                <option value="135-225">135-225 lbs</option>
+                                <option value="225-315">225-315 lbs</option>
+                                <option value="315-405">315-405 lbs</option>
+                                <option value="405-495">405-495 lbs</option>
+                                <option value="495-plus">495+ lbs</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="onboard-fields-row" style="margin-top:0.75rem;">
+                        <div class="onboard-field">
+                            <label for="exercisesLoved">Exercises You Love (optional)</label>
+                            <input type="text" id="exercisesLoved" placeholder="e.g. Deadlifts, Pull-ups, Running">
+                        </div>
+                        <div class="onboard-field">
+                            <label for="exercisesHated">Exercises You Hate (optional)</label>
+                            <input type="text" id="exercisesHated" placeholder="e.g. Burpees, Lunges">
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="onboard-fields-row" style="margin-bottom:1.25rem;">
-                <div class="onboard-field">
-                    <label for="mealsPerDay">Meals Per Day</label>
-                    <select id="mealsPerDay">
-                        <option value="2">2</option>
-                        <option value="3" selected>3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                    </select>
+            <!-- Section 3: Lifestyle -->
+            <div class="onboard-form-section open" data-section="lifestyle">
+                <button class="onboard-section-header" type="button">
+                    <span>Lifestyle</span>
+                    <span class="onboard-section-chevron">&#9660;</span>
+                </button>
+                <div class="onboard-section-body">
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="workType">Work Type</label>
+                            <select id="workType">
+                                <option value="">— Select —</option>
+                                <option value="desk">Desk / Office</option>
+                                <option value="remote">Remote / WFH</option>
+                                <option value="on-feet">On feet all day</option>
+                                <option value="physical-labor">Physical labor</option>
+                                <option value="mixed">Mixed</option>
+                            </select>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="sessionLength">Preferred Session Length</label>
+                            <select id="sessionLength">
+                                <option value="">— Select —</option>
+                                <option value="30">30 min</option>
+                                <option value="45">45 min</option>
+                                <option value="60" selected>60 min</option>
+                                <option value="75">75 min</option>
+                                <option value="90">90 min</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="wakeTime">Wake Time</label>
+                            <input type="time" id="wakeTime" value="06:30">
+                        </div>
+                        <div class="onboard-field">
+                            <label for="bedTime">Bed Time</label>
+                            <input type="time" id="bedTime" value="22:30">
+                        </div>
+                    </div>
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="mealsPerDay">Meals Per Day</label>
+                            <select id="mealsPerDay">
+                                <option value="2">2</option>
+                                <option value="3" selected>3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                            </select>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="hydrationLevel">Hydration</label>
+                            <select id="hydrationLevel">
+                                <option value="low">Low</option>
+                                <option value="moderate" selected>Moderate</option>
+                                <option value="good">Good</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="dietaryApproach">Diet</label>
+                            <select id="dietaryApproach">
+                                <option value="">— Select —</option>
+                                <option value="no-restriction">No restriction</option>
+                                <option value="high-protein">High protein</option>
+                                <option value="keto">Keto</option>
+                                <option value="vegan">Vegan</option>
+                                <option value="vegetarian">Vegetarian</option>
+                                <option value="paleo">Paleo</option>
+                                <option value="iifym">IIFYM / Flexible</option>
+                            </select>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="caffeineDaily">Daily Caffeine</label>
+                            <select id="caffeineDaily">
+                                <option value="">— Select —</option>
+                                <option value="none">None</option>
+                                <option value="1-cup">1 cup</option>
+                                <option value="2-3-cups">2-3 cups</option>
+                                <option value="4-plus-cups">4+ cups</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="alcoholFrequency">Alcohol</label>
+                            <select id="alcoholFrequency">
+                                <option value="">— Select —</option>
+                                <option value="never">Never</option>
+                                <option value="rare">Rarely</option>
+                                <option value="1-2-per-week">1-2/week</option>
+                                <option value="3-5-per-week">3-5/week</option>
+                                <option value="daily">Daily</option>
+                            </select>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="supplements">Supplements (optional)</label>
+                            <input type="text" id="supplements" placeholder="e.g. Creatine, Protein">
+                        </div>
+                    </div>
                 </div>
-                <div class="onboard-field">
-                    <label for="hydrationLevel">Hydration Level</label>
-                    <select id="hydrationLevel">
-                        <option value="low">Low</option>
-                        <option value="moderate" selected>Moderate</option>
-                        <option value="good">Good</option>
-                    </select>
+            </div>
+
+            <!-- Section 4: Injuries & Health -->
+            <div class="onboard-form-section open" data-section="health">
+                <button class="onboard-section-header" type="button">
+                    <span>Injuries & Health</span>
+                    <span class="onboard-section-chevron">&#9660;</span>
+                </button>
+                <div class="onboard-section-body">
+                    <label class="onboard-section-label">Current Injuries</label>
+                    <div id="injuryList"></div>
+                    <button type="button" class="onboard-add-btn" id="addInjuryBtn">+ Add Injury</button>
+
+                    <div class="onboard-fields-row" style="margin-top:1rem;">
+                        <div class="onboard-field">
+                            <label for="chronicConditions">Chronic Conditions (optional)</label>
+                            <textarea id="chronicConditions" rows="2" placeholder="e.g. Asthma, high blood pressure"></textarea>
+                        </div>
+                        <div class="onboard-field">
+                            <label for="medications">Medications (optional)</label>
+                            <textarea id="medications" rows="2" placeholder="e.g. Blood pressure meds"></textarea>
+                        </div>
+                    </div>
+                    <div class="onboard-field">
+                        <label>Previous Physical Therapy?</label>
+                        <div style="display:flex;gap:1rem;margin-top:0.25rem;">
+                            <label class="onboard-radio"><input type="radio" name="previousPT" value="true"> Yes</label>
+                            <label class="onboard-radio"><input type="radio" name="previousPT" value="false"> No</label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="onboard-field" style="margin-bottom:1.5rem;">
-                <label for="supplements">Supplements Used (optional)</label>
-                <input type="text" id="supplements" placeholder="e.g. Creatine, Protein, Multivitamin">
+            <!-- Section 5: Goal Details -->
+            <div class="onboard-form-section open" data-section="goals">
+                <button class="onboard-section-header" type="button">
+                    <span>Goal Details</span>
+                    <span class="onboard-section-chevron">&#9660;</span>
+                </button>
+                <div class="onboard-section-body">
+                    <div class="onboard-fields-row">
+                        <div class="onboard-field">
+                            <label for="targetWeight">Target Weight (optional)</label>
+                            <input type="number" id="targetWeight" placeholder="lbs" min="50" max="600">
+                        </div>
+                        <div class="onboard-field">
+                            <label for="goalTimeline">Timeline</label>
+                            <select id="goalTimeline">
+                                <option value="">— Select —</option>
+                                <option value="no-rush">No rush</option>
+                                <option value="3-months">3 months</option>
+                                <option value="6-months">6 months</option>
+                                <option value="12-months">12 months</option>
+                                <option value="event-date">Training for an event</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="onboard-fields-row" id="eventFields" style="display:none;">
+                        <div class="onboard-field">
+                            <label for="eventDate">Event Date</label>
+                            <input type="date" id="eventDate">
+                        </div>
+                        <div class="onboard-field">
+                            <label for="eventDescription">Event Description</label>
+                            <input type="text" id="eventDescription" placeholder="e.g. Marathon, Powerlifting meet">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <label style="display:block;font-family:var(--font-heading);font-size:0.8rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--gray-light);margin-bottom:0.75rem;">Recovery Practices</label>
-            <div class="onboard-checkboxes" id="recoveryPractices">
-                <div class="onboard-checkbox" data-value="foam-roll"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Foam Rolling</span></div>
-                <div class="onboard-checkbox" data-value="stretch"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Stretching</span></div>
-                <div class="onboard-checkbox" data-value="sauna"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Sauna</span></div>
-                <div class="onboard-checkbox" data-value="cold-plunge"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Cold Plunge</span></div>
-                <div class="onboard-checkbox" data-value="massage"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Massage</span></div>
-                <div class="onboard-checkbox" data-value="none"><div class="onboard-cb-box"></div><span class="onboard-cb-label">None</span></div>
-            </div>
+            <!-- Section 6: Recovery & Baseline -->
+            <div class="onboard-form-section open" data-section="recovery">
+                <button class="onboard-section-header" type="button">
+                    <span>Recovery & Baseline</span>
+                    <span class="onboard-section-chevron">&#9660;</span>
+                </button>
+                <div class="onboard-section-body">
+                    <label class="onboard-section-label">Recovery Practices</label>
+                    <div class="onboard-checkboxes" id="recoveryPractices">
+                        <div class="onboard-checkbox" data-value="foam-roll"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Foam Rolling</span></div>
+                        <div class="onboard-checkbox" data-value="stretch"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Stretching</span></div>
+                        <div class="onboard-checkbox" data-value="sauna"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Sauna</span></div>
+                        <div class="onboard-checkbox" data-value="cold-plunge"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Cold Plunge</span></div>
+                        <div class="onboard-checkbox" data-value="massage"><div class="onboard-cb-box"></div><span class="onboard-cb-label">Massage</span></div>
+                        <div class="onboard-checkbox" data-value="none"><div class="onboard-cb-box"></div><span class="onboard-cb-label">None</span></div>
+                    </div>
 
-            <div class="onboard-slider-group">
-                <label><span>Typical Energy Level</span><span class="onboard-slider-value" id="energyVal">5</span></label>
-                <input type="range" class="onboard-slider" id="energySlider" min="1" max="10" value="5">
-            </div>
-            <div class="onboard-slider-group">
-                <label><span>Typical Soreness Level</span><span class="onboard-slider-value" id="sorenessVal">5</span></label>
-                <input type="range" class="onboard-slider" id="sorenessSlider" min="1" max="10" value="5">
-            </div>
-            <div class="onboard-slider-group">
-                <label><span>Typical Mood Level</span><span class="onboard-slider-value" id="moodVal">5</span></label>
-                <input type="range" class="onboard-slider" id="moodSlider" min="1" max="10" value="5">
-            </div>
-            <div class="onboard-slider-group">
-                <label><span>Typical Sleep Quality</span><span class="onboard-slider-value" id="sleepVal">5</span></label>
-                <input type="range" class="onboard-slider" id="sleepSlider" min="1" max="10" value="5">
+                    <div class="onboard-slider-group">
+                        <label><span>Typical Energy Level</span><span class="onboard-slider-value" id="energyVal">5</span></label>
+                        <input type="range" class="onboard-slider" id="energySlider" min="1" max="10" value="5">
+                    </div>
+                    <div class="onboard-slider-group">
+                        <label><span>Typical Soreness Level</span><span class="onboard-slider-value" id="sorenessVal">5</span></label>
+                        <input type="range" class="onboard-slider" id="sorenessSlider" min="1" max="10" value="5">
+                    </div>
+                    <div class="onboard-slider-group">
+                        <label><span>Typical Mood Level</span><span class="onboard-slider-value" id="moodVal">5</span></label>
+                        <input type="range" class="onboard-slider" id="moodSlider" min="1" max="10" value="5">
+                    </div>
+                    <div class="onboard-slider-group">
+                        <label><span>Typical Sleep Quality</span><span class="onboard-slider-value" id="sleepVal">5</span></label>
+                        <input type="range" class="onboard-slider" id="sleepSlider" min="1" max="10" value="5">
+                    </div>
+                </div>
             </div>
 
             <button class="onboard-btn" id="step3Btn">Complete Setup</button>

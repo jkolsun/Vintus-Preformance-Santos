@@ -23,7 +23,7 @@ export async function getOverview(userId: string): Promise<unknown> {
     where: { id: userId },
     include: {
       athleteProfile: true,
-      subscription: { select: { planTier: true, status: true } },
+      subscription: { select: { planTier: true, status: true, currentPeriodStart: true, currentPeriodEnd: true } },
     },
   });
 
@@ -98,12 +98,24 @@ export async function getOverview(userId: string): Promise<unknown> {
   ]);
 
   return {
-    athlete: {
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      persona: profile.personaType,
-      planTier: user.subscription?.planTier ?? null,
-    },
+    athlete: (() => {
+      const sub = user.subscription;
+      let dayNumber: number | null = null;
+      let totalDays: number | null = null;
+      if (sub?.currentPeriodStart && sub?.currentPeriodEnd) {
+        dayNumber = Math.max(1, Math.ceil((today.getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000)) + 1);
+        totalDays = Math.ceil((new Date(sub.currentPeriodEnd).getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000));
+      }
+      return {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        persona: profile.personaType,
+        planTier: sub?.planTier ?? null,
+        subscriptionStatus: sub?.status ?? null,
+        dayNumber,
+        totalDays,
+      };
+    })(),
     today: {
       workout: todayWorkout,
       readiness: todayReadiness,

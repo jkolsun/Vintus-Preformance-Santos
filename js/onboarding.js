@@ -92,7 +92,53 @@
     goToStep(3);
   });
 
-  // ── Step 3: Routine questionnaire ──
+  // ── Section collapse toggles ──
+  document.querySelectorAll('.onboard-section-header').forEach(function (header) {
+    header.addEventListener('click', function () {
+      var section = header.closest('.onboard-form-section');
+      section.classList.toggle('open');
+    });
+  });
+
+  // ── Injury repeater ──
+  var injuryCount = 0;
+  var addInjuryBtn = document.getElementById('addInjuryBtn');
+  if (addInjuryBtn) {
+    addInjuryBtn.addEventListener('click', function () {
+      injuryCount++;
+      var row = document.createElement('div');
+      row.className = 'onboard-injury-row';
+      row.setAttribute('data-injury-idx', injuryCount);
+      row.innerHTML =
+        '<div class="onboard-fields-row">' +
+          '<div class="onboard-field"><input type="text" class="injury-area" placeholder="Body area (e.g. Left knee)"></div>' +
+          '<div class="onboard-field"><select class="injury-severity">' +
+            '<option value="mild">Mild</option>' +
+            '<option value="moderate">Moderate</option>' +
+            '<option value="severe">Severe</option>' +
+          '</select></div>' +
+        '</div>' +
+        '<div class="onboard-fields-row">' +
+          '<div class="onboard-field" style="flex:1;"><input type="text" class="injury-notes" placeholder="Notes (optional)"></div>' +
+          '<button type="button" class="onboard-remove-btn" style="align-self:center;">Remove</button>' +
+        '</div>';
+      row.querySelector('.onboard-remove-btn').addEventListener('click', function () {
+        row.remove();
+      });
+      document.getElementById('injuryList').appendChild(row);
+    });
+  }
+
+  // ── Event date toggle ──
+  var goalTimelineEl = document.getElementById('goalTimeline');
+  if (goalTimelineEl) {
+    goalTimelineEl.addEventListener('change', function () {
+      var eventFields = document.getElementById('eventFields');
+      eventFields.style.display = this.value === 'event-date' ? '' : 'none';
+    });
+  }
+
+  // ── Step 3: Extended questionnaire ──
   var step3Btn = document.getElementById('step3Btn');
   step3Btn.addEventListener('click', async function () {
     hideError();
@@ -109,18 +155,86 @@
     });
     if (recoveryPractices.length === 0) recoveryPractices = ['none'];
 
+    // Collect injuries
+    var injuries = [];
+    document.querySelectorAll('.onboard-injury-row').forEach(function (row) {
+      var area = row.querySelector('.injury-area').value.trim();
+      if (area) {
+        injuries.push({
+          area: area,
+          severity: row.querySelector('.injury-severity').value,
+          notes: row.querySelector('.injury-notes').value.trim() || undefined
+        });
+      }
+    });
+
+    // Height conversion: ft + in → total inches
+    var heightFt = document.getElementById('heightFt').value;
+    var heightIn = document.getElementById('heightIn').value;
+    var heightInches = (heightFt && heightIn !== '') ? (parseInt(heightFt, 10) * 12 + parseInt(heightIn, 10)) : undefined;
+
+    // Helper for optional selects
+    function optVal(id) { var v = document.getElementById(id).value; return v || undefined; }
+    function optInt(id) { var v = document.getElementById(id).value; return v ? parseInt(v, 10) : undefined; }
+    function optFloat(id) { var v = document.getElementById(id).value; return v ? parseFloat(v) : undefined; }
+    function optText(id) { var v = document.getElementById(id).value.trim(); return v || undefined; }
+
+    // Previous PT radio
+    var ptRadio = document.querySelector('input[name="previousPT"]:checked');
+    var previousPT = ptRadio ? ptRadio.value === 'true' : undefined;
+
     var payload = {
+      // Existing fields
       wakeTime: wakeTime,
       bedTime: bedTime,
       mealsPerDay: parseInt(document.getElementById('mealsPerDay').value, 10),
       hydrationLevel: document.getElementById('hydrationLevel').value,
-      supplementsUsed: document.getElementById('supplements').value.trim() || undefined,
+      supplementsUsed: optText('supplements'),
       recoveryPractices: recoveryPractices,
       typicalEnergyLevel: parseInt(document.getElementById('energySlider').value, 10),
       typicalSorenessLevel: parseInt(document.getElementById('sorenessSlider').value, 10),
       typicalMoodLevel: parseInt(document.getElementById('moodSlider').value, 10),
-      typicalSleepQuality: parseInt(document.getElementById('sleepSlider').value, 10)
+      typicalSleepQuality: parseInt(document.getElementById('sleepSlider').value, 10),
+
+      // Physical Profile
+      heightInches: heightInches,
+      weightLbs: optFloat('weightLbs'),
+      bodyFatEstimate: optVal('bodyFatEstimate'),
+
+      // Training Background
+      yearsTraining: optInt('yearsTraining'),
+      currentProgram: optText('currentProgram'),
+      benchPressMax: optVal('benchPressMax'),
+      squatMax: optVal('squatMax'),
+      deadliftMax: optVal('deadliftMax'),
+      cardioBase: optVal('cardioBase'),
+      exercisesLoved: optText('exercisesLoved'),
+      exercisesHated: optText('exercisesHated'),
+
+      // Lifestyle
+      workType: optVal('workType'),
+      sessionLength: optInt('sessionLength'),
+      dietaryApproach: optVal('dietaryApproach'),
+      alcoholFrequency: optVal('alcoholFrequency'),
+      caffeineDaily: optVal('caffeineDaily'),
+
+      // Injuries & Health
+      specificInjuries: injuries.length > 0 ? injuries : undefined,
+      chronicConditions: optText('chronicConditions'),
+      medications: optText('medications'),
+      previousPT: previousPT,
+
+      // Goal Details
+      targetWeight: optFloat('targetWeight'),
+      goalTimeline: optVal('goalTimeline'),
+      eventDate: optText('eventDate'),
+      eventDescription: optText('eventDescription')
     };
+
+    // Remove undefined keys for cleaner JSON
+    Object.keys(payload).forEach(function (k) {
+      if (payload[k] === undefined) delete payload[k];
+    });
 
     step3Btn.disabled = true;
     step3Btn.textContent = 'Generating your plan...';

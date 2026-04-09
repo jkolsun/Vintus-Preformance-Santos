@@ -877,6 +877,70 @@ export const messageTemplates: Record<string, MessageTemplate[]> = {
       tags: ["checkin-response", "generic"],
     },
   ],
+
+  // ============================================================
+  // DAILY_WORKOUT_ALERT — morning texts (training + rest days)
+  // ============================================================
+  DAILY_WORKOUT_ALERT: [
+    { id: "dwa-1", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Day {{dayNumber}} of {{totalDays}}. Today: {{sessionTitle}} — {{duration}} min. Let's go, {{firstName}}.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-2", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "{{firstName}}, Day {{dayNumber}}. {{sessionTitle}} is loaded. {{duration}} minutes. Show up.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-3", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Day {{dayNumber}} — {{sessionTitle}}. {{duration}} min. The plan works when you do.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-4", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Training day, {{firstName}}. Day {{dayNumber}}: {{sessionTitle}}. Get it done.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-5", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Day {{dayNumber}} of {{totalDays}}. {{sessionTitle}} — {{duration}} min. No excuses.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-6", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "{{firstName}}, your Day {{dayNumber}} session is ready. {{sessionTitle}}. Time to work.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-7", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Day {{dayNumber}}. {{sessionTitle}} — {{duration}} min. Consistency builds champions.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-8", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "{{sessionTitle}} today, {{firstName}}. Day {{dayNumber}} of {{totalDays}}. Lock in.", cooldownHours: 20, tags: ["daily", "training-day"] },
+    { id: "dwa-rest-1", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Day {{dayNumber}} of {{totalDays}}. Rest day. Recovery is part of the process, {{firstName}}.", cooldownHours: 20, tags: ["daily", "rest-day"] },
+    { id: "dwa-rest-2", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "{{firstName}}, Day {{dayNumber}}. Rest day — hydrate, stretch, recover hard.", cooldownHours: 20, tags: ["daily", "rest-day"] },
+    { id: "dwa-rest-3", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Day {{dayNumber}}. No session today. Let your body rebuild. You earned it.", cooldownHours: 20, tags: ["daily", "rest-day"] },
+    { id: "dwa-rest-4", category: "DAILY_WORKOUT_ALERT", channel: "SMS" as const, content: "Rest day, {{firstName}}. Day {{dayNumber}} of {{totalDays}}. Growth happens in recovery.", cooldownHours: 20, tags: ["daily", "rest-day"] },
+  ],
+
+  // ============================================================
+  // WORKOUT_NOT_LOGGED — evening follow-up nudges
+  // ============================================================
+  WORKOUT_NOT_LOGGED: [
+    { id: "wnl-1", category: "WORKOUT_NOT_LOGGED", channel: "SMS" as const, content: "{{firstName}}, Day {{dayNumber}} isn't logged yet. Did you get it done? Don't let this one slip.", cooldownHours: 20, tags: ["follow-up"] },
+    { id: "wnl-2", category: "WORKOUT_NOT_LOGGED", channel: "SMS" as const, content: "Your session today isn't tracked, {{firstName}}. Log it or let us know what happened.", cooldownHours: 20, tags: ["follow-up"] },
+    { id: "wnl-3", category: "WORKOUT_NOT_LOGGED", channel: "SMS" as const, content: "Day {{dayNumber}} — no log yet. If you did the work, track it. Accountability matters.", cooldownHours: 20, tags: ["follow-up"] },
+    { id: "wnl-4", category: "WORKOUT_NOT_LOGGED", channel: "SMS" as const, content: "{{firstName}}, just checking — did you get today's session in? Your Day {{dayNumber}} isn't tracked.", cooldownHours: 20, tags: ["follow-up"] },
+    { id: "wnl-5", category: "WORKOUT_NOT_LOGGED", channel: "SMS" as const, content: "Day {{dayNumber}} workout not logged. The plan can't adapt if we don't have data. Log it, {{firstName}}.", cooldownHours: 20, tags: ["follow-up"] },
+    { id: "wnl-6", category: "WORKOUT_NOT_LOGGED", channel: "SMS" as const, content: "Hey {{firstName}} — today's session isn't logged. Even a missed day should be tracked. Stay honest with the process.", cooldownHours: 20, tags: ["follow-up"] },
+  ],
+
+  // ============================================================
+  // PLAN_MILESTONE — special day-number messages
+  // ============================================================
+  PLAN_MILESTONE: [
+    { id: "pm-day1", category: "PLAN_MILESTONE", channel: "SMS" as const, content: "Day 1 of {{totalDays}}, {{firstName}}. This is where it starts. No looking back.", cooldownHours: 720, tags: ["milestone", "day-1"] },
+    { id: "pm-quarter", category: "PLAN_MILESTONE", channel: "SMS" as const, content: "25% done, {{firstName}}. Day {{dayNumber}} of {{totalDays}}. The foundation is being built.", cooldownHours: 720, tags: ["milestone", "quarter"] },
+    { id: "pm-half", category: "PLAN_MILESTONE", channel: "SMS" as const, content: "Halfway through. Day {{dayNumber}} of {{totalDays}}. Most people quit here. You're not most people, {{firstName}}.", cooldownHours: 720, tags: ["milestone", "halfway"] },
+    { id: "pm-three-quarter", category: "PLAN_MILESTONE", channel: "SMS" as const, content: "75% complete, {{firstName}}. Day {{dayNumber}} of {{totalDays}}. The finish line is in sight.", cooldownHours: 720, tags: ["milestone", "three-quarter"] },
+    { id: "pm-almost", category: "PLAN_MILESTONE", channel: "SMS" as const, content: "{{firstName}}, 2 days left. Day {{dayNumber}} of {{totalDays}}. Finish what you started.", cooldownHours: 720, tags: ["milestone", "almost-done"] },
+    { id: "pm-final", category: "PLAN_MILESTONE", channel: "SMS" as const, content: "Day {{totalDays}}. You completed your {{planTierDisplay}} program, {{firstName}}. Time to decide what's next.", cooldownHours: 720, tags: ["milestone", "final-day"] },
+  ],
+
+  // ============================================================
+  // PLAN_ENDING — warnings before plan expires
+  // ============================================================
+  PLAN_ENDING: [
+    { id: "pe-3day", category: "PLAN_ENDING", channel: "SMS" as const, content: "{{firstName}}, your {{planTierDisplay}} program ends in 3 days. Make the most of what's left.", cooldownHours: 72, tags: ["plan-ending"] },
+    { id: "pe-1day", category: "PLAN_ENDING", channel: "SMS" as const, content: "{{firstName}}, tomorrow is your last day. One more session to close this chapter strong.", cooldownHours: 24, tags: ["plan-ending"] },
+  ],
+
+  // ============================================================
+  // PLAN_COMPLETED — renewal prompt
+  // ============================================================
+  PLAN_COMPLETED: [
+    { id: "pc-1", category: "PLAN_COMPLETED", channel: "SMS" as const, content: "{{firstName}}, your {{planTierDisplay}} program is complete. Ready for the next level? Reply YES to discuss your options.", cooldownHours: 720, tags: ["plan-complete"] },
+  ],
+
+  // ============================================================
+  // RENEWAL_FOLLOWUP — no response follow-up
+  // ============================================================
+  RENEWAL_FOLLOWUP: [
+    { id: "rf-1", category: "RENEWAL_FOLLOWUP", channel: "SMS" as const, content: "{{firstName}}, just following up — your program ended and we'd love to keep the momentum going. Reply if you're interested in continuing.", cooldownHours: 720, tags: ["renewal"] },
+  ],
 };
 
 /**
