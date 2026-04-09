@@ -9,6 +9,7 @@
 (function () {
   var currentStep = 1;
   var userId = null;
+  var currentTier = null;
 
   var errorEl = document.getElementById('onboardError');
   var params = new URLSearchParams(window.location.search);
@@ -67,6 +68,7 @@
       }
 
       userId = verifyRes.data.userId;
+      currentTier = verifyRes.data.tier || null;
 
       // Set password
       var pwRes = await apiPost('/api/v1/onboarding/set-password', { userId: userId, sessionId: sessionId, password: pw });
@@ -242,6 +244,16 @@
     try {
       var res = await apiPost('/api/v1/onboarding/routine', payload);
       if (res.success) {
+        // Customize success message based on plan type
+        var msgEl = document.getElementById('successMsg');
+        if (msgEl && currentTier) {
+          var isNutrition = currentTier.indexOf('NUTRITION') === 0;
+          if (isNutrition) {
+            msgEl.textContent = 'Your personalized nutrition plan is ready. Head to your dashboard to get started.';
+          } else {
+            msgEl.textContent = 'Your personalized plan has been generated. Your coach will review your profile and activate your account shortly.';
+          }
+        }
         goToStep(4);
       } else {
         showError('Failed to save routine. Please try again.');
@@ -297,5 +309,17 @@
   // If no session_id and user is already logged in, skip to step 2
   if (!sessionId && isLoggedIn()) {
     goToStep(2);
+  }
+
+  // Dead-end guard: no session_id and not logged in
+  if (!sessionId && !isLoggedIn()) {
+    showError('No checkout session found. Please complete your assessment and purchase a plan first.');
+    document.getElementById('step1').querySelector('.onboard-btn').style.display = 'none';
+    var backLink = document.createElement('a');
+    backLink.href = 'assessment.html';
+    backLink.textContent = 'Go to Assessment';
+    backLink.className = 'onboard-btn';
+    backLink.style.cssText = 'display:inline-block;text-decoration:none;text-align:center;margin-top:1rem;';
+    document.getElementById('step1').querySelector('.onboard-card').appendChild(backLink);
   }
 })();

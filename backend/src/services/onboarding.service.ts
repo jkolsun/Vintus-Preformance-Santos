@@ -222,7 +222,19 @@ export async function submitRoutineQuestionnaire(
     },
   });
 
-  // Generate initial workout plan
+  // Generate initial workout plan (only if one doesn't already exist)
+  const existingPlan = await prisma.workoutPlan.findFirst({
+    where: { athleteProfileId: profile.id, isActive: true },
+  });
+
+  if (existingPlan) {
+    logger.info(
+      { userId, profileId: profile.id, planId: existingPlan.id },
+      "Onboarding routine completed — plan already exists, skipping generation"
+    );
+    return { planId: existingPlan.id, sessionCount: 0 };
+  }
+
   const plan = await generateInitialPlan(profile.id);
 
   logger.info(
