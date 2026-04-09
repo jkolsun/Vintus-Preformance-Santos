@@ -63,6 +63,54 @@ export async function notifyAdmin(
 }
 
 /**
+ * Send a password reset email to a client.
+ */
+export async function sendPasswordResetEmail(
+  to: string,
+  resetLink: string
+): Promise<void> {
+  const t = getTransporter();
+  if (!t) {
+    logger.info({ to }, "Password reset email skipped (Gmail not configured)");
+    return;
+  }
+
+  const subject = "Reset Your Vintus Performance Password";
+  const body = `
+    <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px;background:#0a0a0a;color:#e5e5e5;border-radius:8px;">
+      <h2 style="color:#fff;margin-bottom:20px;">Password Reset Request</h2>
+      <p style="color:#a3a3a3;line-height:1.6;">
+        We received a request to reset the password for your Vintus Performance account.
+        Click the button below to set a new password. This link expires in 1 hour.
+      </p>
+      <div style="text-align:center;margin:30px 0;">
+        <a href="${resetLink}" style="display:inline-block;padding:12px 32px;background:#fff;color:#0a0a0a;text-decoration:none;font-weight:700;border-radius:6px;font-size:16px;">
+          Reset Password
+        </a>
+      </div>
+      <p style="color:#737373;font-size:13px;line-height:1.5;">
+        If you didn't request this, you can safely ignore this email. Your password will remain unchanged.
+      </p>
+      <hr style="border:none;border-top:1px solid #262626;margin:20px 0;" />
+      <p style="color:#525252;font-size:12px;">Vintus Performance</p>
+    </div>
+  `;
+
+  try {
+    await t.sendMail({
+      from: `"Vintus Performance" <${GMAIL_USER}>`,
+      to,
+      subject,
+      html: body,
+    });
+    logger.info({ to }, "Password reset email sent");
+  } catch (err) {
+    logger.error({ err, to }, "Failed to send password reset email");
+    throw err;
+  }
+}
+
+/**
  * Notify admin of a new client signup.
  */
 export async function notifyNewClient(data: {

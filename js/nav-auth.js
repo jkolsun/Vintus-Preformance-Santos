@@ -32,6 +32,19 @@
 
       li.appendChild(a);
       navLinks.appendChild(li);
+
+      // Add Settings link for logged-in CLIENT users (not admin)
+      if (loggedIn && userRole !== 'ADMIN') {
+        var settingsLi = document.createElement('li');
+        var settingsA = document.createElement('a');
+        settingsA.href = 'settings.html';
+        settingsA.textContent = 'Settings';
+        if (window.location.pathname.includes('settings.html')) {
+          settingsA.classList.add('active');
+        }
+        settingsLi.appendChild(settingsA);
+        navLinks.appendChild(settingsLi);
+      }
     }
 
     // ── Mobile Nav ──
@@ -53,6 +66,18 @@
         mobileNav.insertBefore(mobileLink, socialDiv);
       } else {
         mobileNav.appendChild(mobileLink);
+      }
+
+      // Add Settings link for logged-in CLIENT users in mobile nav
+      if (loggedIn && userRole !== 'ADMIN') {
+        var mobileSettings = document.createElement('a');
+        mobileSettings.href = 'settings.html';
+        mobileSettings.textContent = 'Settings';
+        if (socialDiv) {
+          mobileNav.insertBefore(mobileSettings, socialDiv);
+        } else {
+          mobileNav.appendChild(mobileSettings);
+        }
       }
     }
 

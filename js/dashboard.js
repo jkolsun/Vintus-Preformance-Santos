@@ -1,6 +1,6 @@
 /**
- * Vintus Performance — Client Dashboard (Hub)
- * Loads overview, compact week preview, readiness trends chart, and handles check-in.
+ * Vintus Performance — Client Dashboard (TrainingPeaks-inspired)
+ * Full rewrite: weekly calendar, workout detail, metrics, check-in, trends, chat.
  */
 
 (function () {
@@ -9,22 +9,44 @@
     window.location.href = 'login.html';
     return;
   }
-  // Admins should never see the client dashboard
   if (localStorage.getItem('vintus_role') === 'ADMIN') {
     window.location.href = 'admin.html';
     return;
   }
 
+  // ── Constants ──
+  var DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   var TIER_DISPLAY = {
     PRIVATE_COACHING: 'Private Coaching',
-    TRAINING_30DAY: '30-Day Training',
-    TRAINING_60DAY: '60-Day Training',
-    TRAINING_90DAY: '90-Day Training',
+    TRAINING_30DAY: '30-Day',
+    TRAINING_60DAY: '60-Day',
+    TRAINING_90DAY: '90-Day',
     NUTRITION_4WEEK: '4-Week Nutrition',
     NUTRITION_8WEEK: '8-Week Nutrition'
   };
+
+  var SESSION_TYPE_ICONS = {
+    STRENGTH: 'STR',
+    CARDIO: 'CARDIO',
+    HIIT: 'HIIT',
+    FLEXIBILITY: 'FLEX',
+    RECOVERY: 'REC',
+    CONDITIONING: 'COND',
+    POWER: 'PWR',
+    ENDURANCE: 'END',
+    MOBILITY: 'MOB',
+    SPORT_SPECIFIC: 'SPORT'
+  };
+
+  // ── State ──
   var currentTier = null;
+  var currentWeekOffset = 0;
+  var weekSessions = [];
+  var overviewData = null;
+  var dailySummaryData = null;
+  var selectedDate = null;
+  var todaySession = null;
   var today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -36,11 +58,14 @@
     return y + '-' + m + '-' + day;
   }
 
-  // ── Set date display ──
-  var dateEl = document.getElementById('dashDate');
-  dateEl.textContent = today.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
+  function getWeekMonday(offset) {
+    var d = new Date(today);
+    var dayOfWeek = d.getDay();
+    var diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    d.setDate(d.getDate() - diff + (offset * 7));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
 
   // ── Slider live updates ──
   ['ciEnergy', 'ciSoreness', 'ciMood', 'ciSleep'].forEach(function (id) {
@@ -51,16 +76,19 @@
     }
   });
 
-  // ── Load all data ──
+  // ── Load everything ──
   loadUser();
   loadOverview().then(function (isPending) {
     if (!isPending) {
-      loadWeekPreview();
+      loadWeek(0);
       loadTrends();
     }
   });
 
-  // ── Load user info ──
+  // ============================================================
+  // User Info → Header
+  // ============================================================
+
   async function loadUser() {
     try {
       var res = await apiGet('/api/v1/auth/me');
@@ -68,141 +96,344 @@
         var user = res.data.user;
         var profile = user.athleteProfile;
         var name = (profile && profile.firstName) || user.email.split('@')[0];
-        var hour = new Date().getHours();
-        var greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-        document.getElementById('dashGreeting').textContent = greeting + ', ' + name;
+        document.getElementById('athleteName').textContent = name;
       }
     } catch (err) {
-      // Greeting stays at default
+      // Keep default
     }
   }
 
-  // ── Load dashboard overview ──
+  // ============================================================
+  // Overview → Progress, Metrics, Today's Workout
+  // ============================================================
+
   async function loadOverview() {
     try {
       var res = await apiGet('/api/v1/dashboard/overview');
       if (!res.success || !res.data) return false;
 
       var d = res.data;
+      overviewData = d;
 
-      // Check for pending approval — show message instead of workout data
+      // Check pending approval
       if (d.athlete && d.athlete.subscriptionStatus === 'PENDING_APPROVAL') {
-        showPendingApprovalState(d);
+        showPendingState(d);
         return true;
       }
 
-      // Streak
-      if (d.streak && d.streak.currentStreak > 0) {
-        var streakEl = document.getElementById('dashStreak');
-        streakEl.textContent = d.streak.currentStreak + ' day streak';
-        streakEl.style.display = 'inline-flex';
-      }
-
-      // Account tier
+      // Header badges
       if (d.athlete && d.athlete.planTier) {
         currentTier = d.athlete.planTier;
-        document.getElementById('accountTier').textContent = TIER_DISPLAY[currentTier] || currentTier;
-      }
+        var tierBadge = document.getElementById('tierBadge');
+        tierBadge.textContent = TIER_DISPLAY[currentTier] || currentTier;
+        tierBadge.style.display = 'inline-flex';
 
-      // Plan progress bar
-      if (d.athlete && d.athlete.dayNumber && d.athlete.totalDays) {
-        var progressEl = document.getElementById('planProgress');
-        if (progressEl) {
-          var pct = Math.min(100, Math.round((d.athlete.dayNumber / d.athlete.totalDays) * 100));
-          progressEl.innerHTML =
-            '<div class="dash-progress-label">' +
-              '<span>Day ' + d.athlete.dayNumber + ' of ' + d.athlete.totalDays + '</span>' +
-              '<span>' + pct + '%</span>' +
-            '</div>' +
-            '<div class="dash-progress-track">' +
-              '<div class="dash-progress-fill" style="width:' + pct + '%;"></div>' +
-            '</div>';
-          progressEl.style.display = 'block';
+        // Show manage subscription button for private coaching
+        if (currentTier === 'PRIVATE_COACHING') {
+          document.getElementById('manageSubBtn').style.display = 'inline-flex';
         }
       }
 
+      if (d.athlete && d.athlete.dayNumber && d.athlete.totalDays) {
+        var dayBadge = document.getElementById('dayBadge');
+        dayBadge.textContent = 'Day ' + d.athlete.dayNumber + ' of ' + d.athlete.totalDays;
+        dayBadge.style.display = 'inline-flex';
+
+        // Progress bar
+        var pct = Math.min(100, Math.round((d.athlete.dayNumber / d.athlete.totalDays) * 100));
+        var progressEl = document.getElementById('planProgress');
+        progressEl.style.display = 'block';
+        document.getElementById('progressFill').style.width = pct + '%';
+
+        var weekNum = Math.ceil(d.athlete.dayNumber / 7);
+        var totalWeeks = Math.ceil(d.athlete.totalDays / 7);
+        document.getElementById('progressText').innerHTML =
+          '<span>Week ' + weekNum + ' of ' + totalWeeks + '</span>' +
+          '<span>' + pct + '% complete</span>';
+      }
+
+      // Metrics
+      renderMetrics(d);
+
       // Today's workout
-      renderToday(d);
+      renderTodayWorkout(d);
+
       return false;
     } catch (err) {
-      document.getElementById('todayWorkout').innerHTML = '<span class="dash-rest-day">Unable to load. Please try refreshing.</span>';
+      document.getElementById('todayWorkout').innerHTML =
+        '<div class="tp-rest-day"><div class="tp-rest-day__text">Unable to load. Please try refreshing.</div></div>';
       return false;
     }
   }
 
-  function showPendingApprovalState(d) {
-    // Set tier display
+  function showPendingState(d) {
     if (d.athlete && d.athlete.planTier) {
       currentTier = d.athlete.planTier;
-      document.getElementById('accountTier').textContent = TIER_DISPLAY[currentTier] || currentTier;
+      var tierBadge = document.getElementById('tierBadge');
+      tierBadge.textContent = TIER_DISPLAY[currentTier] || currentTier;
+      tierBadge.style.display = 'inline-flex';
     }
 
-    // Replace today's workout with pending message
     document.getElementById('todayWorkout').innerHTML =
-      '<div class="dash-pending-approval">' +
-        '<div class="dash-pending-icon">&#9203;</div>' +
-        '<h3 class="dash-pending-title">Your Account is Being Reviewed</h3>' +
-        '<p class="dash-pending-text">Thanks for signing up! Your coach is reviewing your profile and will activate your account shortly. You\'ll receive a welcome message once approved.</p>' +
+      '<div class="tp-pending">' +
+        '<div class="tp-pending__icon">&#9203;</div>' +
+        '<h3 class="tp-pending__title">Your Account is Being Reviewed</h3>' +
+        '<p class="tp-pending__text">Thanks for signing up! Your coach is reviewing your profile and will activate your account shortly. You\'ll receive a welcome message once approved.</p>' +
       '</div>';
 
-    // Replace week strip with placeholder
-    var weekStrip = document.getElementById('weekStrip');
-    if (weekStrip) {
-      weekStrip.innerHTML = '<div class="dash-rest-day" style="text-align:center;padding:1rem;">Your training week will appear here once approved.</div>';
-    }
+    document.getElementById('weekGrid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;color:var(--gray);padding:1.5rem;font-style:italic;">Your training week will appear here once approved.</div>';
 
-    // Replace trends with placeholder
-    var trendsWrap = document.getElementById('trendsChart');
-    if (trendsWrap) {
-      trendsWrap.closest('.dash-card').style.display = 'none';
+    // Hide sections that need data
+    document.getElementById('metricsRow').style.display = 'none';
+    var trendsCard = document.getElementById('trendsChart');
+    if (trendsCard) trendsCard.closest('.tp-trends').style.display = 'none';
+  }
+
+  // ============================================================
+  // Metrics Row
+  // ============================================================
+
+  function renderMetrics(d) {
+    var metricsRow = document.getElementById('metricsRow');
+    metricsRow.style.display = 'grid';
+
+    // Streak
+    var streak = (d.streak && d.streak.currentStreak) ? d.streak.currentStreak : 0;
+    document.getElementById('metricStreak').textContent = streak;
+
+    // Readiness (from today data)
+    if (d.today && d.today.readinessScore != null) {
+      document.getElementById('metricReadiness').textContent = Math.round(d.today.readinessScore);
+    } else {
+      document.getElementById('metricReadiness').textContent = '--';
     }
   }
 
-  function renderToday(data) {
+  // Update adherence + TSS when week data loads
+  function updateWeekMetrics(sessions, adherenceRate) {
+    // Adherence ring
+    if (adherenceRate != null) {
+      var pct = Math.round(adherenceRate * 100);
+      document.getElementById('metricAdherence').textContent = pct + '%';
+      var circumference = 2 * Math.PI * 20; // r=20
+      var offset = circumference - (pct / 100) * circumference;
+      var arc = document.getElementById('adherenceArc');
+      arc.setAttribute('stroke-dashoffset', offset);
+      // Color based on adherence
+      var color = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#f87171';
+      arc.setAttribute('stroke', color);
+    }
+
+    // TSS
+    var plannedTSS = 0;
+    var actualTSS = 0;
+    sessions.forEach(function(s) {
+      if (s.prescribedTSS) plannedTSS += s.prescribedTSS;
+      if (s.actualTSS) actualTSS += s.actualTSS;
+    });
+    if (plannedTSS > 0) {
+      document.getElementById('metricTSS').textContent = Math.round(actualTSS);
+      document.getElementById('metricTSSSub').textContent = Math.round(actualTSS) + ' / ' + Math.round(plannedTSS);
+    } else {
+      document.getElementById('metricTSS').textContent = '--';
+    }
+  }
+
+  // ============================================================
+  // Today's Workout Detail Card
+  // ============================================================
+
+  function renderTodayWorkout(data) {
     var el = document.getElementById('todayWorkout');
 
     if (data.today && data.today.workout) {
-      var s = data.today.workout;
+      todaySession = data.today.workout;
+      var s = todaySession;
       var typeBadge = (s.sessionType || '').replace(/_/g, ' ');
       var duration = s.prescribedDuration ? s.prescribedDuration + ' min' : '';
+      var tss = s.prescribedTSS ? 'TSS ' + Math.round(s.prescribedTSS) : '';
 
-      el.innerHTML =
-        '<div class="dash-workout-title">' + escapeHtml(s.title) + '</div>' +
-        '<div class="dash-workout-meta">' +
-          '<span class="dash-badge">' + escapeHtml(typeBadge) + '</span>' +
-          (duration ? '<span class="dash-badge">' + duration + '</span>' : '') +
-          '<span class="dash-badge">' + escapeHtml(s.status) + '</span>' +
-        '</div>' +
-        (s.status === 'SCHEDULED'
-          ? '<a href="workout.html?id=' + s.id + '" class="dash-workout-btn">Start Workout <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>'
-          : s.status === 'COMPLETED'
-            ? '<span style="color:#4ade80;font-weight:600;font-family:var(--font-heading);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;">Completed</span>'
-            : '');
+      var html = '<div class="tp-workout-card">';
+
+      // Header
+      html += '<div class="tp-workout-card__header">';
+      html += '<div class="tp-workout-card__title">' + escapeHtml(s.title) + '</div>';
+      html += '</div>';
+
+      // Meta badges
+      html += '<div class="tp-workout-card__meta">';
+      if (typeBadge) html += '<span class="tp-workout-card__badge">' + escapeHtml(typeBadge) + '</span>';
+      if (duration) html += '<span class="tp-workout-card__badge">' + duration + '</span>';
+      if (tss) html += '<span class="tp-workout-card__badge">' + tss + '</span>';
+      html += '<span class="tp-workout-card__badge">' + escapeHtml(s.status) + '</span>';
+      html += '</div>';
+
+      // Workout content sections (warmup, main, cooldown)
+      html += renderWorkoutSections(s);
+
+      // Action buttons
+      html += '<div class="tp-workout-card__actions">';
+      if (s.status === 'SCHEDULED') {
+        html += '<a href="workout.html?id=' + s.id + '" class="tp-workout-card__start-btn">' +
+          'Start Workout <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
+          '</a>';
+        html += '<button class="tp-workout-card__skip-btn" id="skipWorkoutBtn">Skip Session</button>';
+      } else if (s.status === 'COMPLETED') {
+        html += '<span class="tp-workout-card__completed-label">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
+          'Completed</span>';
+      }
+      html += '</div>';
+      html += '</div>';
+
+      el.innerHTML = html;
+
+      // Bind skip button
+      var skipBtn = document.getElementById('skipWorkoutBtn');
+      if (skipBtn) {
+        skipBtn.addEventListener('click', function() { openSkipModal(s.id); });
+      }
     } else {
-      el.innerHTML = '<div class="dash-rest-day">Rest day. Recovery is part of the process.</div>';
+      el.innerHTML =
+        '<div class="tp-rest-day">' +
+          '<div class="tp-rest-day__icon">&#127769;</div>' +
+          '<div class="tp-rest-day__text">Rest day. Recovery is part of the process.</div>' +
+        '</div>';
     }
   }
 
+  function renderWorkoutSections(session) {
+    var html = '';
+    var plan = session.plan || session.prescribedPlan;
+
+    if (!plan) return html;
+
+    // Handle plan as object or JSON string
+    var planObj = plan;
+    if (typeof plan === 'string') {
+      try { planObj = JSON.parse(plan); } catch(e) { return html; }
+    }
+
+    if (planObj.warmup && planObj.warmup.length > 0) {
+      html += '<div class="tp-workout-card__section">';
+      html += '<div class="tp-workout-card__section-label">Warm-up</div>';
+      html += renderExerciseList(planObj.warmup);
+      html += '</div>';
+    }
+
+    if (planObj.main && planObj.main.length > 0) {
+      html += '<div class="tp-workout-card__section">';
+      html += '<div class="tp-workout-card__section-label">Main</div>';
+      html += renderExerciseList(planObj.main);
+      html += '</div>';
+    }
+
+    if (planObj.cooldown && planObj.cooldown.length > 0) {
+      html += '<div class="tp-workout-card__section">';
+      html += '<div class="tp-workout-card__section-label">Cool-down</div>';
+      html += renderExerciseList(planObj.cooldown);
+      html += '</div>';
+    }
+
+    // Fallback: if plan is an array of exercises at root level
+    if (!planObj.warmup && !planObj.main && !planObj.cooldown && Array.isArray(planObj.exercises)) {
+      html += '<div class="tp-workout-card__section">';
+      html += '<div class="tp-workout-card__section-label">Exercises</div>';
+      html += renderExerciseList(planObj.exercises);
+      html += '</div>';
+    }
+
+    return html;
+  }
+
+  function renderExerciseList(exercises) {
+    if (!exercises || !Array.isArray(exercises)) return '';
+    var html = '';
+    exercises.forEach(function(ex) {
+      var name = ex.name || ex.exercise || ex.title || 'Exercise';
+      var detail = '';
+      if (ex.sets && ex.reps) {
+        detail = ex.sets + ' x ' + ex.reps;
+        if (ex.weight) detail += ' @ ' + ex.weight;
+      } else if (ex.duration) {
+        detail = ex.duration;
+      } else if (ex.description) {
+        detail = ex.description;
+      }
+
+      html += '<div class="tp-workout-card__exercise">';
+      html += '<span class="tp-workout-card__exercise-name">' + escapeHtml(name) + '</span>';
+      if (detail) html += '<span class="tp-workout-card__exercise-detail">' + escapeHtml(detail) + '</span>';
+      html += '</div>';
+
+      if (ex.notes) {
+        html += '<div class="tp-workout-card__exercise-notes">' + escapeHtml(ex.notes) + '</div>';
+      }
+    });
+    return html;
+  }
+
   // ============================================================
-  // Compact Week Preview
+  // Weekly Calendar
   // ============================================================
 
-  async function loadWeekPreview() {
+  // Week navigation
+  document.getElementById('weekPrev').addEventListener('click', function() {
+    loadWeek(currentWeekOffset - 1);
+  });
+
+  document.getElementById('weekNext').addEventListener('click', function() {
+    loadWeek(currentWeekOffset + 1);
+  });
+
+  async function loadWeek(offset) {
+    currentWeekOffset = offset;
+    updateWeekLabel(offset);
+
     try {
-      var res = await apiGet('/api/v1/dashboard/week/0');
-      var sessions = (res.success && res.data && res.data.sessions) ? res.data.sessions : [];
+      var res = await apiGet('/api/v1/dashboard/week/' + offset);
+      weekSessions = (res.success && res.data && res.data.sessions) ? res.data.sessions : [];
       var adherenceRate = (res.success && res.data) ? res.data.adherenceRate : null;
-      renderWeekStrip(sessions, adherenceRate);
+      renderWeekGrid(weekSessions);
+
+      // Update metrics only for current week
+      if (offset === 0) {
+        updateWeekMetrics(weekSessions, adherenceRate);
+        // Adherence text
+        var adhEl = document.querySelector('.tp-week__adherence');
+        if (adhEl) {
+          if (adherenceRate != null && weekSessions.length > 0) {
+            adhEl.textContent = Math.round(adherenceRate * 100) + '% adherence this week';
+          } else {
+            adhEl.textContent = '';
+          }
+        }
+      }
     } catch (err) {
-      renderWeekStrip([], null);
+      renderWeekGrid([]);
     }
   }
 
-  function renderWeekStrip(sessions, adherenceRate) {
-    var strip = document.getElementById('weekStrip');
-    strip.innerHTML = '';
+  function updateWeekLabel(offset) {
+    var label = document.getElementById('weekLabel');
+    if (offset === 0) {
+      label.textContent = 'This Week';
+    } else if (offset === -1) {
+      label.textContent = 'Last Week';
+    } else if (offset === 1) {
+      label.textContent = 'Next Week';
+    } else {
+      var monday = getWeekMonday(offset);
+      label.textContent = monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' Week';
+    }
+  }
 
-    var monday = getWeekMonday(0);
+  function renderWeekGrid(sessions) {
+    var grid = document.getElementById('weekGrid');
+    grid.innerHTML = '';
+
+    var monday = getWeekMonday(currentWeekOffset);
     var todayStr = toLocalDateStr(today);
 
     for (var i = 0; i < 7; i++) {
@@ -216,28 +447,48 @@
         return s.scheduledDate && s.scheduledDate.substring(0, 10) === dateStr;
       });
 
-      var cell = document.createElement('a');
-      cell.href = 'calendar.html';
-      cell.className = 'dash-week-cell' +
-        (isToday ? ' dash-week-cell--today' : '') +
-        (isPast ? ' dash-week-cell--past' : '');
+      var cell = document.createElement('div');
+      cell.className = 'tp-week__cell' +
+        (isToday ? ' tp-week__cell--today' : '') +
+        (isPast ? ' tp-week__cell--past' : '');
+      cell.setAttribute('data-date', dateStr);
 
       var statusInfo = getWeekCellStatus(daySessions, isPast);
+      var typeLabel = '';
+      var durationLabel = '';
+
+      if (daySessions.length > 0) {
+        var mainSession = daySessions[0];
+        var sessionType = (mainSession.sessionType || '').replace(/_/g, ' ');
+        typeLabel = SESSION_TYPE_ICONS[mainSession.sessionType] || sessionType.substring(0, 5).toUpperCase();
+        if (mainSession.prescribedDuration) {
+          durationLabel = mainSession.prescribedDuration + 'm';
+        }
+      }
 
       cell.innerHTML =
-        '<span class="dash-week-day">' + DAY_LETTERS[d.getDay()] + '</span>' +
-        '<span class="dash-week-date">' + d.getDate() + '</span>' +
-        '<span class="dash-week-status dash-week-status--' + statusInfo.cls + '">' + statusInfo.icon + '</span>';
+        '<span class="tp-week__cell-day">' + DAY_LETTERS[d.getDay()] + '</span>' +
+        '<span class="tp-week__cell-date">' + d.getDate() + '</span>' +
+        (typeLabel ? '<span class="tp-week__cell-type">' + typeLabel + '</span>' : '') +
+        (durationLabel ? '<span class="tp-week__cell-duration">' + durationLabel + '</span>' : '') +
+        '<span class="tp-week__cell-status tp-week__cell-status--' + statusInfo.cls + '">' + statusInfo.icon + '</span>';
 
-      strip.appendChild(cell);
+      // Click to expand detail
+      (function(clickDateStr, clickSessions, clickIsToday) {
+        cell.addEventListener('click', function() {
+          handleCellClick(clickDateStr, clickSessions, clickIsToday);
+        });
+      })(dateStr, daySessions, isToday);
+
+      grid.appendChild(cell);
     }
 
-    // Adherence
-    var adhEl = document.getElementById('weekAdherence');
-    if (adherenceRate != null && sessions.length > 0) {
-      adhEl.textContent = Math.round(adherenceRate * 100) + '% adherence this week';
-    } else {
-      adhEl.textContent = '';
+    // Adherence line
+    var adhEl = grid.parentElement.querySelector('.tp-week__adherence');
+    if (!adhEl) {
+      adhEl = document.createElement('div');
+      adhEl.className = 'tp-week__adherence';
+      grid.parentElement.appendChild(adhEl);
     }
   }
 
@@ -258,21 +509,118 @@
     return { cls: 'scheduled', icon: '\u2022' };
   }
 
-  function getWeekMonday(offset) {
-    var d = new Date(today);
-    var dayOfWeek = d.getDay();
-    var diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    d.setDate(d.getDate() - diff + (offset * 7));
-    d.setHours(0, 0, 0, 0);
-    return d;
+  function handleCellClick(dateStr, sessions, isToday) {
+    // Remove selected state from all cells
+    document.querySelectorAll('.tp-week__cell--selected').forEach(function(el) {
+      el.classList.remove('tp-week__cell--selected');
+    });
+
+    // If clicking today and it's current week, scroll to workout card
+    if (isToday && currentWeekOffset === 0 && todaySession) {
+      var workoutEl = document.getElementById('todayWorkout');
+      workoutEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight cell
+      var clickedCell = document.querySelector('[data-date="' + dateStr + '"]');
+      if (clickedCell) clickedCell.classList.add('tp-week__cell--selected');
+      return;
+    }
+
+    // For other days with sessions, show a mini detail inline
+    if (sessions.length > 0) {
+      var clickedCell = document.querySelector('[data-date="' + dateStr + '"]');
+      if (clickedCell) clickedCell.classList.add('tp-week__cell--selected');
+
+      var s = sessions[0];
+      var workoutEl = document.getElementById('todayWorkout');
+      var typeBadge = (s.sessionType || '').replace(/_/g, ' ');
+      var duration = s.prescribedDuration ? s.prescribedDuration + ' min' : '';
+      var d = new Date(dateStr + 'T12:00:00');
+      var dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+      var html = '<div class="tp-workout-card">';
+      html += '<div class="tp-workout-card__header">';
+      html += '<div class="tp-workout-card__title">' + escapeHtml(s.title || dateLabel) + '</div>';
+      html += '</div>';
+      html += '<div class="tp-workout-card__meta">';
+      html += '<span class="tp-workout-card__badge">' + escapeHtml(dateLabel) + '</span>';
+      if (typeBadge) html += '<span class="tp-workout-card__badge">' + escapeHtml(typeBadge) + '</span>';
+      if (duration) html += '<span class="tp-workout-card__badge">' + duration + '</span>';
+      html += '<span class="tp-workout-card__badge">' + escapeHtml(s.status) + '</span>';
+      html += '</div>';
+      html += renderWorkoutSections(s);
+
+      if (s.status === 'COMPLETED') {
+        html += '<div class="tp-workout-card__actions">' +
+          '<span class="tp-workout-card__completed-label">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
+          'Completed</span></div>';
+      } else if (s.status === 'SCHEDULED') {
+        html += '<div class="tp-workout-card__actions">' +
+          '<a href="workout.html?id=' + s.id + '" class="tp-workout-card__start-btn">Start Workout</a>' +
+          '</div>';
+      }
+
+      html += '</div>';
+      workoutEl.innerHTML = html;
+      workoutEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
+
+  // ============================================================
+  // Skip Workout Modal
+  // ============================================================
+
+  var skipSessionId = null;
+
+  function openSkipModal(sessionId) {
+    skipSessionId = sessionId;
+    document.getElementById('skipReason').value = '';
+    document.getElementById('skipModalOverlay').style.display = 'flex';
+  }
+
+  function closeSkipModal() {
+    skipSessionId = null;
+    document.getElementById('skipModalOverlay').style.display = 'none';
+  }
+
+  document.getElementById('skipModalClose').addEventListener('click', closeSkipModal);
+  document.getElementById('skipModalCancel').addEventListener('click', closeSkipModal);
+  document.getElementById('skipModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeSkipModal();
+  });
+
+  document.getElementById('skipModalConfirm').addEventListener('click', async function() {
+    if (!skipSessionId) return;
+
+    var btn = this;
+    var reason = document.getElementById('skipReason').value.trim();
+    btn.disabled = true;
+    btn.textContent = 'Skipping...';
+
+    try {
+      var res = await apiPost('/api/v1/workout/' + encodeURIComponent(skipSessionId) + '/skip', {
+        reason: reason || 'No reason provided'
+      });
+
+      if (res.success) {
+        closeSkipModal();
+        // Reload dashboard data
+        loadOverview();
+        loadWeek(currentWeekOffset);
+      } else {
+        alert('Failed to skip session: ' + (res.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to skip session.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Skip Session';
+  });
 
   // ============================================================
   // 14-Day Performance — Clickable Bar Chart + Detail Panel
   // ============================================================
-
-  var dailySummaryData = null;
-  var selectedDate = null;
 
   async function loadTrends() {
     try {
@@ -283,7 +631,7 @@
 
       if (!dailySummaryData.days || !dailySummaryData.days.length) {
         document.getElementById('trendsChart').innerHTML =
-          '<div class="dash-trends-empty">No data yet. Submit your first check-in above to see your performance.</div>';
+          '<div class="tp-trends__empty">No data yet. Submit your first check-in above to see your performance.</div>';
         return;
       }
 
@@ -292,7 +640,7 @@
       if (dailySummaryData.averageScore != null) {
         var avg = dailySummaryData.averageScore;
         var cls = avg >= 75 ? 'good' : avg >= 50 ? 'moderate' : 'low';
-        scoreEl.className = 'dash-trends-score dash-trends-score--' + cls;
+        scoreEl.className = 'tp-trends__score tp-trends__score--' + cls;
         scoreEl.innerHTML = '<strong>' + avg + '</strong> Avg';
       } else {
         scoreEl.textContent = '';
@@ -301,7 +649,7 @@
       renderDailyChart(dailySummaryData.days);
     } catch (err) {
       document.getElementById('trendsChart').innerHTML =
-        '<div class="dash-trends-empty">Unable to load performance data.</div>';
+        '<div class="tp-trends__empty">Unable to load performance data.</div>';
     }
   }
 
@@ -320,7 +668,6 @@
     chart.className = 'daily-chart';
 
     var todayStr = toLocalDateStr(today);
-    var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     days.forEach(function (day) {
       var group = document.createElement('div');
@@ -345,7 +692,7 @@
 
       var label = document.createElement('div');
       label.className = 'daily-chart__label';
-      label.textContent = dayNames[d.getDay()].charAt(0);
+      label.textContent = DAY_NAMES_SHORT[d.getDay()].charAt(0);
 
       var dateLabel = document.createElement('div');
       dateLabel.className = 'daily-chart__date';
@@ -355,14 +702,12 @@
       group.appendChild(label);
       group.appendChild(dateLabel);
 
-      // Click handler
       if (day.dayType !== 'future') {
         group.addEventListener('click', function () {
           if (selectedDate === day.date) {
             closeDailyDetail();
           } else {
             openDailyDetail(day);
-            // Update active state
             chart.querySelectorAll('.daily-chart__bar-group--active').forEach(function (el) {
               el.classList.remove('daily-chart__bar-group--active');
             });
@@ -379,7 +724,6 @@
 
     container.appendChild(chart);
 
-    // Detail panel placeholder
     var detail = document.createElement('div');
     detail.className = 'daily-detail';
     detail.id = 'dailyDetail';
@@ -395,7 +739,6 @@
 
     var html = '';
 
-    // Header
     var titleText = dateDisplay;
     if (day.workout) {
       titleText += ' — ' + escapeHtml(day.workout.title);
@@ -415,7 +758,6 @@
       '<button class="daily-detail__close" id="detailClose">&times;</button>' +
     '</div>';
 
-    // Status message for missed/skipped
     if (day.dayType === 'missed' || day.dayType === 'skipped') {
       var statusLabel = day.dayType === 'skipped' ? 'Skipped' : 'Missed';
       var statusMsg = '';
@@ -437,12 +779,10 @@
       '</div>';
     }
 
-    // Deload badge
     if (day.isDeloadWeek) {
       html += '<div class="daily-detail__deload-badge">Deload Week</div>';
     }
 
-    // Score breakdown (completed workouts)
     if (day.breakdown && day.dayType === 'workout' && day.workout && day.workout.status === 'COMPLETED') {
       html += '<div class="daily-detail__section">';
       html += '<div class="daily-detail__section-title">Score Breakdown</div>';
@@ -471,7 +811,6 @@
       html += '</div>';
     }
 
-    // Readiness section
     if (day.readiness) {
       html += '<div class="daily-detail__section">';
       html += '<div class="daily-detail__section-title">Check-in Data</div>';
@@ -484,7 +823,6 @@
       html += '</div>';
     }
 
-    // Wearable data
     if (day.hasWearableData && day.readiness) {
       html += '<div class="daily-detail__section">';
       html += '<div class="daily-detail__section-title">Device Data</div>';
@@ -504,7 +842,6 @@
       html += '</div>';
     }
 
-    // Athlete notes
     if (day.workout && day.workout.athleteNotes) {
       html += '<div class="daily-detail__section">';
       html += '<div class="daily-detail__section-title">Notes</div>';
@@ -512,7 +849,6 @@
       html += '</div>';
     }
 
-    // No data message
     if (day.dayType === 'no_data') {
       html += '<div class="daily-detail__empty">' +
         'No check-in or workout data for this day. Regular check-ins help personalize your plan.' +
@@ -522,7 +858,6 @@
     panel.innerHTML = html;
     panel.style.display = 'block';
 
-    // Close button handler
     document.getElementById('detailClose').addEventListener('click', function () {
       closeDailyDetail();
     });
@@ -600,18 +935,18 @@
       alert('Your ' + (TIER_DISPLAY[currentTier] || currentTier) + ' plan does not have a recurring subscription to manage. Contact support@vintusperformance.org for assistance.');
       return;
     }
-    manageSubBtn.textContent = 'Loading...';
+    manageSubBtn.querySelector('span').textContent = 'Loading...';
     try {
       var res = await apiPost('/api/v1/checkout/portal');
       if (res.success && res.data && res.data.url) {
         window.location.href = res.data.url;
       } else {
         alert('Unable to open subscription portal.');
-        manageSubBtn.textContent = 'Manage';
+        manageSubBtn.querySelector('span').textContent = 'Billing';
       }
     } catch (err) {
       alert(err.message || 'Unable to open portal.');
-      manageSubBtn.textContent = 'Manage';
+      manageSubBtn.querySelector('span').textContent = 'Billing';
     }
   });
 
@@ -619,17 +954,20 @@
   // Logout
   // ============================================================
 
-  var logoutBtn = document.getElementById('logoutBtn');
-  logoutBtn.addEventListener('click', async function () {
+  document.getElementById('logoutBtn').addEventListener('click', async function () {
     try {
       await apiPost('/api/v1/auth/logout');
     } catch (e) {
-      // Logout API may fail but we still clear local state
+      // Clear local state regardless
     }
     clearToken();
     localStorage.removeItem('vintus_role');
     window.location.href = 'login.html';
   });
+
+  // ============================================================
+  // Utility
+  // ============================================================
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -653,8 +991,6 @@
   var chatCloseBtn = document.getElementById('chatCloseBtn');
   var chatHistoryLoaded = false;
   var chatSending = false;
-
-  // ── Open / Close ──
 
   function openChat() {
     chatPanel.classList.add('open');
@@ -683,8 +1019,6 @@
       closeChat();
     }
   });
-
-  // ── Load History ──
 
   async function loadChatHistory() {
     try {
@@ -728,8 +1062,6 @@
     });
   }
 
-  // ── Send Message with Human-Like Delays ──
-
   chatInput.addEventListener('input', function() {
     chatSendBtn.disabled = !this.value.trim();
   });
@@ -747,15 +1079,12 @@
     chatInput.value = '';
     chatSendBtn.disabled = true;
 
-    // Clear welcome state if present
     var welcome = chatMessages.querySelector('.chat-welcome');
     if (welcome) welcome.remove();
 
-    // 1. Show user bubble immediately
     appendBubble('user', messageText, new Date().toISOString());
     scrollChatToBottom();
 
-    // 2. Read-before-type delay (200-400ms)
     var readDelay = 200 + Math.random() * 200;
     var typingShown = false;
 
@@ -765,7 +1094,6 @@
       typingShown = true;
     }, readDelay);
 
-    // 3. Send to API
     var sendStart = Date.now();
     try {
       var res = await apiPost('/api/v1/chat/send', { message: messageText });
@@ -775,17 +1103,14 @@
         var responseTime = res.data.assistantMessage.createdAt;
         var apiElapsed = Date.now() - sendStart;
 
-        // 4. Calculate human-like typing delay
         var baseDelay = 1500;
         var perCharDelay = 15;
         var charCount = responseText.length;
         var typingDuration = Math.min(4000, Math.max(1500, baseDelay + (charCount * perCharDelay)));
         typingDuration += (Math.random() - 0.5) * 600;
 
-        // Subtract API time already elapsed
         var remainingDelay = Math.max(400, typingDuration - apiElapsed);
 
-        // Ensure typing indicator is showing before we wait
         if (!typingShown) {
           clearTimeout(typingTimer);
           showChatTyping();
@@ -794,7 +1119,6 @@
 
         await chatSleep(remainingDelay);
 
-        // 5. Show response
         hideChatTyping();
         appendBubble('assistant', responseText, responseTime);
         scrollChatToBottom();
@@ -826,8 +1150,6 @@
   function chatSleep(ms) {
     return new Promise(function(resolve) { setTimeout(resolve, ms); });
   }
-
-  // ── DOM Helpers ──
 
   function appendBubble(role, content, timestamp) {
     var wrapper = document.createElement('div');

@@ -11,6 +11,7 @@ import adminRoutes from "./admin.routes.js";
 import deviceRoutes from "./device.routes.js";
 import leadsRoutes from "./leads.routes.js";
 import chatRoutes from "./chat.routes.js";
+import profileRoutes from "./profile.routes.js";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use("/admin", adminRoutes);
 router.use("/device", deviceRoutes);
 router.use("/leads", leadsRoutes);
 router.use("/chat", chatRoutes);
+router.use("/profile", profileRoutes);
 
 export default router;

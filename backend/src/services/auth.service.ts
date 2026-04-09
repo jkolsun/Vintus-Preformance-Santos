@@ -1,9 +1,11 @@
 import jwt, { type SignOptions, type Secret } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import type { Role } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
+import { sendPasswordResetEmail } from "../lib/gmail-notify.js";
 
 const SALT_ROUNDS = 12;
 
@@ -227,4 +229,86 @@ export async function changePassword(
   await prisma.session.deleteMany({ where: { userId } });
 
   logger.info({ userId }, "Password changed, all sessions invalidated");
+}
+
+const RESET_TOKEN_PREFIX = "reset_";
+const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+
+/** Request a password reset — generates token, stores in Session, sends email */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  // Always return success to avoid leaking whether an email exists
+  if (!user) {
+    logger.info({ email }, "Password reset requested for non-existent email");
+    return;
+  }
+
+  // Invalidate any existing reset tokens for this user
+  await prisma.session.deleteMany({
+    where: {
+      userId: user.id,
+      token: { startsWith: RESET_TOKEN_PREFIX },
+    },
+  });
+
+  // Generate a secure reset token
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const token = `${RESET_TOKEN_PREFIX}${rawToken}`;
+
+  // Store as a Session record with 1-hour expiry
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      token,
+      expiresAt: new Date(Date.now() + RESET_TOKEN_EXPIRY_MS),
+    },
+  });
+
+  // Build reset link and send email
+  const resetLink = `${env.FRONTEND_URL}/reset-password.html?token=${rawToken}`;
+  await sendPasswordResetEmail(user.email, resetLink);
+
+  logger.info({ userId: user.id, email }, "Password reset token created and email sent");
+}
+
+/** Reset password using a valid reset token */
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<void> {
+  const fullToken = `${RESET_TOKEN_PREFIX}${token}`;
+
+  const session = await prisma.session.findUnique({
+    where: { token: fullToken },
+  });
+
+  if (!session) {
+    const err = new Error("Invalid or expired reset token") as Error & { statusCode?: number };
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (session.expiresAt < new Date()) {
+    // Clean up expired token
+    await prisma.session.delete({ where: { id: session.id } });
+    const err = new Error("Reset token has expired") as Error & { statusCode?: number };
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Hash the new password and update user
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({
+    where: { id: session.userId },
+    data: { passwordHash },
+  });
+
+  // Delete the reset token
+  await prisma.session.delete({ where: { id: session.id } });
+
+  // Invalidate all existing login sessions (force re-login)
+  await prisma.session.deleteMany({ where: { userId: session.userId } });
+
+  logger.info({ userId: session.userId }, "Password reset successfully, all sessions invalidated");
 }

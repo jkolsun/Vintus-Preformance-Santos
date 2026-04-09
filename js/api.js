@@ -57,7 +57,9 @@ async function apiFetch(path, options) {
     var pagePath = window.location.pathname;
     var isPublicPage = pagePath.includes('results.html') ||
                        pagePath.includes('onboarding.html') ||
-                       pagePath.includes('login.html');
+                       pagePath.includes('login.html') ||
+                       pagePath.includes('forgot-password.html') ||
+                       pagePath.includes('reset-password.html');
     if (!isPublicPage) {
       clearToken();
       localStorage.removeItem('vintus_role');

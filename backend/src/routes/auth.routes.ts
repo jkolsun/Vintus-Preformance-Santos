@@ -6,6 +6,8 @@ import {
   registerSchema,
   loginSchema,
   changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "./schemas/auth.schemas.js";
 import * as authService from "../services/auth.service.js";
 import { prisma } from "../lib/prisma.js";
@@ -156,6 +158,45 @@ router.put(
       res.status(200).json({
         success: true,
         data: { message: "Password changed. Please log in again." },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /auth/forgot-password — public
+router.post(
+  "/forgot-password",
+  validate(forgotPasswordSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+      await authService.requestPasswordReset(email);
+
+      // Always return success to avoid leaking email existence
+      res.status(200).json({
+        success: true,
+        data: { message: "If that email exists, a reset link has been sent." },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /auth/reset-password — public
+router.post(
+  "/reset-password",
+  validate(resetPasswordSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token, newPassword } = req.body;
+      await authService.resetPassword(token, newPassword);
+
+      res.status(200).json({
+        success: true,
+        data: { message: "Password has been reset. Please log in with your new password." },
       });
     } catch (err) {
       next(err);

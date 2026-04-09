@@ -11,9 +11,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css?v=2">
-    <link rel="stylesheet" href="css/dashboard.css?v=3">
+    <link rel="stylesheet" href="css/dashboard.css?v=4">
 </head>
-<body class="dashboard-page" style="background: #000 !important;">
+<body class="dashboard-page" style="background: #0a0a0a !important;">
     <!-- Navigation -->
     <nav>
         <a href="index.html" class="logo"><img src="images/VintusBlankLogo.jpeg" alt="Vintus Performance" class="logo-img"></a>
@@ -41,127 +41,163 @@
         </div>
     </div>
 
-    <!-- Dashboard Content -->
-    <section class="dash-section">
-        <!-- Greeting -->
-        <div class="dash-greeting">
-            <h1 id="dashGreeting">Welcome back</h1>
-            <div class="dash-date" id="dashDate"></div>
-            <div class="dash-streak" id="dashStreak" style="display:none;"></div>
-        </div>
+    <!-- ============================================================
+         DASHBOARD CONTENT
+         ============================================================ -->
+    <section class="tp-dashboard">
 
-        <!-- Plan Progress -->
-        <div id="planProgress" class="dash-plan-progress" style="display:none;"></div>
-
-        <!-- Today's Workout — Hero Card -->
-        <div class="dash-hero-card">
-            <div class="dash-hero-label">Today's Workout</div>
-            <div id="todayWorkout"><div class="dash-loading-shimmer" style="height:80px;"></div></div>
-        </div>
-
-        <div class="dash-grid">
-            <!-- Compact Week Preview -->
-            <div class="dash-card dash-card-full">
-                <div class="dash-week-header">
-                    <h3>This Week</h3>
-                    <a href="calendar.html" class="dash-week-link">Full Calendar <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
-                </div>
-                <div class="dash-week-strip" id="weekStrip">
-                    <div class="dash-loading-shimmer" style="height:60px;"></div>
-                </div>
-                <div class="dash-week-adherence" id="weekAdherence"></div>
+        <!-- 1. Header Bar -->
+        <div class="tp-header">
+            <div class="tp-header__left">
+                <span class="tp-header__name" id="athleteName">--</span>
+                <span class="tp-header__day-badge" id="dayBadge" style="display:none;"></span>
+                <span class="tp-header__tier-badge" id="tierBadge" style="display:none;"></span>
             </div>
-
-            <!-- Daily Check-in -->
-            <div class="dash-card dash-card-full">
-                <h3>Daily Check-in</h3>
-                <div class="dash-checkin-grid">
-                    <div class="dash-metric-group">
-                        <div class="dash-metric-header">
-                            <svg class="dash-metric-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#4ade80" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                            <span class="dash-metric-label">Energy</span>
-                            <span class="dash-metric-value" id="ciEnergyVal">5</span>
-                        </div>
-                        <div class="dash-metric-scale"><span>Low</span><span>High</span></div>
-                        <input type="range" class="dash-slider dash-slider--energy" id="ciEnergy" min="1" max="10" value="5">
-                    </div>
-                    <div class="dash-metric-group">
-                        <div class="dash-metric-header">
-                            <svg class="dash-metric-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
-                            <span class="dash-metric-label">Soreness</span>
-                            <span class="dash-metric-value" id="ciSorenessVal">5</span>
-                        </div>
-                        <div class="dash-metric-scale"><span>None</span><span>Severe</span></div>
-                        <input type="range" class="dash-slider dash-slider--soreness" id="ciSoreness" min="1" max="10" value="5">
-                    </div>
-                    <div class="dash-metric-group">
-                        <div class="dash-metric-header">
-                            <svg class="dash-metric-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#60a5fa" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-                            <span class="dash-metric-label">Mood</span>
-                            <span class="dash-metric-value" id="ciMoodVal">5</span>
-                        </div>
-                        <div class="dash-metric-scale"><span>Low</span><span>High</span></div>
-                        <input type="range" class="dash-slider dash-slider--mood" id="ciMood" min="1" max="10" value="5">
-                    </div>
-                    <div class="dash-metric-group">
-                        <div class="dash-metric-header">
-                            <svg class="dash-metric-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                            <span class="dash-metric-label">Sleep</span>
-                            <span class="dash-metric-value" id="ciSleepVal">5</span>
-                        </div>
-                        <div class="dash-metric-scale"><span>Poor</span><span>Great</span></div>
-                        <input type="range" class="dash-slider dash-slider--sleep" id="ciSleep" min="1" max="10" value="5">
-                    </div>
-                </div>
-                <button class="dash-checkin-btn" id="checkinBtn">Submit Check-in</button>
-                <div class="dash-checkin-success" id="checkinSuccess">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    Check-in submitted!
-                </div>
-            </div>
-
-            <!-- Readiness Trends -->
-            <div class="dash-card dash-card-full">
-                <div class="dash-trends-header">
-                    <h3>Readiness Trends</h3>
-                    <div class="dash-trends-score" id="trendsScore"></div>
-                </div>
-                <div class="dash-trends-chart" id="trendsChart">
-                    <div class="dash-loading-shimmer" style="height:140px;"></div>
-                </div>
-            </div>
-
-            <!-- Account & Coach — unified bottom bar -->
-            <div class="dash-card dash-card-full dash-bottom-bar">
-                <div class="dash-bottom-left">
-                    <div class="dash-bottom-item">
-                        <span class="dash-bottom-label">Plan</span>
-                        <span class="dash-bottom-value" id="accountTier">&mdash;</span>
-                    </div>
-                    <div class="dash-bottom-divider"></div>
-                    <div class="dash-bottom-item">
-                        <span class="dash-bottom-label">Devices</span>
-                        <a href="onboarding.html" class="dash-bottom-link">Setup</a>
-                    </div>
-                    <div class="dash-bottom-divider"></div>
-                    <div class="dash-bottom-item">
-                        <span class="dash-bottom-label">Session</span>
-                        <button class="dash-bottom-link" id="logoutBtn">Sign Out</button>
-                    </div>
-                    <div class="dash-bottom-divider dash-bottom-divider--muted"></div>
-                    <div class="dash-bottom-item dash-bottom-item--muted">
-                        <span class="dash-bottom-label">Billing</span>
-                        <button class="dash-bottom-link" id="manageSubBtn">Manage</button>
-                    </div>
-                </div>
-                <div class="dash-bottom-right">
-                    <button class="dash-chat-open-btn" id="chatOpenBtn">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        Message Coach Jerry
-                    </button>
-                </div>
+            <div class="tp-header__right">
+                <a href="settings.html" class="tp-header__settings" title="Settings">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </a>
             </div>
         </div>
+
+        <!-- 2. Plan Progress Strip -->
+        <div class="tp-progress" id="planProgress" style="display:none;">
+            <div class="tp-progress__bar-wrap">
+                <div class="tp-progress__fill" id="progressFill"></div>
+            </div>
+            <div class="tp-progress__text" id="progressText"></div>
+        </div>
+
+        <!-- 3. Weekly Calendar -->
+        <div class="tp-week" id="weekSection">
+            <div class="tp-week__nav">
+                <button class="tp-week__nav-btn" id="weekPrev" title="Previous week">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="tp-week__label" id="weekLabel">This Week</span>
+                <button class="tp-week__nav-btn" id="weekNext" title="Next week">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+            <div class="tp-week__grid" id="weekGrid">
+                <div class="dash-loading-shimmer" style="height:100px;border-radius:8px;"></div>
+            </div>
+        </div>
+
+        <!-- 4. Today's Workout Detail (expanded by default) -->
+        <div class="tp-workout" id="todayWorkout">
+            <div class="dash-loading-shimmer" style="height:120px;border-radius:10px;"></div>
+        </div>
+
+        <!-- 5. Performance Metrics Row -->
+        <div class="tp-metrics" id="metricsRow" style="display:none;">
+            <div class="tp-metric-card">
+                <div class="tp-metric-card__value" id="metricStreak">--</div>
+                <div class="tp-metric-card__label">Streak</div>
+                <div class="tp-metric-card__sub">days</div>
+            </div>
+            <div class="tp-metric-card">
+                <div class="tp-metric-card__ring" id="metricAdherenceRing">
+                    <svg viewBox="0 0 48 48">
+                        <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+                        <circle cx="24" cy="24" r="20" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="125.66" transform="rotate(-90 24 24)" id="adherenceArc"/>
+                    </svg>
+                    <span class="tp-metric-card__ring-value" id="metricAdherence">--%</span>
+                </div>
+                <div class="tp-metric-card__label">Adherence</div>
+                <div class="tp-metric-card__sub">this week</div>
+            </div>
+            <div class="tp-metric-card">
+                <div class="tp-metric-card__value" id="metricTSS">--</div>
+                <div class="tp-metric-card__label">TSS</div>
+                <div class="tp-metric-card__sub" id="metricTSSSub">weekly load</div>
+            </div>
+            <div class="tp-metric-card">
+                <div class="tp-metric-card__value" id="metricReadiness">--</div>
+                <div class="tp-metric-card__label">Readiness</div>
+                <div class="tp-metric-card__sub">latest</div>
+            </div>
+        </div>
+
+        <!-- 6. Daily Check-in -->
+        <div class="tp-checkin" id="checkinSection">
+            <div class="tp-checkin__header">
+                <h3 class="tp-section-title">Daily Check-in</h3>
+                <div class="tp-checkin__success" id="checkinSuccess">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Submitted
+                </div>
+            </div>
+            <div class="tp-checkin__sliders">
+                <div class="tp-slider-group">
+                    <div class="tp-slider-group__top">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        <span class="tp-slider-group__name">Energy</span>
+                        <span class="tp-slider-group__val" id="ciEnergyVal">5</span>
+                    </div>
+                    <input type="range" class="tp-slider tp-slider--energy" id="ciEnergy" min="1" max="10" value="5">
+                    <div class="tp-slider-group__range"><span>Low</span><span>High</span></div>
+                </div>
+                <div class="tp-slider-group">
+                    <div class="tp-slider-group__top">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+                        <span class="tp-slider-group__name">Soreness</span>
+                        <span class="tp-slider-group__val" id="ciSorenessVal">5</span>
+                    </div>
+                    <input type="range" class="tp-slider tp-slider--soreness" id="ciSoreness" min="1" max="10" value="5">
+                    <div class="tp-slider-group__range"><span>None</span><span>Severe</span></div>
+                </div>
+                <div class="tp-slider-group">
+                    <div class="tp-slider-group__top">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#60a5fa" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <span class="tp-slider-group__name">Mood</span>
+                        <span class="tp-slider-group__val" id="ciMoodVal">5</span>
+                    </div>
+                    <input type="range" class="tp-slider tp-slider--mood" id="ciMood" min="1" max="10" value="5">
+                    <div class="tp-slider-group__range"><span>Low</span><span>High</span></div>
+                </div>
+                <div class="tp-slider-group">
+                    <div class="tp-slider-group__top">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <span class="tp-slider-group__name">Sleep</span>
+                        <span class="tp-slider-group__val" id="ciSleepVal">5</span>
+                    </div>
+                    <input type="range" class="tp-slider tp-slider--sleep" id="ciSleep" min="1" max="10" value="5">
+                    <div class="tp-slider-group__range"><span>Poor</span><span>Great</span></div>
+                </div>
+            </div>
+            <div class="tp-checkin__footer">
+                <button class="tp-checkin__btn" id="checkinBtn">Submit Check-in</button>
+            </div>
+        </div>
+
+        <!-- 7. 14-Day Trend Chart -->
+        <div class="tp-trends">
+            <div class="tp-trends__header">
+                <h3 class="tp-section-title">14-Day Performance</h3>
+                <div class="tp-trends__score" id="trendsScore"></div>
+            </div>
+            <div class="tp-trends__chart" id="trendsChart">
+                <div class="dash-loading-shimmer" style="height:140px;border-radius:8px;"></div>
+            </div>
+        </div>
+
+        <!-- 8. Quick Actions Bar (mobile: sticky bottom, desktop: inline) -->
+        <div class="tp-actions" id="actionsBar">
+            <button class="tp-actions__btn tp-actions__btn--primary" id="chatOpenBtn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Message Coach</span>
+            </button>
+            <button class="tp-actions__btn" id="logoutBtn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sign Out</span>
+            </button>
+            <button class="tp-actions__btn" id="manageSubBtn" style="display:none;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                <span>Billing</span>
+            </button>
+        </div>
+
     </section>
 
     <!-- Chat Slide-Out Panel -->
@@ -195,6 +231,24 @@
         <div class="chat-footer-note">Jerry is an AI coach. For medical concerns, consult a professional.</div>
     </div>
 
+    <!-- Skip Workout Modal -->
+    <div class="tp-modal-overlay" id="skipModalOverlay" style="display:none;">
+        <div class="tp-modal">
+            <div class="tp-modal__header">
+                <h3>Skip Workout</h3>
+                <button class="tp-modal__close" id="skipModalClose">&times;</button>
+            </div>
+            <div class="tp-modal__body">
+                <p>Why are you skipping today's session?</p>
+                <textarea class="tp-modal__textarea" id="skipReason" rows="3" placeholder="e.g., Feeling under the weather, time conflict..."></textarea>
+            </div>
+            <div class="tp-modal__footer">
+                <button class="tp-modal__btn tp-modal__btn--cancel" id="skipModalCancel">Cancel</button>
+                <button class="tp-modal__btn tp-modal__btn--confirm" id="skipModalConfirm">Skip Session</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -222,6 +276,6 @@
     <script src="js/config.js?v=2"></script>
     <script src="js/api.js?v=2"></script>
     <script src="js/nav-auth.js?v=2"></script>
-    <script src="js/dashboard.js?v=3"></script>
+    <script src="js/dashboard.js?v=4"></script>
 </body>
 </html>
