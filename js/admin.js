@@ -648,6 +648,35 @@
 
       // Actions: trigger review, pause/activate, remove
       var isPaused = sub && sub.status === 'PAUSED';
+      // Plan management
+      html += '<div class="admin-detail-section">' +
+        '<div class="admin-detail-section-title">Plan Management</div>' +
+        '<div class="admin-form-row" style="gap:0.5rem;margin-bottom:0.5rem;">' +
+          '<div class="onboard-field" style="margin:0;flex:1;">' +
+            '<label for="changeTierSelect" style="font-size:0.7rem;">Change Plan Tier</label>' +
+            '<select class="admin-select" id="changeTierSelect" style="padding:0.5rem;">' +
+              '<option value="PRIVATE_COACHING"' + (sub && sub.planTier === 'PRIVATE_COACHING' ? ' selected' : '') + '>Private Coaching</option>' +
+              '<option value="TRAINING_30DAY"' + (sub && sub.planTier === 'TRAINING_30DAY' ? ' selected' : '') + '>Training 30-Day</option>' +
+              '<option value="TRAINING_60DAY"' + (sub && sub.planTier === 'TRAINING_60DAY' ? ' selected' : '') + '>Training 60-Day</option>' +
+              '<option value="TRAINING_90DAY"' + (sub && sub.planTier === 'TRAINING_90DAY' ? ' selected' : '') + '>Training 90-Day</option>' +
+              '<option value="NUTRITION_4WEEK"' + (sub && sub.planTier === 'NUTRITION_4WEEK' ? ' selected' : '') + '>Nutrition 4-Week</option>' +
+              '<option value="NUTRITION_8WEEK"' + (sub && sub.planTier === 'NUTRITION_8WEEK' ? ' selected' : '') + '>Nutrition 8-Week</option>' +
+            '</select>' +
+          '</div>' +
+          '<button class="admin-btn-secondary admin-btn-small" id="changeTierBtn" style="align-self:flex-end;">Update Tier</button>' +
+        '</div>' +
+        '<div class="admin-form-row" style="gap:0.5rem;margin-bottom:0.5rem;">' +
+          '<div class="onboard-field" style="margin:0;flex:1;">' +
+            '<label for="extendDaysInput" style="font-size:0.7rem;">Extend Subscription (days)</label>' +
+            '<input type="number" class="admin-input" id="extendDaysInput" min="1" max="365" value="30" style="padding:0.5rem;">' +
+          '</div>' +
+          '<button class="admin-btn-secondary admin-btn-small" id="extendSubBtn" style="align-self:flex-end;">Extend</button>' +
+        '</div>' +
+        '<button class="admin-btn-secondary admin-btn-small" id="regenPlanBtn" style="margin-top:0.25rem;">Regenerate AI Plan</button>' +
+        '<div id="planMgmtAlert" style="margin-top:0.5rem;"></div>' +
+        '</div>';
+
+      // Actions
       html += '<div class="admin-detail-section">' +
         '<div class="admin-detail-section-title">Actions</div>' +
         '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">' +
@@ -717,6 +746,58 @@
           rejectBtn.disabled = false;
           rejectBtn.textContent = 'Reject';
         }
+      });
+    }
+
+    // Change tier
+    var changeTierBtn = document.getElementById('changeTierBtn');
+    if (changeTierBtn) {
+      changeTierBtn.addEventListener('click', async function () {
+        var tier = document.getElementById('changeTierSelect').value;
+        if (!confirm('Change this client\'s plan to ' + tier + '?')) return;
+        changeTierBtn.disabled = true;
+        try {
+          await apiPut('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/tier', { tier: tier });
+          document.getElementById('planMgmtAlert').innerHTML = '<div class="admin-alert admin-alert--success">Plan tier updated</div>';
+          loadClientDetail(userId);
+        } catch (err) {
+          document.getElementById('planMgmtAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+        } finally { changeTierBtn.disabled = false; }
+      });
+    }
+
+    // Extend subscription
+    var extendSubBtn = document.getElementById('extendSubBtn');
+    if (extendSubBtn) {
+      extendSubBtn.addEventListener('click', async function () {
+        var days = parseInt(document.getElementById('extendDaysInput').value, 10);
+        if (!days || days < 1) { alert('Enter a valid number of days'); return; }
+        if (!confirm('Extend subscription by ' + days + ' days?')) return;
+        extendSubBtn.disabled = true;
+        try {
+          await apiPut('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/extend', { days: days });
+          document.getElementById('planMgmtAlert').innerHTML = '<div class="admin-alert admin-alert--success">Subscription extended by ' + days + ' days</div>';
+          loadClientDetail(userId);
+        } catch (err) {
+          document.getElementById('planMgmtAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+        } finally { extendSubBtn.disabled = false; }
+      });
+    }
+
+    // Regenerate plan
+    var regenPlanBtn = document.getElementById('regenPlanBtn');
+    if (regenPlanBtn) {
+      regenPlanBtn.addEventListener('click', async function () {
+        if (!confirm('Regenerate this client\'s workout plan using AI? This replaces their current plan.')) return;
+        regenPlanBtn.disabled = true;
+        regenPlanBtn.textContent = 'Generating...';
+        try {
+          var res = await apiPost('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/regenerate-plan');
+          document.getElementById('planMgmtAlert').innerHTML = '<div class="admin-alert admin-alert--success">Plan regenerated (' + (res.data ? res.data.sessionCount : '?') + ' sessions)</div>';
+          loadClientDetail(userId);
+        } catch (err) {
+          document.getElementById('planMgmtAlert').innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
+        } finally { regenPlanBtn.disabled = false; regenPlanBtn.textContent = 'Regenerate AI Plan'; }
       });
     }
 

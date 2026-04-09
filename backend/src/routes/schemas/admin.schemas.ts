@@ -54,6 +54,18 @@ export const clientStatusSchema = z.object({
   action: z.enum(["pause", "activate", "approve", "reject"]),
 });
 
+export const changeTierSchema = z.object({
+  tier: z.enum(["PRIVATE_COACHING", "TRAINING_30DAY", "TRAINING_60DAY", "TRAINING_90DAY", "NUTRITION_4WEEK", "NUTRITION_8WEEK"]),
+});
+
+export const extendSubscriptionSchema = z.object({
+  days: z.number().int().min(1).max(365),
+});
+
+export const resolveEscalationSchema = z.object({
+  resolution: z.enum(["resumed", "paused_subscription", "churned", "call_completed", "other"]),
+});
+
 export type ClientStatus = z.infer<typeof clientStatusSchema>;
 export type ClientNotes = z.infer<typeof clientNotesSchema>;
 export type CustomMessage = z.infer<typeof customMessageSchema>;

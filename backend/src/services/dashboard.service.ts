@@ -103,8 +103,8 @@ export async function getOverview(userId: string): Promise<unknown> {
       let dayNumber: number | null = null;
       let totalDays: number | null = null;
       if (sub?.currentPeriodStart && sub?.currentPeriodEnd) {
-        dayNumber = Math.max(1, Math.ceil((today.getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000)) + 1);
         totalDays = Math.ceil((new Date(sub.currentPeriodEnd).getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000));
+        dayNumber = Math.min(totalDays, Math.max(1, Math.ceil((today.getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000)) + 1));
       }
       return {
         firstName: profile.firstName,

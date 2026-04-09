@@ -344,14 +344,21 @@ export async function generateInitialPlan(
   try {
     const aiResult = await generatePlanWithClaude(profile, subscription);
     planName = aiResult.planName;
+    const VALID_SESSION_TYPES = new Set([
+      "STRENGTH_UPPER", "STRENGTH_LOWER", "STRENGTH_FULL", "STRENGTH_PUSH", "STRENGTH_PULL",
+      "ENDURANCE_ZONE2", "ENDURANCE_TEMPO", "ENDURANCE_INTERVALS",
+      "HIIT", "MOBILITY_RECOVERY", "ACTIVE_RECOVERY", "REST", "CUSTOM",
+    ]);
+
     sessionData = aiResult.sessions.map((s, index) => {
       const sessionDate = new Date(startDate);
       sessionDate.setDate(sessionDate.getDate() + s.dayOffset);
-      const estimatedTSS = Math.round(s.prescribedDuration * 1.2); // rough TSS estimate
+      const estimatedTSS = Math.round(s.prescribedDuration * 1.2);
+      const validatedType = VALID_SESSION_TYPES.has(s.sessionType) ? s.sessionType : "CUSTOM";
       return {
         scheduledDate: sessionDate,
         scheduledOrder: index + 1,
-        sessionType: s.sessionType as SessionType,
+        sessionType: validatedType as SessionType,
         title: s.title,
         description: s.description,
         prescribedDuration: s.prescribedDuration,

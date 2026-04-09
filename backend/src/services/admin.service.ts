@@ -414,8 +414,21 @@ export async function setClientStatus(
       throw err;
     }
     newStatus = "CANCELED";
+  } else if (action === "pause") {
+    if (subscription.status !== "ACTIVE") {
+      const err = new Error("Can only pause an active subscription") as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    }
+    newStatus = "PAUSED";
   } else {
-    newStatus = action === "pause" ? "PAUSED" : "ACTIVE";
+    // activate — only from PAUSED
+    if (subscription.status !== "PAUSED") {
+      const err = new Error("Can only reactivate a paused subscription") as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    }
+    newStatus = "ACTIVE";
   }
 
   if (subscription.status === newStatus) {
@@ -522,6 +535,15 @@ export async function fireTrigger(messageLogId: string): Promise<{ success: bool
   try {
     if (log.channel === "SMS" && phone) {
       const sid = await sendSMS(phone, log.content);
+      if (!sid) {
+        await prisma.messageLog.update({
+          where: { id: messageLogId },
+          data: { failedAt: new Date(), failureReason: "SMS delivery returned null SID" },
+        });
+        const smsErr = new Error("SMS delivery failed") as Error & { statusCode?: number };
+        smsErr.statusCode = 502;
+        throw smsErr;
+      }
       await prisma.messageLog.update({
         where: { id: messageLogId },
         data: { failureReason: null, externalId: sid, sentAt: new Date() },
@@ -749,6 +771,118 @@ export async function getMessageFeed(options: {
     page,
     totalPages: Math.ceil(total / limit),
   };
+}
+
+/**
+ * Change a client's plan tier (e.g., upgrade from 30-day to 90-day).
+ */
+export async function changePlanTier(
+  userId: string,
+  newTier: string
+): Promise<{ success: boolean; planTier: string }> {
+  if (!Object.values(PlanTier).includes(newTier as PlanTier)) {
+    const err = new Error("Invalid plan tier: " + newTier) as Error & { statusCode?: number };
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const subscription = await prisma.subscription.findUnique({ where: { userId } });
+  if (!subscription) {
+    const err = new Error("No subscription found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  await prisma.subscription.update({
+    where: { userId },
+    data: { planTier: newTier as PlanTier },
+  });
+
+  logger.info({ userId, oldTier: subscription.planTier, newTier }, "Admin changed client plan tier");
+  return { success: true, planTier: newTier };
+}
+
+/**
+ * Extend a client's subscription end date.
+ */
+export async function extendSubscription(
+  userId: string,
+  additionalDays: number
+): Promise<{ success: boolean; newEndDate: Date }> {
+  if (additionalDays < 1 || additionalDays > 365) {
+    const err = new Error("Days must be between 1 and 365") as Error & { statusCode?: number };
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const subscription = await prisma.subscription.findUnique({ where: { userId } });
+  if (!subscription) {
+    const err = new Error("No subscription found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const currentEnd = new Date(subscription.currentPeriodEnd);
+  const newEnd = new Date(currentEnd.getTime() + additionalDays * 24 * 60 * 60 * 1000);
+
+  await prisma.subscription.update({
+    where: { userId },
+    data: {
+      currentPeriodEnd: newEnd,
+      // Clear renewal/deactivation if subscription was extended
+      renewalPromptedAt: null,
+      renewalResponseAt: null,
+      scheduledDeleteAt: null,
+    },
+  });
+
+  logger.info({ userId, additionalDays, newEnd }, "Admin extended subscription");
+  return { success: true, newEndDate: newEnd };
+}
+
+/**
+ * Resolve an escalation event.
+ */
+export async function resolveEscalation(
+  escalationId: string,
+  resolution: string
+): Promise<{ success: boolean }> {
+  const escalation = await prisma.escalationEvent.findUnique({ where: { id: escalationId } });
+  if (!escalation) {
+    const err = new Error("Escalation not found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (escalation.resolvedAt) {
+    return { success: true }; // already resolved
+  }
+
+  await prisma.escalationEvent.update({
+    where: { id: escalationId },
+    data: { resolvedAt: new Date(), resolution },
+  });
+
+  logger.info({ escalationId, resolution }, "Escalation resolved");
+  return { success: true };
+}
+
+/**
+ * Trigger plan regeneration for a client (using AI).
+ */
+export async function regeneratePlan(userId: string): Promise<{ planId: string; sessionCount: number }> {
+  const profile = await prisma.athleteProfile.findUnique({ where: { userId } });
+  if (!profile) {
+    const err = new Error("Athlete profile not found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const { generateInitialPlan } = await import("./workout.service.js");
+  const result = await generateInitialPlan(profile.id);
+
+  logger.info({ userId, planId: result.planId }, "Admin triggered plan regeneration");
+  return result;
 }
 
 /**

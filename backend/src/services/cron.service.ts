@@ -18,6 +18,10 @@ import * as readinessService from "./readiness.service.js";
 
 const AUTO_MESSAGING_ENABLED = process.env.AUTO_MESSAGING_ENABLED === "true";
 
+// Exclude pending triggers from dedup queries — pending triggers have sentAt set
+// by Prisma's @default(now()) but haven't actually been sent yet
+const NOT_PENDING_TRIGGER = { NOT: { failureReason: { startsWith: "PENDING_TRIGGER:" } } } as const;
+
 /**
  * Queue a message as a pending trigger instead of sending immediately.
  * Admin can review and fire these from the admin dashboard.
@@ -343,7 +347,7 @@ export async function dailyReviewForClient(
   // Send WORKOUT_MISSED message if sessions were missed (dedup: once per day)
   if (missedSessions.length > 0) {
     const existingMissedMsg = await prisma.messageLog.findFirst({
-      where: { userId, category: "WORKOUT_MISSED", sentAt: { gte: today } },
+      where: { userId, category: "WORKOUT_MISSED", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
     });
     if (!existingMissedMsg) {
       try {
@@ -359,7 +363,7 @@ export async function dailyReviewForClient(
   // Send WORKOUT_COMPLETED message if sessions were completed yesterday (dedup)
   if (completedSessions.length > 0) {
     const existingCompletedMsg = await prisma.messageLog.findFirst({
-      where: { userId, category: "WORKOUT_COMPLETED", sentAt: { gte: yesterday } },
+      where: { userId, category: "WORKOUT_COMPLETED", sentAt: { gte: yesterday }, ...NOT_PENDING_TRIGGER },
     });
     if (!existingCompletedMsg) {
       try {
@@ -431,7 +435,7 @@ export async function dailyReviewForClient(
     // Send RECOVERY_TIP if any recovery flag is active (dedup)
     if (highFatigue || lowSleep || lowHrv) {
       const existingRecoveryMsg = await prisma.messageLog.findFirst({
-        where: { userId, category: "RECOVERY_TIP", sentAt: { gte: today } },
+        where: { userId, category: "RECOVERY_TIP", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
       });
       if (!existingRecoveryMsg) {
         try {
@@ -446,7 +450,7 @@ export async function dailyReviewForClient(
     // Catch-up: if check-in exists today but no CHECKIN_RESPONSE was sent
     // (e.g., server restarted during the 3-minute setTimeout window)
     const existingCheckinResponse = await prisma.messageLog.findFirst({
-      where: { userId, category: "CHECKIN_RESPONSE" as MessageCategory, sentAt: { gte: today } },
+      where: { userId, category: "CHECKIN_RESPONSE" as MessageCategory, sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
     });
     if (!existingCheckinResponse) {
       try {
@@ -484,7 +488,7 @@ export async function dailyReviewForClient(
   } else if (!todayReadiness && isMorningReview) {
     // No check-in yet and it's the morning review → prompt check-in (dedup)
     const existingCheckInMsg = await prisma.messageLog.findFirst({
-      where: { userId, category: "CHECK_IN", sentAt: { gte: today } },
+      where: { userId, category: "CHECK_IN", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
     });
     if (!existingCheckInMsg) {
       try {
@@ -562,7 +566,7 @@ export async function dailyReviewForClient(
   } else if (consecutiveMissed === 2) {
     // 2 consecutive missed → send concern-level WORKOUT_MISSED (dedup)
     const existingConcernMsg = await prisma.messageLog.findFirst({
-      where: { userId, category: "WORKOUT_MISSED", sentAt: { gte: today } },
+      where: { userId, category: "WORKOUT_MISSED", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
     });
     if (!existingConcernMsg) {
       try {
@@ -604,7 +608,7 @@ export async function dailyReviewForClient(
 
         // Send plan-ready message (dedup)
         const existingPlanMsg = await prisma.messageLog.findFirst({
-          where: { userId, category: "SYSTEM", sentAt: { gte: today } },
+          where: { userId, category: "SYSTEM", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
         });
         if (!existingPlanMsg) {
           await triggerOrQueue(userId, "SYSTEM", "SMS", {
@@ -630,7 +634,7 @@ export async function dailyReviewForClient(
 
       if (todayMessageCount <= 1) {
         const existingMotivation = await prisma.messageLog.findFirst({
-          where: { userId, category: "MOTIVATION", sentAt: { gte: today } },
+          where: { userId, category: "MOTIVATION", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
         });
         if (!existingMotivation) {
           try {
@@ -655,7 +659,7 @@ export async function dailyReviewForClient(
 
     // Check if we already sent a daily alert today
     const existingDailyAlert = await prisma.messageLog.findFirst({
-      where: { userId, category: "DAILY_WORKOUT_ALERT", sentAt: { gte: today } },
+      where: { userId, category: "DAILY_WORKOUT_ALERT", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
     });
 
     if (!existingDailyAlert && dayNumber <= totalDays) {
@@ -725,7 +729,7 @@ export async function dailyReviewForClient(
 
     if (todaySessions.length > 0) {
       const existingNotLogged = await prisma.messageLog.findFirst({
-        where: { userId, category: "WORKOUT_NOT_LOGGED", sentAt: { gte: today } },
+        where: { userId, category: "WORKOUT_NOT_LOGGED", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
       });
 
       if (!existingNotLogged) {
@@ -757,7 +761,7 @@ export async function dailyReviewForClient(
         NUTRITION_8WEEK: "8-Week Nutrition",
       };
       const existingEnding = await prisma.messageLog.findFirst({
-        where: { userId, category: "PLAN_ENDING", sentAt: { gte: today } },
+        where: { userId, category: "PLAN_ENDING", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
       });
       if (!existingEnding) {
         try {
@@ -788,7 +792,7 @@ export async function dailyReviewForClient(
         NUTRITION_8WEEK: "8-Week Nutrition",
       };
       const existingCompleted = await prisma.messageLog.findFirst({
-        where: { userId, category: "PLAN_COMPLETED", sentAt: { gte: today } },
+        where: { userId, category: "PLAN_COMPLETED", sentAt: { gte: today }, ...NOT_PENDING_TRIGGER },
       });
       if (!existingCompleted) {
         try {

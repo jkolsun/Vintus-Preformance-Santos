@@ -133,6 +133,19 @@ async function handleCheckoutCompleted(
     return;
   }
 
+  // Guard: prevent overwriting an active or pending subscription with a different tier
+  const existingSub = await prisma.subscription.findUnique({ where: { userId } });
+  if (existingSub) {
+    const activeStatuses = ["ACTIVE", "PENDING_APPROVAL", "TRIALING"];
+    if (activeStatuses.includes(existingSub.status) && existingSub.planTier !== tier) {
+      logger.warn(
+        { userId, existingTier: existingSub.planTier, newTier: tier, existingStatus: existingSub.status },
+        "Checkout completed but user already has an active subscription — skipping overwrite"
+      );
+      return;
+    }
+  }
+
   const stripeCustomerId =
     typeof session.customer === "string"
       ? session.customer

@@ -9,6 +9,9 @@ import {
   customMessageSchema,
   workoutOverrideSchema,
   profileEditSchema,
+  changeTierSchema,
+  extendSubscriptionSchema,
+  resolveEscalationSchema,
 } from "./schemas/admin.schemas.js";
 import { dailyReviewForClient } from "../services/cron.service.js";
 import * as adminService from "../services/admin.service.js";
@@ -228,6 +231,61 @@ router.put(
         success: true,
         data: result,
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PUT /admin/clients/:userId/tier — change plan tier
+router.put(
+  "/clients/:userId/tier",
+  validate(changeTierSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await adminService.changePlanTier(req.params.userId as string, req.body.tier);
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PUT /admin/clients/:userId/extend — extend subscription
+router.put(
+  "/clients/:userId/extend",
+  validate(extendSubscriptionSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await adminService.extendSubscription(req.params.userId as string, req.body.days);
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /admin/clients/:userId/regenerate-plan — trigger AI plan regeneration
+router.post(
+  "/clients/:userId/regenerate-plan",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await adminService.regeneratePlan(req.params.userId as string);
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /admin/escalations/:id/resolve — resolve an escalation
+router.post(
+  "/escalations/:id/resolve",
+  validate(resolveEscalationSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await adminService.resolveEscalation(req.params.id as string, req.body.resolution);
+      res.status(200).json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
