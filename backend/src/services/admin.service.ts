@@ -592,7 +592,7 @@ export async function getMessageFeed(options: {
   };
 
   if (category) {
-    where.category = category as Prisma.EnumMessageCategoryFilter;
+    where.category = category as MessageCategory;
   }
 
   if (status === "failed") {

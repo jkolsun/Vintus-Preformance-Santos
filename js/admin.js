@@ -1207,7 +1207,11 @@
   async function loadActionQueue() {
     try {
       var res = await apiGet('/api/v1/admin/action-queue');
-      var d = res.data;
+      var d = res.data || {};
+      d.pendingApprovals = d.pendingApprovals || [];
+      d.endingSoon = d.endingSoon || [];
+      d.completedPlans = d.completedPlans || [];
+      d.unresolvedEscalations = d.unresolvedEscalations || [];
 
       // Pending Approvals
       var paEl = document.getElementById('aqPendingApprovals');
@@ -1368,27 +1372,29 @@
       if (st) params += '&status=' + encodeURIComponent(st);
 
       var res = await apiGet('/api/v1/admin/messages' + params);
-      var d = res.data;
-      msgTotalPages = d.totalPages;
+      var d = res.data || {};
+      var stats = d.stats || { totalToday: 0, deliveredToday: 0, failedToday: 0, deliveryRate: 100 };
+      var messages = d.messages || [];
+      msgTotalPages = d.totalPages || 1;
 
       // Stats bar
       var statsEl = document.getElementById('msgStats');
       statsEl.innerHTML =
         '<div class="admin-kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1rem;">' +
-          '<div class="admin-kpi"><span class="admin-kpi-label">Sent Today</span><span class="admin-kpi-value">' + d.stats.totalToday + '</span></div>' +
-          '<div class="admin-kpi"><span class="admin-kpi-label">Delivered</span><span class="admin-kpi-value" style="color:#4ade80;">' + d.stats.deliveredToday + '</span></div>' +
-          '<div class="admin-kpi"><span class="admin-kpi-label">Failed</span><span class="admin-kpi-value" style="color:' + (d.stats.failedToday > 0 ? '#f87171' : '#4ade80') + ';">' + d.stats.failedToday + '</span></div>' +
-          '<div class="admin-kpi"><span class="admin-kpi-label">Delivery Rate</span><span class="admin-kpi-value">' + d.stats.deliveryRate + '%</span></div>' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Sent Today</span><span class="admin-kpi-value">' + stats.totalToday + '</span></div>' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Delivered</span><span class="admin-kpi-value" style="color:#4ade80;">' + stats.deliveredToday + '</span></div>' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Failed</span><span class="admin-kpi-value" style="color:' + (stats.failedToday > 0 ? '#f87171' : '#4ade80') + ';">' + stats.failedToday + '</span></div>' +
+          '<div class="admin-kpi"><span class="admin-kpi-label">Delivery Rate</span><span class="admin-kpi-value">' + stats.deliveryRate + '%</span></div>' +
         '</div>';
 
       // Messages table
       var body = document.getElementById('msgBody');
-      if (!d.messages.length) {
+      if (!messages.length) {
         body.innerHTML = '<tr><td colspan="6" class="admin-empty">No messages today</td></tr>';
       } else {
         var html = '';
-        for (var i = 0; i < d.messages.length; i++) {
-          var m = d.messages[i];
+        for (var i = 0; i < messages.length; i++) {
+          var m = messages[i];
           var mName = m.user && m.user.athleteProfile ? esc(m.user.athleteProfile.firstName || '') + ' ' + esc(m.user.athleteProfile.lastName || '') : (m.user ? esc(m.user.email) : '—');
           var failed = m.failedAt ? true : false;
           var statusCls = failed ? 'admin-badge--canceled' : 'admin-badge--active';

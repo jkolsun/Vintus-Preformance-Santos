@@ -155,12 +155,14 @@ async function dailyReviewCron(): Promise<void> {
 
     // Midnight window: local hour is 0
     // Morning window: local hour is 6 (or hour 5 + minute >= 30 for half-hour-offset timezones)
+    // Evening window: local hour is 20 (8pm) — for "workout not logged" follow-ups
     const isMidnight = local.hour === 0;
     const isMorning = local.hour === 6 || (local.hour === 5 && local.minute >= 30);
+    const isEvening = local.hour === 20;
 
-    if (!isMidnight && !isMorning) continue;
+    if (!isMidnight && !isMorning && !isEvening) continue;
 
-    const reviewType = isMidnight ? "midnight" : "morning";
+    const reviewType = isEvening ? "evening" : isMidnight ? "midnight" : "morning";
     const dedupKey = `${client.userId}:${local.dateStr}:${reviewType}`;
 
     if (processedReviews.has(dedupKey)) {
@@ -170,7 +172,7 @@ async function dailyReviewCron(): Promise<void> {
 
     const start = Date.now();
     try {
-      await dailyReviewForClient(client.userId, isMorning);
+      await dailyReviewForClient(client.userId, isMorning, isEvening);
       processedReviews.set(dedupKey, true);
       processed++;
       logger.info(
@@ -199,7 +201,8 @@ async function dailyReviewCron(): Promise<void> {
 
 export async function dailyReviewForClient(
   userId: string,
-  isMorningReview: boolean = false
+  isMorningReview: boolean = false,
+  isEveningReview: boolean = false
 ): Promise<void> {
   const startTime = Date.now();
 
@@ -652,7 +655,7 @@ export async function dailyReviewForClient(
 
   // ── Step 7b: WORKOUT NOT LOGGED follow-up (evening ~8pm) ───
 
-  if (sub && !isMorningReview && localTime.hour >= 19 && localTime.hour <= 21) {
+  if (sub && isEveningReview) {
     const todaySessions = activePlan?.sessions.filter((s) => {
       const sd = new Date(s.scheduledDate);
       sd.setUTCHours(0, 0, 0, 0);
