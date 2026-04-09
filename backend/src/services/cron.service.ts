@@ -897,6 +897,7 @@ async function weeklyDigestCron(): Promise<void> {
         category: "SYSTEM",
         channel: "EMAIL",
         sentAt: { gte: weekStart },
+        ...NOT_PENDING_TRIGGER,
       },
     });
     if (existingDigest) {
