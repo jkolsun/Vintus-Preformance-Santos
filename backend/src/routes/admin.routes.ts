@@ -167,7 +167,7 @@ router.post(
   "/triggers/:id/fire",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await adminService.fireTrigger(req.params.id);
+      const result = await adminService.fireTrigger(req.params.id as string);
 
       res.status(200).json({
         success: true,
@@ -184,7 +184,7 @@ router.post(
   "/triggers/:id/dismiss",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await adminService.dismissTrigger(req.params.id);
+      const result = await adminService.dismissTrigger(req.params.id as string);
 
       res.status(200).json({
         success: true,

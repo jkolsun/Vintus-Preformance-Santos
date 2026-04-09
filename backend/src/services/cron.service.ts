@@ -553,7 +553,7 @@ export async function dailyReviewForClient(
 
         await prisma.escalationEvent.update({
           where: { id: escalation.id },
-          data: { messageSent: true, messageLogId: result.messageId },
+          data: { messageSent: true },
         });
       } catch (err) {
         logger.error({ err, userId, level }, "Failed to send ESCALATION message");

@@ -527,10 +527,10 @@ export async function fireTrigger(messageLogId: string): Promise<{ success: bool
         data: { failureReason: null, externalId: sid, sentAt: new Date() },
       });
     } else if (log.channel === "EMAIL" && email) {
-      const result = await sendEmail(email, log.category, log.content);
+      const emailId = await sendEmail(email, log.category, log.content);
       await prisma.messageLog.update({
         where: { id: messageLogId },
-        data: { failureReason: null, externalId: result?.id ?? null, sentAt: new Date() },
+        data: { failureReason: null, externalId: emailId ?? null, sentAt: new Date() },
       });
     } else {
       const err = new Error("No phone/email available for this client") as Error & { statusCode?: number };
