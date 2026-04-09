@@ -5,7 +5,6 @@ import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
 import { sendWelcomeSequence } from "./messaging.service.js";
-import { notifyNewClient } from "../lib/gmail-notify.js";
 
 // ============================================================
 // Product → Stripe Price ID mapping
@@ -225,20 +224,8 @@ async function handleCheckoutCompleted(
     }
   }
 
-  // Notify admin via Gmail of new client signup
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { athleteProfile: { select: { firstName: true, lastName: true } } },
-  });
-  if (user) {
-    const name = [user.athleteProfile?.firstName, user.athleteProfile?.lastName].filter(Boolean).join(" ") || user.email;
-    notifyNewClient({
-      name,
-      email: user.email,
-      planTier: tier,
-      status: initialStatus,
-    }).catch((err) => logger.error({ err }, "Admin notification failed"));
-  }
+  // Admin notification is sent AFTER onboarding completion (not here),
+  // so the admin has a complete profile to review before approving.
 }
 
 // Subscription lifecycle events — only apply to PRIVATE_COACHING (recurring)

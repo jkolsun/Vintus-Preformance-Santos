@@ -6,6 +6,7 @@ import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
 import { generateInitialPlan } from "./workout.service.js";
+import { notifyNewClient } from "../lib/gmail-notify.js";
 import type { RoutineQuestionnaire } from "../routes/schemas/onboarding.schemas.js";
 
 const SALT_ROUNDS = 12;
@@ -241,6 +242,22 @@ export async function submitRoutineQuestionnaire(
     { userId, profileId: profile.id, planId: plan.planId },
     "Onboarding routine completed, initial plan generated"
   );
+
+  // Notify admin — client has completed onboarding with full profile + plan generated.
+  // This is the ideal time: admin has all data to review before approving.
+  const userWithSub = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { subscription: { select: { planTier: true, status: true } } },
+  });
+  if (userWithSub?.subscription) {
+    const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || userWithSub.email;
+    notifyNewClient({
+      name,
+      email: userWithSub.email,
+      planTier: userWithSub.subscription.planTier,
+      status: userWithSub.subscription.status,
+    }).catch((err) => logger.error({ err, userId }, "Admin notification failed after onboarding"));
+  }
 
   return plan;
 }
