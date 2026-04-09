@@ -15,6 +15,7 @@ import {
 } from "./schemas/admin.schemas.js";
 import { dailyReviewForClient } from "../services/cron.service.js";
 import { getFlags, setFlag } from "../lib/feature-flags.js";
+import { getHistory as getChatHistory } from "../services/chat.service.js";
 import * as adminService from "../services/admin.service.js";
 
 const router = Router();
@@ -314,6 +315,19 @@ router.post(
     try {
       const result = await adminService.resolveEscalation(req.params.id as string, req.body.resolution);
       res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /admin/clients/:userId/chat — view client's AI coach conversation
+router.get(
+  "/clients/:userId/chat",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getChatHistory(req.params.userId as string);
+      res.status(200).json({ success: true, data });
     } catch (err) {
       next(err);
     }

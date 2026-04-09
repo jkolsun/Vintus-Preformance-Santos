@@ -727,9 +727,16 @@
         '<div id="msgAlert"></div>' +
         '</div>';
 
+      // Chat history
+      html += '<div class="admin-detail-section">' +
+        '<div class="admin-detail-section-title">AI Coach Conversation</div>' +
+        '<div id="detailChatHistory" style="max-height:250px;overflow-y:auto;"><div class="admin-empty" style="padding:1rem;">Loading...</div></div>' +
+        '</div>';
+
       // Actions: trigger review, pause/activate, remove
       var isPaused = sub && sub.status === 'PAUSED';
-      // Plan management
+      // Plan management — only show for clients with subscriptions
+      if (sub) {
       html += '<div class="admin-detail-section">' +
         '<div class="admin-detail-section-title">Plan Management</div>' +
         '<div class="admin-form-row" style="gap:0.5rem;margin-bottom:0.5rem;">' +
@@ -756,6 +763,7 @@
         '<button class="admin-btn-secondary admin-btn-small" id="regenPlanBtn" style="margin-top:0.25rem;">Regenerate AI Plan</button>' +
         '<div id="planMgmtAlert" style="margin-top:0.5rem;"></div>' +
         '</div>';
+      } // end if (sub) — plan management
 
       // Actions
       html += '<div class="admin-detail-section">' +
@@ -773,6 +781,7 @@
 
       // Bind detail events
       bindDetailEvents(userId, sessions);
+      loadDetailChat(userId);
 
     } catch (err) {
       detailBody.innerHTML = '<div class="admin-alert admin-alert--error">' + esc(err.message) + '</div>';
@@ -785,6 +794,33 @@
     }
     var display = (value != null && value !== '') ? value : '—';
     return '<div class="admin-detail-row"><span class="admin-detail-label">' + esc(label) + '</span><span class="admin-detail-value">' + esc(display) + '</span></div>';
+  }
+
+  // Load chat history into detail panel
+  async function loadDetailChat(userId) {
+    var el = document.getElementById('detailChatHistory');
+    if (!el) return;
+    try {
+      var res = await apiGet('/api/v1/admin/clients/' + encodeURIComponent(userId) + '/chat');
+      var msgs = (res.data && res.data.messages) || [];
+      if (msgs.length === 0) {
+        el.innerHTML = '<div class="admin-empty" style="padding:1rem;">No conversation yet</div>';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < msgs.length; i++) {
+        var m = msgs[i];
+        var isUser = m.role === 'user';
+        html += '<div style="margin-bottom:0.5rem;padding:0.5rem 0.6rem;background:' + (isUser ? 'rgba(192,192,192,0.06)' : 'rgba(74,222,128,0.06)') + ';border-left:2px solid ' + (isUser ? 'rgba(192,192,192,0.3)' : 'rgba(74,222,128,0.3)') + ';">' +
+          '<div style="font-size:0.65rem;color:rgba(192,192,192,0.4);margin-bottom:0.2rem;">' + (isUser ? 'Client' : 'AI Coach') + ' &middot; ' + fmtDateTime(m.createdAt) + '</div>' +
+          '<div style="font-size:0.8rem;color:#c0c0c0;">' + esc(m.content) + '</div>' +
+        '</div>';
+      }
+      el.innerHTML = html;
+      el.scrollTop = el.scrollHeight;
+    } catch (err) {
+      el.innerHTML = '<div class="admin-empty" style="padding:1rem;color:#f87171;">Failed to load chat</div>';
+    }
   }
 
   function bindDetailEvents(userId, sessions) {

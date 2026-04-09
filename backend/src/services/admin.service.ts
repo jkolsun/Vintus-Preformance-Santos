@@ -157,7 +157,7 @@ export async function getClientDetail(userId: string): Promise<unknown> {
         include: {
           workoutPlans: {
             where: { isActive: true },
-            orderBy: { weekNumber: "desc" },
+            orderBy: { createdAt: "desc" },
             take: 1,
             include: {
               sessions: {
