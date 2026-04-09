@@ -1896,6 +1896,23 @@
     height: 22px;
   }
 
+  .tp-checkin__btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .tp-modal__textarea {
+    font-size: 16px; /* Prevent iOS zoom */
+  }
+
+  .chat-input {
+    font-size: 16px; /* Prevent iOS zoom */
+  }
+
+  .tp-modal__btn {
+    min-height: 44px;
+  }
+
   .daily-chart {
     height: 90px;
     gap: 2px;

@@ -240,8 +240,8 @@
   font-size: 0.9rem;
 }
 
-/* ── Mobile ── */
-@media (max-width: 600px) {
+/* ── Tablet ── */
+@media (max-width: 768px) {
   .settings-section {
     padding: 90px 1rem 3rem;
   }
@@ -258,8 +258,33 @@
     grid-template-columns: 1fr;
   }
 
+  .settings-btn {
+    min-height: 44px; /* Tappable on mobile */
+  }
+}
+
+/* ── Small Mobile ── */
+@media (max-width: 480px) {
+  .settings-section {
+    padding: 80px 0.75rem 2rem;
+  }
+
+  .settings-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .settings-title {
+    font-size: 1.4rem;
+  }
+
   .settings-field input,
   .settings-field select {
     font-size: 16px; /* Prevent iOS zoom */
+    min-height: 44px;
+  }
+
+  .settings-btn {
+    font-size: 0.8rem;
+    padding: 1rem;
   }
 }

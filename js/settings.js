@@ -62,8 +62,8 @@
 
       // Populate subscription info
       var sub = user.subscription;
+      subscriptionCard.style.display = 'block';
       if (sub) {
-        subscriptionCard.style.display = 'block';
 
         // Tier display name
         var tierNames = {
@@ -98,13 +98,18 @@
         if (sub.planTier === 'PRIVATE_COACHING') {
           manageSubBtn.style.display = 'block';
         }
+      } else {
+        // No subscription — show empty state
+        subTier.textContent = 'No active plan';
+        subStatus.innerHTML = '<span class="settings-badge settings-badge--default">None</span>';
+        subPeriodEnd.textContent = '--';
       }
 
       // Show content, hide loading
       loadingEl.style.display = 'none';
       contentEl.style.display = 'block';
     } catch (err) {
-      loadingEl.textContent = 'Failed to load settings. Please refresh or log in again.';
+      loadingEl.innerHTML = 'Failed to load settings. <a href="#" onclick="window.location.reload();return false;" style="color:var(--silver);text-decoration:underline;">Retry</a>';
     }
   }
 

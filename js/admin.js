@@ -109,8 +109,34 @@
     });
   });
 
+  function showTabLoading(name) {
+    var shimmerHtml = '<div class="admin-loading" style="height:40px;margin-bottom:0.75rem;"></div>' +
+      '<div class="admin-loading" style="height:40px;margin-bottom:0.75rem;"></div>' +
+      '<div class="admin-loading" style="height:40px;margin-bottom:0.75rem;"></div>';
+    if (name === 'actions') {
+      var tEl = document.getElementById('aqTriggers');
+      var paEl = document.getElementById('aqPendingApprovals');
+      if (tEl && !tEl.innerHTML.trim()) tEl.innerHTML = shimmerHtml;
+      if (paEl && !paEl.innerHTML.trim()) paEl.innerHTML = shimmerHtml;
+    } else if (name === 'escalations') {
+      var listEl = document.getElementById('escalationsList');
+      if (listEl && !listEl.innerHTML.trim()) listEl.innerHTML = shimmerHtml;
+    } else if (name === 'messaging') {
+      var msgBody = document.getElementById('msgBody');
+      if (msgBody && !msgBody.innerHTML.trim()) {
+        msgBody.innerHTML = '<tr><td colspan="6"><div class="admin-loading" style="height:24px;margin:0.5rem 0;"></div><div class="admin-loading" style="height:24px;margin:0.5rem 0;"></div></td></tr>';
+      }
+    } else if (name === 'adherence') {
+      var adhBody = document.getElementById('adherenceBody');
+      if (adhBody && !adhBody.innerHTML.trim()) {
+        adhBody.innerHTML = '<tr><td colspan="6"><div class="admin-loading" style="height:24px;margin:0.5rem 0;"></div><div class="admin-loading" style="height:24px;margin:0.5rem 0;"></div></td></tr>';
+      }
+    }
+  }
+
   function loadTab(name, force) {
     if (loadedTabs[name] && !force) return;
+    showTabLoading(name);
     loadedTabs[name] = true;
     if (name === 'overview') loadOverview();
     else if (name === 'actions') loadActionQueue();
@@ -1321,9 +1347,35 @@
             '<span>' + (esc_item.resolvedAt ? statusBadge('COMPLETED') : statusBadge('MISSED')) + '</span>' +
             '</div>' +
             (esc_item.resolution ? '<div class="admin-esc-resolution">' + esc(esc_item.resolution) + '</div>' : '') +
+            (!esc_item.resolvedAt ? '<div class="admin-esc-actions" style="margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap;">' +
+              '<select class="admin-select esc-resolution-select" data-eid="' + esc(esc_item.id) + '" style="padding:0.4rem;font-size:0.75rem;flex:1;min-width:120px;">' +
+                '<option value="">Select resolution...</option>' +
+                '<option value="resumed">Resumed Training</option>' +
+                '<option value="paused_subscription">Paused Subscription</option>' +
+                '<option value="churned">Churned</option>' +
+                '<option value="call_completed">Call Completed</option>' +
+                '<option value="other">Other</option>' +
+              '</select>' +
+              '<button class="admin-btn-primary admin-btn-small esc-resolve-btn" data-eid="' + esc(esc_item.id) + '" style="background:#22c55e;border-color:#22c55e;padding:0.4rem 0.8rem;font-size:0.75rem;">Resolve</button>' +
+            '</div>' : '') +
             '</div>';
         }
         listEl.innerHTML = html;
+
+        // Bind resolve buttons
+        listEl.querySelectorAll('.esc-resolve-btn').forEach(function (btn) {
+          btn.addEventListener('click', async function () {
+            var eid = btn.getAttribute('data-eid');
+            var select = listEl.querySelector('.esc-resolution-select[data-eid="' + eid + '"]');
+            var resolution = select ? select.value : '';
+            if (!resolution) { alert('Select a resolution type first'); return; }
+            btn.disabled = true; btn.textContent = '...';
+            try {
+              await apiPost('/api/v1/admin/escalations/' + encodeURIComponent(eid) + '/resolve', { resolution: resolution });
+              loadEscalations();
+            } catch (e) { alert('Failed: ' + e.message); btn.disabled = false; btn.textContent = 'Resolve'; }
+          });
+        });
       }
 
       renderPagination('escalationsPagination', escalationsPage, escalationsTotalPages, function (pg) {
@@ -1638,7 +1690,13 @@
     } catch (e) { /* ignore */ }
   }
 
-  /* ── Init: load overview + pending count on page load ── */
+  /* ── Init: show loading shimmers + load overview + pending count on page load ── */
+  // Pre-fill client table with loading state
+  var clientsBody = document.getElementById('clientsBody');
+  if (clientsBody && !clientsBody.innerHTML.trim()) {
+    clientsBody.innerHTML = '<tr><td colspan="7"><div class="admin-loading" style="height:24px;margin:0.5rem 0;"></div><div class="admin-loading" style="height:24px;margin:0.5rem 0;"></div><div class="admin-loading" style="height:24px;margin:0.5rem 0;"></div></td></tr>';
+  }
+
   loadTab('overview');
   loadPendingCount();
 

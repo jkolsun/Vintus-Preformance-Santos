@@ -147,8 +147,11 @@
 
     var wakeTime = document.getElementById('wakeTime').value;
     var bedTime = document.getElementById('bedTime').value;
+    var mealsPerDay = document.getElementById('mealsPerDay').value;
 
     if (!wakeTime || !bedTime) { showError('Please set your wake and bed times.'); return; }
+    if (!mealsPerDay || parseInt(mealsPerDay, 10) < 1 || parseInt(mealsPerDay, 10) > 10) { showError('Please select a valid number of meals per day.'); return; }
+    if (!document.getElementById('hydrationLevel').value) { showError('Please select your hydration level.'); return; }
 
     // Collect recovery practices
     var recoveryPractices = [];

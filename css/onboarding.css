@@ -562,23 +562,48 @@
 }
 
 @media (max-width: 480px) {
+  .onboard-section {
+    padding: 6rem 4% 3rem;
+  }
+
   .onboard-field input,
   .onboard-field select,
   .onboard-field textarea {
-    font-size: 16px;
+    font-size: 16px; /* Prevent iOS zoom */
   }
+
   .onboard-devices {
     grid-template-columns: 1fr;
   }
+
   .onboard-section-header {
     padding: 0.85rem 1rem;
   }
+
   .onboard-slider::-webkit-slider-thumb {
     width: 30px;
     height: 30px;
   }
+
   .onboard-slider::-moz-range-thumb {
     width: 30px;
     height: 30px;
+  }
+
+  .onboard-injury-row .onboard-fields-row {
+    grid-template-columns: 1fr;
+  }
+
+  .onboard-remove-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .onboard-btn {
+    min-height: 44px;
+  }
+
+  .onboard-step h2 {
+    font-size: 1.3rem;
   }
 }

@@ -20,6 +20,12 @@
       return;
     }
 
+    // Basic email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError('Please enter a valid email address.');
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.querySelector('.login-submit-text').textContent = 'Sending...';
 

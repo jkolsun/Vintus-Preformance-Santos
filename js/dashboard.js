@@ -202,9 +202,20 @@
     var streak = (d.streak && d.streak.currentStreak) ? d.streak.currentStreak : 0;
     document.getElementById('metricStreak').textContent = streak;
 
-    // Readiness (from today data)
-    if (d.today && d.today.readinessScore != null) {
-      document.getElementById('metricReadiness').textContent = Math.round(d.today.readinessScore);
+    // Readiness (computed from today's check-in data)
+    if (d.today && d.today.readiness) {
+      var r = d.today.readiness;
+      var readinessVals = [];
+      if (r.perceivedEnergy != null) readinessVals.push(r.perceivedEnergy);
+      if (r.perceivedSoreness != null) readinessVals.push(11 - r.perceivedSoreness); // invert: high soreness = low readiness
+      if (r.perceivedMood != null) readinessVals.push(r.perceivedMood);
+      if (r.sleepQualityManual != null) readinessVals.push(r.sleepQualityManual);
+      if (readinessVals.length > 0) {
+        var readinessAvg = readinessVals.reduce(function(a, b) { return a + b; }, 0) / readinessVals.length;
+        document.getElementById('metricReadiness').textContent = Math.round(readinessAvg);
+      } else {
+        document.getElementById('metricReadiness').textContent = '--';
+      }
     } else {
       document.getElementById('metricReadiness').textContent = '--';
     }
@@ -305,7 +316,7 @@
 
   function renderWorkoutSections(session) {
     var html = '';
-    var plan = session.plan || session.prescribedPlan;
+    var plan = session.content || session.plan || session.prescribedPlan;
 
     if (!plan) return html;
 

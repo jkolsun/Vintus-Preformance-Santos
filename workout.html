@@ -96,6 +96,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     Mark Complete
                 </button>
+                <button class="workout-skip-btn" id="skipBtn">Skip Session</button>
             </div>
 
             <!-- Already Completed Message -->
@@ -105,6 +106,21 @@
             </div>
         </div>
     </section>
+
+    <!-- Skip Modal -->
+    <div class="workout-modal-overlay" id="skipModal">
+        <div class="workout-modal">
+            <button class="workout-modal-close" id="skipModalClose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <h3>Skip Workout</h3>
+            <div class="workout-modal-field">
+                <label for="skipReason">Why are you skipping? (optional)</label>
+                <textarea id="skipReason" placeholder="e.g., Feeling under the weather, time conflict..."></textarea>
+            </div>
+            <button class="workout-modal-submit workout-modal-submit--skip" id="skipModalSubmit">Skip Session</button>
+        </div>
+    </div>
 
     <!-- Completion Modal -->
     <div class="workout-modal-overlay" id="completeModal">

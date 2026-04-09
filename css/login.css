@@ -136,12 +136,52 @@
   margin: 0 0.75rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  .login-section {
+    padding: 6rem 1rem 3rem;
+  }
+
   .login-card {
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 2rem;
+  }
+
+  .login-submit {
+    min-height: 44px; /* Tappable on mobile */
+  }
+
+  .login-field input {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-section {
+    padding: 5rem 0.75rem 2rem;
+  }
+
+  .login-card {
+    padding: 2rem 1.25rem;
+  }
+
+  .login-card h1 {
+    font-size: 1.5rem;
   }
 
   .login-field input {
     font-size: 16px; /* Prevent iOS zoom */
+    min-height: 44px;
+  }
+
+  .login-submit {
+    font-size: 0.85rem;
+    padding: 1rem;
+  }
+
+  .login-footer-links a {
+    font-size: 0.85rem;
+  }
+
+  .login-footer-links span {
+    margin: 0 0.4rem;
   }
 }

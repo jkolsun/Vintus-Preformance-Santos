@@ -1188,6 +1188,17 @@
 
   .admin-tabs {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .admin-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .admin-action-card {
@@ -1201,6 +1212,47 @@
 
   .admin-action-btns button {
     flex: 1;
+  }
+
+  .admin-esc-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .admin-esc-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .admin-esc-card {
+    padding: 0.85rem 1rem;
+  }
+
+  .admin-detail-body {
+    padding: 1rem;
+  }
+
+  .admin-detail-header {
+    padding: 1rem;
+  }
+
+  .admin-btn-primary,
+  .admin-btn-secondary,
+  .admin-btn-danger {
+    min-height: 44px;
+  }
+
+  .admin-channel-toggle {
+    flex-wrap: nowrap;
+  }
+
+  .admin-msg-thread {
+    max-height: 250px;
+  }
+
+  /* Feature flag toggles on mobile */
+  .flag-toggle {
+    min-width: 48px !important;
+    min-height: 36px !important;
   }
 }
 
@@ -1220,6 +1272,35 @@
   .admin-table th,
   .admin-table td {
     padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .admin-input,
+  .admin-textarea,
+  .admin-select {
+    font-size: 16px; /* Prevent iOS zoom */
+    min-height: 44px;
+  }
+
+  .admin-modal {
+    max-width: 95vw;
+  }
+
+  .admin-modal-body {
+    padding: 1rem;
+  }
+
+  .admin-detail-row {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .admin-detail-value {
+    text-align: left;
+  }
+
+  .admin-pagination {
+    gap: 0.5rem;
     font-size: 0.75rem;
   }
 }

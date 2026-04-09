@@ -186,6 +186,52 @@
     contentEl.style.display = 'block';
   }
 
+  // ── Skip Modal ──
+  var skipModal = document.getElementById('skipModal');
+  var skipBtn = document.getElementById('skipBtn');
+  var skipModalClose = document.getElementById('skipModalClose');
+  var skipModalSubmit = document.getElementById('skipModalSubmit');
+
+  skipBtn.addEventListener('click', function () {
+    document.getElementById('skipReason').value = '';
+    skipModal.classList.add('active');
+  });
+
+  skipModalClose.addEventListener('click', function () {
+    skipModal.classList.remove('active');
+  });
+
+  skipModal.addEventListener('click', function (e) {
+    if (e.target === skipModal) {
+      skipModal.classList.remove('active');
+    }
+  });
+
+  skipModalSubmit.addEventListener('click', async function () {
+    skipModalSubmit.disabled = true;
+    skipModalSubmit.textContent = 'Skipping...';
+
+    var reason = document.getElementById('skipReason').value.trim();
+    var payload = { reason: reason || 'No reason provided' };
+
+    try {
+      var res = await apiPost('/api/v1/workout/' + encodeURIComponent(sessionId) + '/skip', payload);
+      if (res.success) {
+        skipModal.classList.remove('active');
+        document.getElementById('completeWrap').style.display = 'none';
+        window.location.href = 'dashboard.html';
+      } else {
+        alert('Failed to skip session: ' + (res.error || 'Unknown error'));
+        skipModalSubmit.disabled = false;
+        skipModalSubmit.textContent = 'Skip Session';
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to skip session.');
+      skipModalSubmit.disabled = false;
+      skipModalSubmit.textContent = 'Skip Session';
+    }
+  });
+
   // ── Completion Modal ──
   var modal = document.getElementById('completeModal');
   var completeBtn = document.getElementById('completeBtn');
