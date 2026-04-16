@@ -14,6 +14,9 @@ import smsWebhookRoutes from "./routes/sms-webhook.routes.js";
 
 const app = express();
 
+// Trust Railway's reverse proxy so rate limiters use the real client IP
+app.set("trust proxy", 1);
+
 // ---------------------------------------------------------------------------
 // Global middleware
 // ---------------------------------------------------------------------------
