@@ -138,6 +138,12 @@ router.get(
         return;
       }
 
+      // Sanitize aiSummary — strip any legacy [ADMIN NOTES] contamination
+      if (user.athleteProfile?.aiSummary?.includes("[ADMIN NOTES]")) {
+        (user.athleteProfile as { aiSummary: string | null }).aiSummary =
+          user.athleteProfile.aiSummary.substring(0, user.athleteProfile.aiSummary.indexOf("[ADMIN NOTES]")).trim();
+      }
+
       res.status(200).json({ success: true, data: { user } });
     } catch (err) {
       next(err);
