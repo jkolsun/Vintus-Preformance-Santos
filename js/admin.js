@@ -706,13 +706,8 @@
         html += '</div>';
       }
 
-      // Admin notes — extract only the admin-written portion after [ADMIN NOTES]
-      var rawSummary = prof.aiSummary || '';
-      var adminNotesOnly = '';
-      var adminMarkerIdx = rawSummary.indexOf('[ADMIN NOTES]');
-      if (adminMarkerIdx !== -1) {
-        adminNotesOnly = rawSummary.substring(adminMarkerIdx + '[ADMIN NOTES]'.length).trim();
-      }
+      // Admin notes — stored in dedicated adminNotes field (never in aiSummary)
+      var adminNotesOnly = prof.adminNotes || '';
       html += '<div class="admin-detail-section">' +
         '<div class="admin-detail-section-title">Admin Notes</div>' +
         '<textarea class="admin-textarea" id="detailNotes" rows="4" placeholder="Add notes about this client...">' + esc(adminNotesOnly) + '</textarea>' +

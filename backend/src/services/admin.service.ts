@@ -307,21 +307,27 @@ export async function updateClientNotes(
     throw err;
   }
 
-  // Store notes in the aiSummary field (admin notes appended) or we can use a JSON approach
-  // For MVP, append to existing aiSummary with a separator
-  const existingNotes = profile.aiSummary ?? "";
-  const separator = existingNotes.includes("[ADMIN NOTES]") ? "" : "\n\n[ADMIN NOTES]\n";
-  const adminSection = existingNotes.includes("[ADMIN NOTES]")
-    ? existingNotes.substring(0, existingNotes.indexOf("[ADMIN NOTES]")) + "[ADMIN NOTES]\n" + notes
-    : existingNotes + separator + notes;
-
-  await prisma.athleteProfile.update({
+  // Store in dedicated adminNotes field — NEVER in aiSummary.
+  // aiSummary is client-visible and fed to the AI coach.
+  const updated = await prisma.athleteProfile.update({
     where: { userId },
-    data: { aiSummary: adminSection },
+    data: { adminNotes: notes },
+    select: { adminNotes: true },
   });
 
-  logger.info({ userId }, "Admin notes updated");
-  return { notes: adminSection };
+  // One-time cleanup: if aiSummary was previously contaminated with [ADMIN NOTES],
+  // strip that section out to restore clean AI context.
+  if (profile.aiSummary?.includes("[ADMIN NOTES]")) {
+    const cleanSummary = profile.aiSummary.substring(0, profile.aiSummary.indexOf("[ADMIN NOTES]")).trim();
+    await prisma.athleteProfile.update({
+      where: { userId },
+      data: { aiSummary: cleanSummary || profile.aiSummary.split("[ADMIN NOTES]")[0].trim() },
+    });
+    logger.info({ userId }, "Cleaned contaminated aiSummary — removed [ADMIN NOTES] block");
+  }
+
+  logger.info({ userId }, "Admin notes updated (stored in adminNotes field)");
+  return { adminNotes: updated.adminNotes };
 }
 
 /**

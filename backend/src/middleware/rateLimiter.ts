@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import rateLimit from "express-rate-limit";
 
 /**
@@ -5,12 +6,21 @@ import rateLimit from "express-rate-limit";
  * Applied per-route (not globally) to avoid penalizing normal traffic.
  */
 
+// Extract real client IP from X-Forwarded-For (Railway proxy)
+function getClientIp(req: Request): string {
+  const xff = req.headers["x-forwarded-for"];
+  if (typeof xff === "string") return xff.split(",")[0].trim();
+  if (Array.isArray(xff) && xff.length > 0) return xff[0].split(",")[0].trim();
+  return req.ip || req.socket.remoteAddress || "unknown";
+}
+
 /** POST /auth/login — 10 attempts per 15 min per IP */
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getClientIp,
   message: { success: false, error: "Too many login attempts. Please try again in 15 minutes." },
 });
 
@@ -20,15 +30,17 @@ export const forgotPasswordLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getClientIp,
   message: { success: false, error: "Too many password reset requests. Please try again in 15 minutes." },
 });
 
-/** POST /chat/send — 30 per 5 min per IP (user-scoped via auth, but IP as fallback) */
+/** POST /chat/send — 30 per 5 min per IP */
 export const chatSendLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getClientIp,
   message: { success: false, error: "Too many messages. Please slow down and try again shortly." },
 });
 
@@ -38,5 +50,6 @@ export const intakeFullLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getClientIp,
   message: { success: false, error: "Too many submissions. Please try again in 15 minutes." },
 });

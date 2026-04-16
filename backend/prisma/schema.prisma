@@ -78,6 +78,7 @@ model AthleteProfile {
 
   // Admin controls
   messagingDisabled Boolean @default(false)
+  adminNotes      String?       // Private admin-only notes — NEVER exposed to client or AI
 
   // AI classification output
   personaType     String?       // executive-athlete | endurance-competitor | hybrid-builder | recovery-first
