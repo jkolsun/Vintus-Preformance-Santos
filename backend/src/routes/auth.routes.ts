@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import { authenticate } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
+import { loginLimiter, forgotPasswordLimiter } from "../middleware/rateLimiter.js";
 import {
   registerSchema,
   loginSchema,
@@ -47,6 +48,7 @@ router.post(
 // POST /auth/login
 router.post(
   "/login",
+  loginLimiter,
   validate(loginSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -168,6 +170,7 @@ router.put(
 // POST /auth/forgot-password — public
 router.post(
   "/forgot-password",
+  forgotPasswordLimiter,
   validate(forgotPasswordSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

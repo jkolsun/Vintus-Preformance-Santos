@@ -85,6 +85,25 @@ export async function submitCheckin(
 }
 
 // ============================================================
+// getLatest — most recent readiness metric for the user
+// ============================================================
+
+export async function getLatest(userId: string): Promise<unknown> {
+  const profile = await prisma.athleteProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!profile) return null;
+
+  const metric = await prisma.readinessMetric.findFirst({
+    where: { athleteProfileId: profile.id },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return metric ?? null;
+}
+
+// ============================================================
 // getHistory — last N days of readiness data
 // ============================================================
 

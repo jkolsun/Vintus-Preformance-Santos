@@ -106,12 +106,29 @@ export async function getOverview(userId: string): Promise<unknown> {
         totalDays = Math.ceil((new Date(sub.currentPeriodEnd).getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000));
         dayNumber = Math.min(totalDays, Math.max(1, Math.ceil((today.getTime() - new Date(sub.currentPeriodStart).getTime()) / (24 * 60 * 60 * 1000)) + 1));
       }
+      // Compute plan state
+      let planState: "active" | "expired" | "completed" | "renewal_pending" | "pending_approval" | null = null;
+      if (sub) {
+        if (sub.status === "PENDING_APPROVAL") {
+          planState = "pending_approval";
+        } else if (sub.currentPeriodEnd && new Date(sub.currentPeriodEnd) < today) {
+          // Period ended
+          const isRecurring = sub.planTier === "PRIVATE_COACHING";
+          planState = isRecurring ? "renewal_pending" : "completed";
+        } else if (sub.status === "ACTIVE") {
+          planState = "active";
+        } else {
+          planState = "expired";
+        }
+      }
+
       return {
         firstName: profile.firstName,
         lastName: profile.lastName,
         persona: profile.personaType,
         planTier: sub?.planTier ?? null,
         subscriptionStatus: sub?.status ?? null,
+        planState,
         dayNumber,
         totalDays,
       };
@@ -121,13 +138,7 @@ export async function getOverview(userId: string): Promise<unknown> {
       readiness: todayReadiness,
       hasCheckedIn: todayReadiness != null,
     },
-    thisWeek: {
-      plan: activePlan,
-      sessions: weekSessions,
-      adherenceRate: weekAdherence.adherenceRate,
-      completedCount: weekAdherence.completedCount,
-      scheduledCount: weekAdherence.scheduledCount,
-    },
+    thisWeek: await getWeekView(userId, 0),
     streak: streakData,
     recentMessages,
   };

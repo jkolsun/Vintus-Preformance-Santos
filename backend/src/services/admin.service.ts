@@ -229,6 +229,10 @@ export async function getClientDetail(userId: string): Promise<unknown> {
     throw err;
   }
 
+  // Strip sensitive fields — never send passwordHash to the client
+  const { passwordHash: _, ...safeUser } = user;
+  const userResponse = safeUser as typeof user;
+
   // Get adherence history (last 8 weeks)
   const eightWeeksAgo = new Date();
   eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
@@ -243,7 +247,7 @@ export async function getClientDetail(userId: string): Promise<unknown> {
   const consecutiveMissed = await getConsecutiveMissedForAdmin(userId);
 
   return {
-    ...user,
+    ...userResponse,
     adherenceHistory,
     consecutiveMissed,
   };
@@ -268,7 +272,7 @@ export async function updateClientProfile(
     timezone?: string;
     messagingDisabled?: boolean;
   }
-): Promise<{ success: boolean }> {
+): Promise<unknown> {
   const profile = await prisma.athleteProfile.findUnique({
     where: { userId },
   });
@@ -279,19 +283,20 @@ export async function updateClientProfile(
     throw err;
   }
 
-  await prisma.athleteProfile.update({
+  const updated = await prisma.athleteProfile.update({
     where: { userId },
     data: updates,
+    select: { firstName: true, lastName: true, timezone: true, primaryGoal: true, trainingDaysPerWeek: true, experienceLevel: true, equipmentAccess: true, messagingDisabled: true },
   });
 
   logger.info({ userId, fields: Object.keys(updates) }, "Admin updated client profile");
-  return { success: true };
+  return updated;
 }
 
 export async function updateClientNotes(
   userId: string,
   notes: string
-): Promise<{ success: boolean }> {
+): Promise<unknown> {
   const profile = await prisma.athleteProfile.findUnique({
     where: { userId },
   });
@@ -316,7 +321,7 @@ export async function updateClientNotes(
   });
 
   logger.info({ userId }, "Admin notes updated");
-  return { success: true };
+  return { notes: adminSection };
 }
 
 /**
@@ -575,6 +580,13 @@ export async function fireTrigger(messageLogId: string): Promise<{ success: bool
  * Dismiss a pending trigger without sending.
  */
 export async function dismissTrigger(messageLogId: string): Promise<{ success: boolean }> {
+  const log = await prisma.messageLog.findUnique({ where: { id: messageLogId } });
+  if (!log) {
+    const err = new Error("Message trigger not found") as Error & { statusCode?: number };
+    err.statusCode = 404;
+    throw err;
+  }
+
   await prisma.messageLog.update({
     where: { id: messageLogId },
     data: { failureReason: "DISMISSED", failedAt: new Date() },

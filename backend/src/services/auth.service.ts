@@ -185,6 +185,12 @@ export async function verifyToken(
   token: string
 ): Promise<{ userId: string; email: string; role: Role } | null> {
   try {
+    // Reject password-reset tokens — they are stored in the Session table
+    // with a "reset_" prefix but must never be accepted as login credentials.
+    if (token.startsWith(RESET_TOKEN_PREFIX)) {
+      return null;
+    }
+
     const decoded = jwt.verify(token, env.JWT_SECRET) as TokenPayload;
 
     // Verify session exists and is not expired
@@ -215,7 +221,7 @@ export async function changePassword(
   const valid = await bcrypt.compare(oldPassword, user.passwordHash);
   if (!valid) {
     const err = new Error("Current password is incorrect") as Error & { statusCode?: number };
-    err.statusCode = 401;
+    err.statusCode = 403;
     throw err;
   }
 

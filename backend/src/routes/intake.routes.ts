@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import { validate } from "../middleware/validate.js";
+import { intakeFullLimiter } from "../middleware/rateLimiter.js";
 import {
   simpleIntakeSchema,
   expandedIntakeSchema,
@@ -30,6 +31,7 @@ router.post(
 // POST /intake/full — public (no auth) — accepts ExpandedIntakeSchema
 router.post(
   "/full",
+  intakeFullLimiter,
   validate(expandedIntakeSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

@@ -29,6 +29,24 @@ router.post(
   }
 );
 
+// GET /readiness/latest — most recent check-in for the authenticated user
+router.get(
+  "/latest",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const profile = await readinessService.getLatest(userId);
+
+      res.status(200).json({
+        success: true,
+        data: profile,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // GET /readiness/history — last N days (default 14)
 router.get(
   "/history",

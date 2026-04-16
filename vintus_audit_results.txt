@@ -1,0 +1,369 @@
+Vintus Performance Full-Stack Audit
+Started: Thu Apr 16 11:37:53 EDT 2026
+Base URL: https://vintus-preformance-santos-production.up.railway.app/api/v1
+
+================================================================
+=== 1. AUTH — logins
+================================================================
+
+--- POST /auth/login (admin)
+    status: 200
+    response:
+      {"success":true,"data":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbW0zcWt4cWMwMDAwbjM1ZDAwZDFsaTF1IiwiZW1haWwiOiJhZG1pbkB2aW50dXNwZXJmb3JtYW5jZS5vcmciLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3NzYzNTM4NzQsImV4cCI6MTc3Njk1ODY3NH0.Q6wUYVbDmWKuwVSJf5qt0HoJA-aHO5xoOASwdmFVjbg","userId":"cmm3qkxqc0000n35d00d1li1u","role":"ADMIN"}}
+>>> admin token captured (len=248)
+
+--- POST /auth/login (client)
+    status: 200
+    response:
+      {"success":true,"data":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbW0zcWt4eTUwMDAxbjM1ZDVhbW01MHM3IiwiZW1haWwiOiJtYXJjdXMuY2hlbkB0ZXN0Y2xpZW50LmNvbSIsInJvbGUiOiJDTElFTlQiLCJpYXQiOjE3NzYzNTM4NzUsImV4cCI6MTc3Njk1ODY3NX0.qGSvLUV1vQ13be5Jras7jvnFDxF5fE5g6A5Wih9XsUA","userId":"cmm3qkxy50001n35d5amm50s7","role":"CLIENT"}}
+>>> client token captured (len=248)
+
+--- POST /auth/login
+    body: {"email":"admin@vintusperformance.org","password":"wrong"}
+    status: 401
+    response:
+      {"success":false,"error":"Invalid email or password"}
+
+--- POST /auth/login
+    body: {"email":"not-an-email","password":"x"}
+    status: 400
+    response:
+      {"success":false,"error":"Validation failed","details":[{"field":"email","message":"Must be a valid email address"}]}
+
+--- POST /auth/login
+    body: {}
+    status: 400
+    response:
+      {"success":false,"error":"Validation failed","details":[{"field":"email","message":"Required"},{"field":"password","message":"Required"}]}
+
+================================================================
+=== 2. AUTH — authenticated endpoints
+================================================================
+
+--- GET /auth/me
+    status: 200
+    response:
+      {"success":true,"data":{"user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","role":"CLIENT","createdAt":"2026-02-26T17:27:47.166Z","athleteProfile":{"id":"cmm3qkxy50002n35d05fbdgu4","firstName":"Marcus","lastName":"Chen","phone":"+15551234567","timezone":"America/New_York","primaryGoal":"recomposition","experienceLevel":"advanced","personaType":"executive-athlete","aiSummary":"You're a high-performing executive who treats training like a business objective. With advanced experience and a recomposition goal, you need a structured plan that maximizes efficiency within your demanding schedule. Your monthly travel and elevated stress levels mean adaptive recovery programming is critical to your progress."},"subscription":{"id":"cmm3qkxyv0004n35d12wc0kl6","planTier":"PRIVATE_COACHING","status":"ACTIVE","currentPeriodEnd":"2026-03-01T00:00:00.000Z"}}}}
+
+--- GET /auth/me
+    status: 200
+    response:
+      {"success":true,"data":{"user":{"id":"cmm3qkxqc0000n35d00d1li1u","email":"admin@vintusperformance.org","role":"ADMIN","createdAt":"2026-02-26T17:27:46.885Z","athleteProfile":null,"subscription":null}}}
+
+--- GET /auth/me
+    status: 401
+    response:
+      {"success":false,"error":"Authentication required"}
+
+--- GET /auth/me
+    status: 401
+    response:
+      {"success":false,"error":"Invalid or expired token"}
+
+--- POST /auth/forgot-password
+    body: {"email":"nonexistent@example.com"}
+    status: 200
+    response:
+      {"success":true,"data":{"message":"If that email exists, a reset link has been sent."}}
+
+--- POST /auth/forgot-password
+    body: {"email":"marcus.chen@testclient.com"}
+    status: 200
+    response:
+      {"success":true,"data":{"message":"If that email exists, a reset link has been sent."}}
+
+--- POST /auth/reset-password
+    body: {"token":"invalid-token","newPassword":"NewPass123!"}
+    status: 400
+    response:
+      {"success":false,"error":"Invalid or expired reset token"}
+
+--- PUT /auth/password
+    body: {"oldPassword":"definitely-wrong","newPassword":"NewPass123!"}
+    status: 401
+    response:
+      {"success":false,"error":"Current password is incorrect"}
+
+================================================================
+=== 3. PUBLIC — intake
+================================================================
+
+--- POST /intake/full
+    status: 201
+    response:
+      {"success":true,"data":{"userId":"cmo1n8ijq000io06uvkwbqils","profileId":"cmo1n8ijy000ko06ujqxkqiy4","persona":"hybrid-builder","summary":"You're an intermediate lifter with solid gym experience who understands the fundamentals and is ready to take your muscle-building to the next level. You have the discipline to train consistently four days per week and access to everything you need to execute a sophisticated program.","planRecommendations":[{"tier":"PRIVATE_COACHING","name":"Private Coaching","tagline":"Your dedicated performance coach, always adapting.","price":500,"period":"/mo","isRecurring":true,"durationLabel":"Monthly subscription","category":"coaching","features":["1-on-1 adaptive programming","AI-powered workout personalization","Readiness-based daily adjustments","Wearable device integration","SMS & email coaching nudges","Priority coach access & strategy calls","Full biometric tracking & recovery analytics","Weekly performance digest"],"recommended":true},{"tier":"TRAINING_30DAY","name":"30-Day Training Plan","tagline":"Build habits in one focused month.","price":99,"period":"","isRecurring":false,"durationLabel":"30-day access","category":"training","features":["Structured 4-week training plan","Daily readiness check-ins","Automated plan adjustments","Progress tracking dashboard"],"recommended":false},{"tier":"TRAINING_60DAY","name":"60-Day Training Plan","tagline":"Structured progression with periodized phases.","price":149,"period":"","isRecurring":false,"durationLabel":"60-day access","category":"training","features":["8-week periodized training plan","Base, build, and peak phases","Daily readiness check-ins","Automated plan adjustments","Progress tracking dashboard"],"recommended":false},{"tier":"TRAINING_90DAY","name":"90-Day Training Plan","tagline":"Full transformation with peak-to-deload cycling.","price":199,"period":"","isRecurring":false,"durationLabel":"90-day access","category":"training","features":["12-week full periodization program","Base, build, peak, and deload cycles","Daily read
+>>> captured profileId: cmo1n8ijy000ko06ujqxkqiy4
+
+--- GET /intake/results/cmo1n8ijy000ko06ujqxkqiy4
+    status: 200
+    response:
+      {"success":true,"data":{"persona":"hybrid-builder","summary":"You're an intermediate lifter with solid gym experience who understands the fundamentals and is ready to take your muscle-building to the next level. You have the discipline to train consistently four days per week and access to everything you need to execute a sophisticated program.","riskFlags":[],"planRecommendations":[{"tier":"PRIVATE_COACHING","name":"Private Coaching","tagline":"Your dedicated performance coach, always adapting.","price":500,"period":"/mo","isRecurring":true,"durationLabel":"Monthly subscription","category":"coaching","features":["1-on-1 adaptive programming","AI-powered workout personalization","Readiness-based daily adjustments","Wearable device integration","SMS & email coaching nudges","Priority coach access & strategy calls","Full biometric tracking & recovery analytics","Weekly performance digest"],"recommended":true},{"tier":"TRAINING_30DAY","name":"30-Day Training Plan","tagline":"Build habits in one focused month.","price":99,"period":"","isRecurring":false,"durationLabel":"30-day access","category":"training","features":["Structured 4-week training plan","Daily readiness check-ins","Automated plan adjustments","Progress tracking dashboard"],"recommended":false},{"tier":"TRAINING_60DAY","name":"60-Day Training Plan","tagline":"Structured progression with periodized phases.","price":149,"period":"","isRecurring":false,"durationLabel":"60-day access","category":"training","features":["8-week periodized training plan","Base, build, and peak phases","Daily readiness check-ins","Automated plan adjustments","Progress tracking dashboard"],"recommended":false},{"tier":"TRAINING_90DAY","name":"90-Day Training Plan","tagline":"Full transformation with peak-to-deload cycling.","price":199,"period":"","isRecurring":false,"durationLabel":"90-day access","category":"training","features":["12-week full periodization program","Base, build, peak, and deload cycles","Daily readiness check-ins","Automated plan adjustments","Progress tracki
+
+--- GET /intake/results/does-not-exist-xyz
+    status: 404
+    response:
+      {"success":false,"error":"Intake results not found for this profile"}
+
+--- POST /intake/full
+    body: {"email":"bad"}
+    status: 400
+    response:
+      {"success":false,"error":"Validation failed","details":[{"field":"firstName","message":"Required"},{"field":"lastName","message":"Required"},{"field":"email","message":"Must be a valid email address"},{"field":"primaryGoal","message":"Required"},{"field":"trainingDaysPerWeek","message":"Required"},{"field":"experienceLevel","message":"Required"},{"field":"equipmentAccess","message":"Required"}]}
+
+================================================================
+=== 4. CLIENT — dashboard & workouts
+================================================================
+
+--- GET /dashboard/overview
+    status: 200
+    response:
+      {"success":true,"data":{"athlete":{"firstName":"Marcus","lastName":"Chen","persona":"executive-athlete","planTier":"PRIVATE_COACHING","subscriptionStatus":"ACTIVE","dayNumber":28,"totalDays":28},"today":{"workout":null,"readiness":null,"hasCheckedIn":false},"thisWeek":{"plan":{"id":"cmns3pxt40006o05d3dlf9lm7","athleteProfileId":"cmm3qkxy50002n35d05fbdgu4","name":"Week 1 — Base Phase","weekNumber":1,"blockType":"base","startDate":"2026-04-06T00:00:00.000Z","endDate":"2026-04-10T00:00:00.000Z","isActive":true,"plannedTSS":320,"actualTSS":0,"createdAt":"2026-04-09T23:21:45.833Z","updatedAt":"2026-04-09T23:21:45.833Z"},"sessions":[],"adherenceRate":0,"completedCount":0,"scheduledCount":0},"streak":{"currentStreak":0,"longestStreak":1,"totalCompleted":2},"recentMessages":[{"id":"cmm98x5z40009nx6xmlp0k602","channel":"EMAIL","category":"SYSTEM","content":"<strong>Last Week</strong><br>Sessions: 0/36 completed<br>Adherence: 0%<br>Readiness: Holding Steady (Energy 6.6/10 · Sleep 6.6/10)<br><br>Marcus, last week was tough — 0/36 sessions. No judgment. This week is a fresh start.<br><br><strong>This Week</strong><br>Week 2 — Base Phase<br>Mon: Upper Body Strength<br>Tue: Lower Body Strength<br>Wed: Full Body Strength<br>Thu: Zone 2 Cardio<br>Fri: HIIT Conditioning 1<br><br>Stay disciplined. Stay dominant.","sentAt":"2026-03-02T14:00:01.408Z"},{"id":"cmm92ho8p0007nx6xxzq4fg98","channel":"SMS","category":"CHECK_IN","content":"Morning, Marcus. Drop a quick check-in so your plan can adjust for today: https://vintusperformance.org/dashboard/checkin","sentAt":"2026-03-02T11:00:00.890Z"},{"id":"cmm8pmpo00005nx6x754c697z","channel":"SMS","category":"MOTIVATION","content":"Identity is built through action. Train today.","sentAt":"2026-03-02T05:00:01.009Z"},{"id":"cmm8pmpfz0003nx6xex1zmgzi","channel":"EMAIL","category":"ESCALATION","content":"Hey Marcus — haven't seen you in a few sessions. No pressure, but I'm here if you want to adjust the plan: https://vintusperformance.org/book-consultation","sentAt":"2026-03-02T05:00:00
+
+--- GET /dashboard/week/0
+    status: 200
+    response:
+      {"success":true,"data":{"plan":null,"sessions":[],"adherenceRate":0}}
+
+--- GET /dashboard/week/-1
+    status: 200
+    response:
+      {"success":true,"data":{"plan":{"id":"cmns3pxt40006o05d3dlf9lm7","athleteProfileId":"cmm3qkxy50002n35d05fbdgu4","name":"Week 1 — Base Phase","weekNumber":1,"blockType":"base","startDate":"2026-04-06T00:00:00.000Z","endDate":"2026-04-10T00:00:00.000Z","isActive":true,"plannedTSS":320,"actualTSS":0,"createdAt":"2026-04-09T23:21:45.833Z","updatedAt":"2026-04-09T23:21:45.833Z"},"sessions":[{"id":"cmns3pxtd0008o05d2u0q8cqw","scheduledDate":"2026-04-06T00:00:00.000Z","scheduledOrder":1,"sessionType":"STRENGTH_PUSH","title":"Upper Body Push — Chest & Shoulders","description":"Compound push focus with progressive overload. Control tempo on eccentric.","prescribedDuration":55,"status":"SCHEDULED","completedAt":null,"actualDuration":null,"rpe":null},{"id":"cmns3pxu2000ao05d4vx8bpqb","scheduledDate":"2026-04-07T00:00:00.000Z","scheduledOrder":2,"sessionType":"ENDURANCE_ZONE2","title":"Zone 2 Steady-State Cardio","description":"Aerobic base building. Stay conversational throughout. Heart rate 120-140bpm.","prescribedDuration":40,"status":"SCHEDULED","completedAt":null,"actualDuration":null,"rpe":null},{"id":"cmns3pxu6000go05doizb5chx","scheduledDate":"2026-04-08T00:00:00.000Z","scheduledOrder":3,"sessionType":"STRENGTH_PULL","title":"Upper Body Pull — Back & Biceps","description":"Horizontal and vertical pulling. Prioritize scapular retraction.","prescribedDuration":55,"status":"SCHEDULED","completedAt":null,"actualDuration":null,"rpe":null},{"id":"cmns3pxu4000eo05dtactp750","scheduledDate":"2026-04-09T00:00:00.000Z","scheduledOrder":4,"sessionType":"STRENGTH_LOWER","title":"Lower Body Strength — Quad & Glute Focus","description":"Compound lower body with squat pattern emphasis. Mind lower back stability.","prescribedDuration":60,"status":"SCHEDULED","completedAt":null,"actualDuration":null,"rpe":null},{"id":"cmns3pxu2000co05dnyq5vjj6","scheduledDate":"2026-04-10T00:00:00.000Z","scheduledOrder":5,"sessionType":"ENDURANCE_TEMPO","title":"Tempo Run — Controlled Effort","description":"Tempo effort after a strength wee
+
+--- GET /dashboard/week/1
+    status: 200
+    response:
+      {"success":true,"data":{"plan":null,"sessions":[],"adherenceRate":0}}
+
+--- GET /dashboard/daily-summary?days=14
+    status: 200
+    response:
+      {"success":true,"data":{"days":[{"date":"2026-04-03","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-04","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-05","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-06","dayType":"workout","score":68,"grade":"yellow","readiness":{"perceivedEnergy":7,"perceivedSoreness":4,"perceivedMood":7,"sleepQualityManual":7,"readinessAvg":6.7,"hrvMs":null,"restingHr":null,"sleepScore":null,"sleepDurationMin":420,"steps":null},"workout":{"id":"cmns3pxtd0008o05d2u0q8cqw","title":"Upper Body Push — Chest & Shoulders","sessionType":"STRENGTH_PUSH","status":"SCHEDULED","prescribedDuration":55,"actualDuration":null,"prescribedTSS":70,"actualTSS":null,"rpe":null,"athleteNotes":null,"completedAt":null,"planName":"Week 1 — Base Phase","blockType":"base"},"breakdown":{"durationAdherence":null,"tssAdherence":null,"rpeAppropriateness":null,"readinessQuality":68},"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-07","dayType":"workout","score":50,"grade":"yellow","readiness":{"perceivedEnergy":5,"perceivedSoreness":6,"perceivedMood":6,"sleepQualityManual":5,"readinessAvg":4.7,"hrvMs":null,"restingHr":null,"sleepScore":null,"sleepDurationMin":360,"steps":null},"workout":{"id":"cmns3pxu2000ao05d4vx8bpqb","title":"Zone 2 Steady-State Cardio","sessionType":"ENDURANCE_ZONE2","status":"SCHEDULED","prescribedDuration":40,"actualDuration":null,"prescribedTSS":50,"actualTSS":null,"rpe":null,"athleteNotes":null,"completedAt":null,"planName":"Week 1 — Base Phase","blockType":"base"},"breakdown":{"durationAdherence":null,"tssAdherence":null,"rpeAppropriateness":null,"readinessQuality":50},"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-08","dayType
+
+--- GET /dashboard/daily-summary?days=7
+    status: 200
+    response:
+      {"success":true,"data":{"days":[{"date":"2026-04-10","dayType":"workout","score":null,"grade":"gray","readiness":null,"workout":{"id":"cmns3pxu2000co05dnyq5vjj6","title":"Tempo Run — Controlled Effort","sessionType":"ENDURANCE_TEMPO","status":"SCHEDULED","prescribedDuration":35,"actualDuration":null,"prescribedTSS":60,"actualTSS":null,"rpe":null,"athleteNotes":null,"completedAt":null,"planName":"Week 1 — Base Phase","blockType":"base"},"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-11","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-12","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-13","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-14","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-15","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false},{"date":"2026-04-16","dayType":"no_data","score":null,"grade":"gray","readiness":null,"workout":null,"breakdown":null,"hasWearableData":false,"isDeloadWeek":false}],"connectedDevices":[],"averageScore":null}}
+
+--- GET /dashboard/overview
+    status: 401
+    response:
+      {"success":false,"error":"Authentication required"}
+
+--- POST /readiness/checkin
+    body: {"perceivedEnergy":7,"perceivedSoreness":3,"perceivedMood":8,"sleepQualityManual":7}
+    status: 200
+    response:
+      {"success":true,"data":{"id":"cmo1n8oep000mo06ucshewcmr","flagged":false,"flags":[]}}
+
+--- GET /readiness/latest
+    status: 404
+    response:
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="utf-8">
+      <title>Error</title>
+      </head>
+      <body>
+      <pre>Cannot GET /api/v1/readiness/latest</pre>
+      </body>
+      </html>
+
+
+--- POST /readiness/checkin
+    body: {"perceivedEnergy":99}
+    status: 400
+    response:
+      {"success":false,"error":"Validation failed","details":[{"field":"perceivedEnergy","message":"Number must be less than or equal to 10"},{"field":"perceivedSoreness","message":"Required"},{"field":"perceivedMood","message":"Required"},{"field":"sleepQualityManual","message":"Required"}]}
+
+--- GET /chat/history
+    status: 200
+    response:
+      {"success":true,"data":{"conversationId":"cmns35esg000lph6x1yckurbb","messages":[{"id":"cmns35esm000nph6xz04nmog6","role":"user","content":"Hey coach, quick question about my lower body day today","createdAt":"2026-04-09T23:05:48.071Z"},{"id":"cmns35fvs000pph6xtp1pmjb0","role":"assistant","content":"What's up, Marcus? \n\nFire away — what's on your mind about today's session?","createdAt":"2026-04-09T23:05:49.481Z"},{"id":"cmns37bt7000tph6xuwhc3f0e","role":"user","content":"Hey coach, quick question about my lower body day today","createdAt":"2026-04-09T23:07:17.516Z"},{"id":"cmns37cqx000vph6x6lxcb8cb","role":"assistant","content":"Got it — what's the question about your quad and glute session?","createdAt":"2026-04-09T23:07:18.729Z"}]}}
+
+--- POST /chat/send
+    body: {"message":"Hey coach, this is an automated audit ping"}
+    status: 200
+    response:
+      {"success":true,"data":{"userMessage":{"id":"cmo1n8p35000oo06u0i6l1rhq","role":"user","content":"Hey coach, this is an automated audit ping","createdAt":"2026-04-16T15:38:09.281Z"},"assistantMessage":{"id":"cmo1n8qlg000qo06ulequl3dw","role":"assistant","content":"Hey Marcus — what's going on with your lower body training today?\n\nWhat question did you have?","createdAt":"2026-04-16T15:38:11.236Z"}}}
+
+--- POST /chat/send
+    body: {}
+    status: 400
+    response:
+      {"success":false,"error":"Validation failed","details":[{"field":"message","message":"Required"}]}
+
+--- PUT /profile
+    body: {"firstName":"Marcus","lastName":"Chen","timezone":"America/New_York"}
+    status: 200
+    response:
+      {"success":true,"data":{"firstName":"Marcus","lastName":"Chen","phone":"+15551234567","timezone":"America/New_York"}}
+>>> captured sessionId: NONE
+
+--- POST /workout/does-not-exist/complete
+    body: {"actualDuration":55,"rpe":7,"athleteNotes":"nope"}
+    status: 404
+    response:
+      {"success":false,"error":"Workout session not found"}
+
+================================================================
+=== 5. ADMIN — system & analytics
+================================================================
+
+--- GET /admin/feature-flags
+    status: 200
+    response:
+      {"success":true,"data":{"messagingEnabled":false,"cronEnabled":false,"autoMessagingEnabled":false}}
+
+--- GET /admin/system/health
+    status: 200
+    response:
+      {"success":true,"data":{"database":{"status":"ok","latencyMs":6},"stripe":{"status":"error","latencyMs":14,"error":"Invalid API Key provided: sk_1T4q4***************RYWt"},"twilio":{"status":"ok","latencyMs":55},"resend":{"status":"ok","latencyMs":89},"anthropic":{"status":"ok","latencyMs":78}}}
+
+--- GET /admin/system/cron-status
+    status: 200
+    response:
+      {"success":true,"data":{"lastDailyReview":"2026-03-02T11:00:00.890Z","lastWeeklyDigest":"2026-03-02T14:00:01.408Z","recentErrors":[],"activeClientCount":1}}
+
+--- GET /admin/analytics/overview
+    status: 200
+    response:
+      {"success":true,"data":{"totalClients":15,"activeClients":1,"byTier":{"PRIVATE_COACHING":1,"TRAINING_30DAY":0,"TRAINING_60DAY":0,"TRAINING_90DAY":0,"NUTRITION_4WEEK":0,"NUTRITION_8WEEK":0},"avgAdherenceRate":0.02,"churnedLast30Days":0,"newLast30Days":0,"mrr":500}}
+
+--- GET /admin/analytics/adherence
+    status: 200
+    response:
+      {"success":true,"data":[{"weekStart":"2026-02-23","avgAdherenceRate":0,"totalCompleted":0,"totalScheduled":26,"totalMissed":2,"clientCount":1},{"weekStart":"2026-03-16","avgAdherenceRate":0.2,"totalCompleted":1,"totalScheduled":5,"totalMissed":0,"clientCount":1},{"weekStart":"2026-04-06","avgAdherenceRate":0.02,"totalCompleted":1,"totalScheduled":65,"totalMissed":0,"clientCount":1}]}
+
+--- GET /admin/analytics/escalations?page=1&limit=20
+    status: 200
+    response:
+      {"success":true,"data":{"escalations":[{"id":"cmm8pmp8x0001nx6x2podb7q3","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":3,"messageSent":true,"messageLogId":"cmm8pmpfz0003nx6xex1zmgzi","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-03-02T05:00:00.465Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}},{"id":"cmm7a6uwy000bo36xxnry4e88","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":3,"messageSent":true,"messageLogId":"cmm7a6v2d000do36xoclzgwby","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-03-01T05:00:00.898Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}},{"id":"cmm5uqzzf0003o36xs00e4kmh","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":2,"messageSent":true,"messageLogId":"cmm5ur07z0005o36xni0bv6nt","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-02-28T05:00:00.555Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}},{"id":"cmm4fb6190006lf6xi06l68w1","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":1,"messageSent":true,"messageLogId":"cmm4fb6450008lf6x08ml757f","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-02-27T05:00:01.485Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}}],"total":4,"page":1,"totalPages":1}}
+
+--- GET /admin/feature-flags
+    status: 403
+    response:
+      {"success":false,"error":"Admin access required"}
+
+--- GET /admin/system/health
+    status: 403
+    response:
+      {"success":false,"error":"Admin access required"}
+
+================================================================
+=== 6. ADMIN — action queue, triggers, messages
+================================================================
+
+--- GET /admin/action-queue
+    status: 200
+    response:
+      {"success":true,"data":{"pendingApprovals":[],"endingSoon":[],"completedPlans":[],"unresolvedEscalations":[{"id":"cmm8pmp8x0001nx6x2podb7q3","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":3,"messageSent":true,"messageLogId":"cmm8pmpfz0003nx6xex1zmgzi","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-03-02T05:00:00.465Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}},{"id":"cmm7a6uwy000bo36xxnry4e88","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":3,"messageSent":true,"messageLogId":"cmm7a6v2d000do36xoclzgwby","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-03-01T05:00:00.898Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}},{"id":"cmm5uqzzf0003o36xs00e4kmh","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":2,"messageSent":true,"messageLogId":"cmm5ur07z0005o36xni0bv6nt","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-02-28T05:00:00.555Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}},{"id":"cmm4fb6190006lf6xi06l68w1","userId":"cmm3qkxy50001n35d5amm50s7","triggerReason":"low_weekly_adherence","escalationLevel":1,"messageSent":true,"messageLogId":"cmm4fb6450008lf6x08ml757f","callBooked":false,"resolvedAt":null,"resolution":null,"createdAt":"2026-02-27T05:00:01.485Z","user":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","athleteProfile":{"firstName":"Marcus","lastName":"Chen"}}}]}}
+
+--- GET /admin/triggers
+    status: 200
+    response:
+      {"success":true,"data":{"triggers":[]}}
+
+--- GET /admin/messages?page=1&limit=50
+    status: 200
+    response:
+      {"success":true,"data":{"messages":[],"stats":{"totalToday":0,"deliveredToday":0,"failedToday":0,"deliveryRate":100},"total":0,"page":1,"totalPages":0}}
+
+--- GET /admin/pending-count
+    status: 200
+    response:
+      {"success":true,"data":{"count":0}}
+
+--- POST /admin/triggers/does-not-exist/fire
+    status: 404
+    response:
+      {"success":false,"error":"Message trigger not found"}
+
+--- POST /admin/triggers/does-not-exist/dismiss
+    status: 500
+    response:
+      {"success":false,"error":"Internal server error"}
+
+================================================================
+=== 7. ADMIN — clients
+================================================================
+
+--- GET /admin/clients?page=1&limit=20
+    status: 200
+    response:
+      {"success":true,"data":{"clients":[{"id":"cmo1n8ijq000io06uvkwbqils","email":"audit_1776353880@example.com","createdAt":"2026-04-16T15:38:00.807Z","athleteProfile":{"firstName":"Audit","lastName":"Bot","primaryGoal":"build-muscle","personaType":"hybrid-builder","experienceLevel":"intermediate","trainingDaysPerWeek":4},"subscription":null,"adherence":null},{"id":"cmnys53gs0009o06uc108orrp","email":"Freddynunan@icloud.com","createdAt":"2026-04-14T15:32:00.845Z","athleteProfile":{"firstName":"Freddy","lastName":"Nunan","primaryGoal":"well-rounded","personaType":"hybrid-builder","experienceLevel":"intermediate","trainingDaysPerWeek":5},"subscription":null,"adherence":null},{"id":"cmns422pt0006o06us17e8z6m","email":"finaltest@test.com","createdAt":"2026-04-09T23:31:12.065Z","athleteProfile":{"firstName":"Final","lastName":"Test","primaryGoal":"endurance","personaType":"endurance-competitor","experienceLevel":"beginner","trainingDaysPerWeek":3},"subscription":null,"adherence":null},{"id":"cmnrrx1td000ao370kav72cv5","email":"livetest@example.com","createdAt":"2026-04-09T17:51:22.226Z","athleteProfile":{"firstName":"Live","lastName":"Test","primaryGoal":"build-muscle","personaType":"hybrid-builder","experienceLevel":"intermediate","trainingDaysPerWeek":4},"subscription":null,"adherence":null},{"id":"cmnqj1dbt000to26x0e6toeoh","email":"admin@brightautomations.net","createdAt":"2026-04-08T20:55:01.050Z","athleteProfile":{"firstName":"Jared","lastName":"Kolsun","primaryGoal":"lose-fat","personaType":"hybrid-builder","experienceLevel":"beginner","trainingDaysPerWeek":5},"subscription":null,"adherence":null},{"id":"cmnnllskt000do26xst7bi6v9","email":"hardeebr1@gmail.com","createdAt":"2026-04-06T19:43:34.637Z","athleteProfile":{"firstName":"Briley","lastName":"Hardee","primaryGoal":"well-rounded","personaType":"hybrid-builder","experienceLevel":"beginner","trainingDaysPerWeek":6},"subscription":null,"adherence":null},{"id":"cmnhxioys000ao26x4oev1jy7","email":"nickpagliughi@gmail.com","createdAt":"2026-04-02T20:30:28.325Z","ath
+
+--- GET /admin/clients/cmm3qkxy50001n35d5amm50s7
+    status: 200
+    response:
+      {"success":true,"data":{"id":"cmm3qkxy50001n35d5amm50s7","email":"marcus.chen@testclient.com","passwordHash":"$2a$12$/70yMlOtID.Nmeku527QNujie1P8soXh8mdjl5uNBQgf6Xt7JPJxy","role":"CLIENT","createdAt":"2026-02-26T17:27:47.166Z","updatedAt":"2026-02-26T17:27:47.166Z","athleteProfile":{"id":"cmm3qkxy50002n35d05fbdgu4","userId":"cmm3qkxy50001n35d5amm50s7","firstName":"Marcus","lastName":"Chen","phone":"+15551234567","timezone":"America/New_York","dateOfBirth":"1986-03-15T00:00:00.000Z","primaryGoal":"recomposition","secondaryGoals":["build-muscle","endurance"],"trainingDaysPerWeek":5,"preferredTrainingTime":"morning","experienceLevel":"advanced","currentActivity":"3x/week gym (mostly machines), occasional weekend run, inconsistent schedule due to travel","equipmentAccess":"full-gym","injuryHistory":"Minor lower back strain 2 years ago, fully recovered","sleepSchedule":"11pm-6:30am","stressLevel":7,"occupation":"VP of Operations, SaaS company","travelFrequency":"monthly","biggestChallenge":null,"messagingDisabled":true,"personaType":"executive-athlete","aiSummary":"You're a high-performing executive who treats training like a business objective. With advanced experience and a recomposition goal, you need a structured plan that maximizes efficiency within your demanding schedule. Your monthly travel and elevated stress levels mean adaptive recovery programming is critical to your progress.","riskFlags":["high-stress-high-volume"],"wakeTime":"05:30","bedTime":"23:00","mealsPerDay":3,"hydrationLevel":"moderate","supplementsUsed":"Creatine, protein powder, vitamin D, magnesium","recoveryPractices":["foam-roll","sauna","stretch"],"heightInches":null,"weightLbs":null,"bodyFatEstimate":null,"yearsTraining":null,"currentProgram":null,"benchPressMax":null,"squatMax":null,"deadliftMax":null,"cardioBase":null,"exercisesLoved":null,"exercisesHated":null,"workType":null,"sessionLength":null,"specificInjuries":null,"dietaryApproach":null,"alcoholFrequency":null,"caffeineDaily":null,"targetWeight":null,"goalTimeline":null,"eventDate
+
+--- GET /admin/clients/cmm3qkxy50001n35d5amm50s7/chat
+    status: 200
+    response:
+      {"success":true,"data":{"conversationId":"cmns35esg000lph6x1yckurbb","messages":[{"id":"cmns35esm000nph6xz04nmog6","role":"user","content":"Hey coach, quick question about my lower body day today","createdAt":"2026-04-09T23:05:48.071Z"},{"id":"cmns35fvs000pph6xtp1pmjb0","role":"assistant","content":"What's up, Marcus? \n\nFire away — what's on your mind about today's session?","createdAt":"2026-04-09T23:05:49.481Z"},{"id":"cmns37bt7000tph6xuwhc3f0e","role":"user","content":"Hey coach, quick question about my lower body day today","createdAt":"2026-04-09T23:07:17.516Z"},{"id":"cmns37cqx000vph6x6lxcb8cb","role":"assistant","content":"Got it — what's the question about your quad and glute session?","createdAt":"2026-04-09T23:07:18.729Z"},{"id":"cmo1n8p35000oo06u0i6l1rhq","role":"user","content":"Hey coach, this is an automated audit ping","createdAt":"2026-04-16T15:38:09.281Z"},{"id":"cmo1n8qlg000qo06ulequl3dw","role":"assistant","content":"Hey Marcus — what's going on with your lower body training today?\n\nWhat question did you have?","createdAt":"2026-04-16T15:38:11.236Z"}]}}
+
+--- GET /admin/clients/does-not-exist
+    status: 404
+    response:
+      {"success":false,"error":"User not found"}
+
+--- PUT /admin/clients/cmm3qkxy50001n35d5amm50s7/notes
+    body: {"notes":"Audit ping — automated test"}
+    status: 200
+    response:
+      {"success":true,"data":{"success":true}}
+
+--- PUT /admin/clients/cmm3qkxy50001n35d5amm50s7/profile
+    body: {"firstName":"Marcus"}
+    status: 200
+    response:
+      {"success":true,"data":{"success":true}}
+
+--- POST /admin/clients/cmm3qkxy50001n35d5amm50s7/message
+    body: {"content":"Audit ping — automated test","channel":"EMAIL"}
+    status: 200
+    response:
+      {"success":true,"data":{"messageId":"cmo1n8v83000so06url3cu0t7"}}
+
+--- PUT /admin/clients/cmm3qkxy50001n35d5amm50s7/status
+    body: {"action":"not-a-real-action"}
+    status: 400
+    response:
+      {"success":false,"error":"Validation failed","details":[{"field":"action","message":"Invalid enum value. Expected 'pause' | 'activate' | 'approve' | 'reject', received 'not-a-real-action'"}]}
+
+--- POST /admin/escalations/does-not-exist/resolve
+    body: {"resolution":"audit_test"}
+    status: 400
+    response:
+      {"success":false,"error":"Validation failed","details":[{"field":"resolution","message":"Invalid enum value. Expected 'resumed' | 'paused_subscription' | 'churned' | 'call_completed' | 'other', received 'audit_test'"}]}
+
+================================================================
+=== 8. CHECKOUT — expected to fail
+================================================================
+
+--- POST /checkout/session
+    body: {"tier":"TRAINING_30DAY","profileId":"cmo1n8ijy000ko06ujqxkqiy4","successUrl":"https://vintusperformance.org/onboarding.html","cancelUrl":"https://vintusperformance.org/results.html"}
+    status: 401
+    response:
+      {"success":false,"error":"Invalid API Key provided: sk_1T4q4***************RYWt"}
+
+================================================================
+=== 9. LOGOUT
+================================================================
+
+--- POST /auth/logout
+    status: 200
+    response:
+      {"success":true,"data":{"message":"Logged out"}}
+
+--- POST /auth/logout
+    status: 200
+    response:
+      {"success":true,"data":{"message":"Logged out"}}
+
+================================================================
+=== AUDIT COMPLETE
+================================================================
+Finished: Thu Apr 16 11:38:18 EDT 2026
+Results written to: vintus_audit_results.txt

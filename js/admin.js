@@ -660,6 +660,11 @@
           '</label>' +
         '</div>';
 
+      // Show messaging status banner
+      if (msgDisabled) {
+        html += '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:#f87171;padding:0.5rem 0.75rem;font-size:0.75rem;margin-bottom:0.5rem;">Messaging paused for this client (per-user toggle)</div>';
+      }
+
       if (d.messageLogs && d.messageLogs.length) {
         html += '<div class="admin-msg-thread">';
         for (var m = 0; m < d.messageLogs.length; m++) {

@@ -57,9 +57,10 @@ router.post(
       // Estimate TSS from RPE and duration
       const estimatedTSS = Math.round(actualDuration * (rpe / 10) * 1.5);
 
-      // Update session
-      const updated = await prisma.workoutSession.update({
-        where: { id: sessionId },
+      // Atomically update only if status is still SCHEDULED — prevents race
+      // conditions where two concurrent requests could double-count TSS.
+      const updateResult = await prisma.workoutSession.updateMany({
+        where: { id: sessionId, status: "SCHEDULED" },
         data: {
           status: "COMPLETED",
           completedAt: new Date(),
@@ -68,6 +69,17 @@ router.post(
           athleteNotes: athleteNotes ?? null,
           actualTSS: estimatedTSS,
         },
+      });
+
+      if (updateResult.count === 0) {
+        // Another request already completed (or changed) this session
+        res.status(409).json({ success: false, error: "Session already completed" });
+        return;
+      }
+
+      // Re-fetch the updated session for the response
+      const updated = await prisma.workoutSession.findUnique({
+        where: { id: sessionId },
       });
 
       // Update plan actualTSS
