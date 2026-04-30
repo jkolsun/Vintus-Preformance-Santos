@@ -7,11 +7,11 @@
 (function () {
   // Auth guard
   if (!isLoggedIn()) {
-    window.location.href = 'login.html';
+    window.location.href = '/login';
     return;
   }
   if (localStorage.getItem('vintus_role') === 'ADMIN') {
-    window.location.href = 'admin.html';
+    window.location.href = '/admin';
     return;
   }
 
@@ -219,7 +219,7 @@
       if (res.success) {
         skipModal.classList.remove('active');
         document.getElementById('completeWrap').style.display = 'none';
-        window.location.href = 'dashboard.html';
+        window.location.href = '/dashboard';
       } else {
         alert('Failed to skip session: ' + (res.error || 'Unknown error'));
         skipModalSubmit.disabled = false;
@@ -312,7 +312,7 @@
 
         // Redirect to dashboard after brief delay
         setTimeout(function () {
-          window.location.href = 'dashboard.html';
+          window.location.href = '/dashboard';
         }, 2000);
       } else {
         alert('Failed to mark workout as complete. Please try again.');

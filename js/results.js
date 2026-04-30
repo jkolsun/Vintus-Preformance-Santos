@@ -141,7 +141,7 @@
 
       // Private Coaching → book a consultation call (pass tier context)
       if (tier === 'PRIVATE_COACHING') {
-        window.location.href = 'book.html?tier=PRIVATE_COACHING';
+        window.location.href = '/book?tier=PRIVATE_COACHING';
         return;
       }
 
@@ -154,7 +154,7 @@
           var res = await apiPost('/api/v1/checkout/session', {
             tier: tier,
             profileId: profileId,
-            successUrl: window.location.origin + '/onboarding.html',
+            successUrl: window.location.origin + '/onboarding',
             cancelUrl: window.location.href
           });
 
@@ -175,7 +175,7 @@
 
       // Unauthenticated users → go to assessment to create full profile
       localStorage.setItem('vintus_selected_tier', tier);
-      window.location.href = 'assessment.html';
+      window.location.href = '/assessment';
     });
   });
 

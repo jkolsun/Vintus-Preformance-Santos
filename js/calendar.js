@@ -6,11 +6,11 @@
 (function () {
   // Auth guard
   if (!isLoggedIn()) {
-    window.location.href = 'login.html';
+    window.location.href = '/login';
     return;
   }
   if (localStorage.getItem('vintus_role') === 'ADMIN') {
-    window.location.href = 'admin.html';
+    window.location.href = '/admin';
     return;
   }
 
@@ -189,7 +189,7 @@
 
     card.addEventListener('click', function (e) {
       if (e.defaultPrevented) return;
-      window.location.href = 'workout.html?id=' + session.id;
+      window.location.href = '/workout?id=' + session.id;
     });
 
     if (isMobile && isDraggable) {

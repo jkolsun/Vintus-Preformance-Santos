@@ -296,7 +296,7 @@
       redirectNote.style.cssText = 'color:var(--gray);font-size:0.85rem;margin-top:1rem;text-align:center;';
       redirectNote.textContent = 'Redirecting to your dashboard...';
       if (target) target.querySelector('.onboard-success').appendChild(redirectNote);
-      setTimeout(function () { window.location.href = 'dashboard.html'; }, 2500);
+      setTimeout(function () { window.location.href = '/dashboard'; }, 2500);
     }
   }
 

@@ -273,9 +273,9 @@
 
         // Redirect to results page — with profileId for AI results, or quiz fallback
         if (profileId) {
-            window.location.href = 'results.html?id=' + profileId + '&source=quiz';
+            window.location.href = '/results?id=' + profileId + '&source=quiz';
         } else {
-            window.location.href = 'results.html?source=quiz';
+            window.location.href = '/results?source=quiz';
         }
     }
 

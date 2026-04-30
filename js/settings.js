@@ -5,7 +5,7 @@
 (function () {
   // Require auth — redirect to login if not logged in
   if (!isLoggedIn()) {
-    window.location.href = 'login.html';
+    window.location.href = '/login';
     return;
   }
 
@@ -200,7 +200,7 @@
       setTimeout(function () {
         clearToken();
         localStorage.removeItem('vintus_role');
-        window.location.href = 'login.html';
+        window.location.href = '/login';
       }, 2000);
     } catch (err) {
       showMsg(passwordError, err.message || 'Failed to update password.');

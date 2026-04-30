@@ -238,7 +238,7 @@
       var res = await apiPost('/api/v1/intake/full', payload);
 
       if (res.success && res.data && res.data.profileId) {
-        window.location.href = 'results.html?id=' + res.data.profileId;
+        window.location.href = '/results?id=' + res.data.profileId;
       } else {
         alert('Submission succeeded but no profile ID was returned. Please contact support.');
         submitBtn.disabled = false;

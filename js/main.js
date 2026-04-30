@@ -589,9 +589,9 @@ function throttle(func, limit) {
 
             // Redirect to results page with plans
             if (heroProfileId) {
-              window.location.href = 'results.html?id=' + heroProfileId + '&source=quiz';
+              window.location.href = '/results?id=' + heroProfileId + '&source=quiz';
             } else {
-              window.location.href = 'results.html?source=quiz';
+              window.location.href = '/results?source=quiz';
             }
         });
 
@@ -978,7 +978,7 @@ function throttle(func, limit) {
                 ${exercisesList}
             </ul>
             <div class="modal-note">${data.note}</div>
-            <a href="contact.html" class="btn-primary" style="width: 100%; justify-content: center;">Start Your Plan</a>
+            <a href="/contact" class="btn-primary" style="width: 100%; justify-content: center;">Start Your Plan</a>
         `;
 
         modalOverlay.classList.add('active');

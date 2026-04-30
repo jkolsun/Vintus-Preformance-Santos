@@ -6,7 +6,7 @@
   /* ── Auth Guard ── */
   var role = localStorage.getItem('vintus_role');
   if (!isLoggedIn() || role !== 'ADMIN') {
-    window.location.href = 'login.html';
+    window.location.href = '/login';
     return;
   }
 
@@ -157,7 +157,7 @@
     try { await apiPost('/api/v1/auth/logout'); } catch (e) { /* ignore */ }
     clearToken();
     localStorage.removeItem('vintus_role');
-    window.location.href = 'login.html';
+    window.location.href = '/login';
   });
 
   /* ============================================================

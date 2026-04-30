@@ -63,7 +63,7 @@ async function apiFetch(path, options) {
     if (!isPublicPage) {
       clearToken();
       localStorage.removeItem('vintus_role');
-      window.location.href = 'login.html';
+      window.location.href = '/login';
     }
     throw new Error('Session expired. Please log in again.');
   }

@@ -66,7 +66,7 @@
 
       // Redirect to login after 2 seconds
       setTimeout(function () {
-        window.location.href = 'login.html';
+        window.location.href = '/login';
       }, 2000);
     } catch (err) {
       showError(err.message || 'Reset failed. The link may have expired.');

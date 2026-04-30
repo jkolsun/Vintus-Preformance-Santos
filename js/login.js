@@ -6,7 +6,7 @@
   // If already logged in, redirect based on role
   if (isLoggedIn()) {
     var savedRole = localStorage.getItem('vintus_role');
-    window.location.href = savedRole === 'ADMIN' ? 'admin.html' : 'dashboard.html';
+    window.location.href = savedRole === 'ADMIN' ? '/admin' : '/dashboard';
     return;
   }
 
@@ -38,9 +38,9 @@
           localStorage.setItem('vintus_role', res.data.role);
         }
         if (res.data.role === 'ADMIN') {
-          window.location.href = 'admin.html';
+          window.location.href = '/admin';
         } else {
-          window.location.href = 'dashboard.html';
+          window.location.href = '/dashboard';
         }
       } else {
         showError('Login failed. Please check your credentials.');

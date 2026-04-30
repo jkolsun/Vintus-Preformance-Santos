@@ -6,11 +6,11 @@
 (function () {
   // Auth guard
   if (!isLoggedIn()) {
-    window.location.href = 'login.html';
+    window.location.href = '/login';
     return;
   }
   if (localStorage.getItem('vintus_role') === 'ADMIN') {
-    window.location.href = 'admin.html';
+    window.location.href = '/admin';
     return;
   }
 
@@ -286,7 +286,7 @@
       // Action buttons
       html += '<div class="tp-workout-card__actions">';
       if (s.status === 'SCHEDULED') {
-        html += '<a href="workout.html?id=' + s.id + '" class="tp-workout-card__start-btn">' +
+        html += '<a href="/workout?id=' + s.id + '" class="tp-workout-card__start-btn">' +
           'Start Workout <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
           '</a>';
         html += '<button class="tp-workout-card__skip-btn" id="skipWorkoutBtn">Skip Session</button>';
@@ -567,7 +567,7 @@
           'Completed</span></div>';
       } else if (s.status === 'SCHEDULED') {
         html += '<div class="tp-workout-card__actions">' +
-          '<a href="workout.html?id=' + s.id + '" class="tp-workout-card__start-btn">Start Workout</a>' +
+          '<a href="/workout?id=' + s.id + '" class="tp-workout-card__start-btn">Start Workout</a>' +
           '</div>';
       }
 
@@ -848,7 +848,7 @@
     } else if (dailySummaryData && dailySummaryData.connectedDevices && dailySummaryData.connectedDevices.length === 0) {
       html += '<div class="daily-detail__section">';
       html += '<div class="daily-detail__device-prompt">' +
-        'Connect a wearable to see HRV, sleep, and recovery metrics. <a href="onboarding.html">Setup</a>' +
+        'Connect a wearable to see HRV, sleep, and recovery metrics. <a href="/onboarding">Setup</a>' +
       '</div>';
       html += '</div>';
     }
@@ -973,7 +973,7 @@
     }
     clearToken();
     localStorage.removeItem('vintus_role');
-    window.location.href = 'login.html';
+    window.location.href = '/login';
   });
 
   // ============================================================
